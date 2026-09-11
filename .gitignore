@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Environments
+.venv/
+venv/
+env/
+.conda/
+
+# Local settings
+.env
+.vscode/
+
+# Generated data and results
+data/*.h5
+data/*.hdf5
+data/*.csv
+data/*.parquet
+results/*
+!results/README.md
+
+# Logs and checkpoints
+*.log
+*.pt
+*.pth
+*.ckpt
+
+# OS/editor
+.DS_Store
+Thumbs.db

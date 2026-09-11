@@ -1,0 +1,9 @@
+numpy
+scipy
+pandas
+matplotlib
+h5py
+pyyaml
+pytest
+torch
+pybamm
