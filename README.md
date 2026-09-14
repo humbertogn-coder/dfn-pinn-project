@@ -130,3 +130,17 @@ integration of exported fields. It reports sampled global balance residuals
 without imposing a pass threshold. Small balances alone do not establish local
 state accuracy or mesh convergence. These equations apply to the current model
 without side reactions and must be revisited if degradation is introduced.
+
+## Internal Variable Inventory
+
+```bat
+python scripts/inspect_internal_variables.py
+```
+
+This inventories 23 primary and auxiliary fields at 80 points/domain using
+10-second output samples and tight solver tolerances. It records exact PyBaMM
+names, units, domains, native axis order, node/edge coordinates, shapes, and
+sampled ranges in JSON and Markdown under `results/`. It checks finite entries
+and coordinate lengths. Full field arrays are not exported at this stage.
+Particle concentrations use native `(r, x, t)` order. Surface values must be
+read separately rather than taken from the last radial cell center.
