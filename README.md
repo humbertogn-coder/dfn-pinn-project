@@ -255,3 +255,16 @@ and full discharge (10-second outputs). Applies the working criteria in
 conservation, wall times, and uncompressed concentration-array size estimates.
 Reports remain provisional even if radial checks pass: through-cell refinement
 and sampling limitations are not resolved by this study.
+
+## Radial 320/640 Startup Comparison
+
+```bat
+python scripts/check_radial_320_640.py
+```
+
+Runs fixed x80 with radial 320 and 640 for 10 seconds, sampling every 0.05 s.
+Compares voltage and native surface concentrations without cross-mesh
+interpolation. Reports 0-5 s, 5.05-10 s and the full interval against the existing
+1 mV and 0.1% concentration-scale criteria. Saves samples, peak locations, timing,
+CSV/JSON metrics and a figure. Internal fields and conservation are outside this
+focused check; spatial refinement and intersample extrema remain pending.
