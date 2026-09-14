@@ -1,3 +1,3 @@
 # Docs
 
-Notas tecnicas, decisiones de implementacion y resumenes de resultados.
+Technical notes, implementation decisions, and summaries of research results.

@@ -1,3 +1,3 @@
 # Configs
 
-Aqui iran archivos YAML para protocolos, entrenamiento y rutas de salida.
+This directory will contain YAML configuration files for protocols, training, and output paths.

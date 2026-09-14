@@ -1,3 +1,3 @@
 # Results
 
-Resultados generados localmente o en HPRC. En general, no subir archivos pesados a Git.
+Results generated locally or on HPRC. Large generated files should not be committed to Git.

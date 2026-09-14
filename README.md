@@ -1,60 +1,59 @@
 # DFN PINN Project
 
-Proyecto de investigacion para implementar y evaluar PINNs para el modelo Doyle-Fuller-Newman completo, con enfoque en:
+Research project to implement and evaluate physics-informed neural networks (PINNs) for the full Doyle-Fuller-Newman model, focusing on:
 
-- referencia reproducible con PyBaMM
-- formulacion mixed-variable con corriente interfacial aprendida
-- inverse Butler-Volmer como residual de acondicionamiento
-- conservacion dura de corriente por proyeccion
-- identificabilidad antes de estimar parametros
+- reproducible reference solutions with PyBaMM
+- a mixed-variable formulation with learned interfacial current
+- an inverse Butler-Volmer residual to investigate conditioning
+- hard current conservation through projection
+- identifiability analysis before parameter estimation
 
-## Estado actual
+## Current Status
 
-Este repositorio empieza con un esqueleto minimo. La primera meta no es entrenar un PINN, sino preparar un flujo reproducible:
+The repository currently contains a minimal project skeleton. The first goal is to establish a reproducible workflow:
 
-1. ambiente local
-2. Git y GitHub
-3. Codex para desarrollo asistido
-4. HPRC Grace para ejecuciones mas pesadas
+1. Local environment
+2. Git and GitHub
+3. Codex-assisted development
+4. HPRC Grace for larger computational runs
 
-## Crear ambiente local
+## Create the Local Environment
 
-En Anaconda Prompt:
+From the project directory in Anaconda Prompt:
 
 ```bat
-cd "%USERPROFILE%\OneDrive\Documents\ChatGPT\DFN_PINN_Project"
 conda create -n dfn-pinn python=3.11 -y
 conda activate dfn-pinn
 pip install -r requirements.txt
 pip install -e .
 ```
 
-## Verificar instalacion
+## Verify the Installation
 
 ```bat
 python scripts/check_project.py
 pytest -q
 ```
 
-## Flujo con Git
+## Git Workflow
 
 ```bat
 git init
 git add .
-git commit -m "Inicializa proyecto DFN PINN"
+git commit -m "Initialize DFN PINN project"
 ```
 
-Despues crea un repositorio vacio en GitHub y conecta el remoto:
+For a new repository, create an empty repository on GitHub and connect the remote. Replace `REPOSITORY_URL` with its clone URL:
 
 ```bat
 git branch -M main
-git remote add origin URL_DEL_REPOSITORIO
+git remote add origin REPOSITORY_URL
 git push -u origin main
 ```
 
 ## HPRC Grace
 
-Flujo base usando el ambiente existente:
+The project owner's existing Grace environment can be activated as follows. Collaborators should substitute their own environment and checkout paths:
 
 ```bash
 module purge
@@ -68,12 +67,12 @@ python scripts/check_project.py
 pytest -q
 ```
 
-## Primera meta tecnica
+## First Technical Goal
 
-Crear un exportador reproducible:
+Implement a reproducible reference exporter with the following planned command:
 
 ```bash
 python scripts/export_pybamm_reference.py --protocol 1C
 ```
 
-Ese script todavia no existe. Sera el primer modulo real del proyecto.
+This script has not been implemented yet. It will be the first scientific module in the project.
