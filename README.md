@@ -172,3 +172,19 @@ source, actual sampled times, and electrode positions used for radial profiles.
 Figures show concentrations and currents at the start, near mid-discharge, and
 at cutoff. Radial curves use native centers, not exact particle boundaries.
 This visualization is not an accuracy or convergence certificate.
+
+## Internal Concentration Mesh Study
+
+```bat
+python scripts/check_concentration_convergence.py
+```
+
+Compares 20, 40, and 80 points/domain at fixed tight solver tolerances. It checks
+both full particle concentrations, both surface concentrations, and electrolyte
+concentration separately in each region. Finer solutions are interpolated
+spatially onto the coarse interior nodes, at shared 10-second output times.
+No extrapolation or interpolation across electrolyte interfaces is performed.
+Outputs include pairwise maximum and unweighted RMS differences, scale-based
+percentages, sampled arrays, settings, coordinates, and a figure under `results/`.
+The report documents sampling and interpolation limits. No accuracy threshold
+or convergence certificate is implied by a successful run.
