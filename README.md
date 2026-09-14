@@ -69,10 +69,31 @@ pytest -q
 
 ## First Technical Goal
 
-Implement a reproducible reference exporter with the following planned command:
+Run the initial Chen2020 isothermal DFN discharge at 1C:
 
 ```bash
 python scripts/export_pybamm_reference.py --protocol 1C
 ```
 
-This script has not been implemented yet. It will be the first scientific module in the project.
+The script exports terminal signals to CSV and HDF5, a voltage plot, and JSON
+metadata to a timestamped directory under `results/`. It checks finite outputs,
+increasing time, the applied current, and the final voltage cutoff.
+
+This is an initial solver smoke run. Internal-state exports, mesh convergence,
+and a conservation audit are still required before using it as a validated PINN
+reference. Generated results are excluded from Git.
+
+The setup follows the [official PyBaMM example](https://github.com/pybamm-team/PyBaMM/blob/main/examples/scripts/experimental_protocols/cccv.py).
+
+## Mesh Refinement Check
+
+```bat
+python scripts/check_mesh_convergence.py
+```
+
+This repeats the same discharge with 20, 40, and 80 points in each spatial
+domain, using one-second outputs. It compares voltages at shared sample times
+and reports cutoff-time differences relative to the finest tested mesh.
+CSV signals, metrics, JSON settings, and a figure are saved under `results/`.
+The finest mesh is not an exact solution. This check does not yet establish
+internal-state accuracy, solver-tolerance independence, or conservation.
