@@ -144,3 +144,16 @@ sampled ranges in JSON and Markdown under `results/`. It checks finite entries
 and coordinate lengths. Full field arrays are not exported at this stage.
 Particle concentrations use native `(r, x, t)` order. Surface values must be
 read separately rather than taken from the last radial cell center.
+
+## Export Full Internal Fields
+
+```bat
+python scripts/export_internal_fields.py
+```
+
+Exports all 23 inventoried arrays with lossless compression, per-field native
+coordinates, units, dimension scales, terminal signals, and simulation metadata.
+The exporter reopens the file and checks exact equality against the simulation
+before naming it `reference.h5`. Outputs live in a new directory under `results/`.
+See [HDF5 schema](docs/HDF5_SCHEMA.md). Successful export verifies data fidelity,
+not physical accuracy or mesh convergence.

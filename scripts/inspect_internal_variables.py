@@ -25,7 +25,8 @@ def coordinate_record(mesh, size, axis, domains):
             "values": values.tolist()}
 
 
-def main() -> None:
+def collect_inventory():
+    """Return the solved reference and checked inventory for reuse by exporters."""
     print("Inspecting DFN internal fields: 80 points/domain, 10-second outputs...", flush=True)
     solution, parameters, protocol, mesh, elapsed = run_discharge(
         80, "10 seconds", rtol=1e-8, atol=1e-10
@@ -90,9 +91,6 @@ def main() -> None:
         print(f"{identifier:12s} {str(values.shape):18s} {record['axis_order']} "
               f"range=[{record['minimum']:.6g}, {record['maximum']:.6g}] {unit}")
     now = datetime.now(timezone.utc)
-    output = (Path(__file__).resolve().parents[1] / "results"
-              / ("internal_inventory_" + now.strftime("%Y%m%dT%H%M%S%fZ")))
-    output.mkdir(parents=True, exist_ok=False)
     report = {
         "created_utc": now.isoformat(), "pybamm_version": pybamm.__version__,
         "python_version": platform.python_version(), "model": "isothermal DFN",
@@ -110,6 +108,16 @@ def main() -> None:
                  "j uses active surface area; i_s and i_e use geometric area. "
                  "Accuracy and coordinate alignment need validation before PINN training.",
     }
+    return solution, report
+
+
+def main() -> None:
+    _, report = collect_inventory()
+    records = report["variables"]
+    now = datetime.now(timezone.utc)
+    output = (Path(__file__).resolve().parents[1] / "results"
+              / ("internal_inventory_" + now.strftime("%Y%m%dT%H%M%S%fZ")))
+    output.mkdir(parents=True, exist_ok=False)
     (output / "inventory.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     lines = ["# DFN Internal Variable Inventory", "",
              f"PyBaMM {pybamm.__version__}; Chen2020; 1C; 80 points/domain.", "",
