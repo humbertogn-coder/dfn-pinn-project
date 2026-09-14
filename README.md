@@ -228,3 +228,17 @@ from exact samples, and combined error on the r80 centers. All quantities are
 dimensionless. JSON, CSV, NPZ, and a figure are saved under `results/`.
 This isolates comparison errors for a known solution; it does not reproduce
 the DFN step-current transient or certify its accuracy.
+
+## Constant-Flux Sphere Benchmark
+
+```bat
+python scripts/check_constant_flux_sphere.py
+```
+
+Applies a unit outward flux to an initially uniform sphere and compares
+80/160/320 radial meshes with an independent eigenfunction series. The series
+is checked with 512 and 1024 modes at every comparison point. Surface errors
+use native boundary reconstruction, not cross-mesh interpolation. The script
+reports the initial corner separately, samples positive dimensionless times
+logarithmically from 1e-5 to 0.02, and checks spherical volume-mean mass balance.
+Outputs are stored under `results/`. This is not a full-cell accuracy certificate.
