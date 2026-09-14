@@ -215,3 +215,16 @@ are compared separately without radial interpolation. CSV metrics, JSON settings
 and peak locations, NPZ samples, and a figure are saved under `results/`.
 This query grid differs from the earlier 20-center transient study. Maxima
 between output samples remain unresolved; no exact-reference claim is made.
+
+## Analytic Spherical Diffusion Benchmark
+
+```bat
+python scripts/check_spherical_diffusion.py
+```
+
+Compares radial meshes 80/160/320 against a smooth exact spherical eigenmode
+with zero-flux boundaries. Reports native solver error, interpolation-only error
+from exact samples, and combined error on the r80 centers. All quantities are
+dimensionless. JSON, CSV, NPZ, and a figure are saved under `results/`.
+This isolates comparison errors for a known solution; it does not reproduce
+the DFN step-current transient or certify its accuracy.
