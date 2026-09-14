@@ -97,3 +97,17 @@ and reports cutoff-time differences relative to the finest tested mesh.
 CSV signals, metrics, JSON settings, and a figure are saved under `results/`.
 The finest mesh is not an exact solution. This check does not yet establish
 internal-state accuracy, solver-tolerance independence, or conservation.
+
+## Solver Tolerance Check
+
+```bat
+python scripts/check_solver_tolerances.py
+```
+
+This holds the mesh at 80 points per domain and compares `(rtol, atol)` pairs
+`(1e-6, 1e-8)`, `(1e-7, 1e-9)`, and `(1e-8, 1e-10)` for the same discharge.
+It saves CSV signals and metrics, JSON settings, and a plot under `results/`.
+Voltage differences use shared one-second output times; cutoff times are
+compared separately. The tightest run is a provisional reference, not an exact
+solution. These sampled voltage checks do not certify internal-state accuracy,
+conservation, or behavior between output samples.

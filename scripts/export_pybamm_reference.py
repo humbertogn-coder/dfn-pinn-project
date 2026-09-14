@@ -18,13 +18,14 @@ import numpy as np
 import pybamm
 
 
-def run_discharge(points: int = 20, period: str = "10 seconds"):
-    """Solve the shared discharge protocol with a specified spatial resolution."""
+def run_discharge(points: int = 20, period: str = "10 seconds", *,
+                  rtol: float = 1e-6, atol: float = 1e-8):
+    """Solve the shared protocol with specified mesh and solver tolerances."""
     model = pybamm.lithium_ion.DFN(options={"thermal": "isothermal"})
     parameters = pybamm.ParameterValues("Chen2020")
     protocol = "Discharge at 1C for 2 hours or until 2.5 V"
     mesh = {name: points for name in ("x_n", "x_s", "x_p", "r_n", "r_p")}
-    solver = pybamm.IDAKLUSolver(rtol=1e-6, atol=1e-8)
+    solver = pybamm.IDAKLUSolver(rtol=rtol, atol=atol)
     simulation = pybamm.Simulation(
         model,
         parameter_values=parameters,
