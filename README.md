@@ -242,3 +242,16 @@ use native boundary reconstruction, not cross-mesh interpolation. The script
 reports the initial corner separately, samples positive dimensionless times
 logarithmically from 1e-5 to 0.02, and checks spherical volume-mean mass balance.
 Outputs are stored under `results/`. This is not a full-cell accuracy certificate.
+
+## Provisional Reference Assessment
+
+```bat
+python scripts/assess_reference.py
+```
+
+Runs x80/r160 and x80/r320 over both the first five seconds (0.05-second outputs)
+and full discharge (10-second outputs). Applies the working criteria in
+[REFERENCE_ACCEPTANCE.md](docs/REFERENCE_ACCEPTANCE.md), including sampled global
+conservation, wall times, and uncompressed concentration-array size estimates.
+Reports remain provisional even if radial checks pass: through-cell refinement
+and sampling limitations are not resolved by this study.
