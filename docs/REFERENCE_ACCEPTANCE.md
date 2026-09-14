@@ -31,3 +31,10 @@ effect being measured; tighten these targets if comparisons require it.
 Record solver settings, actual wall times, cutoff times, conservation metrics,
 and estimated array storage. Storage estimates exclude compression and HDF5
 metadata; they are not measured file sizes. Keep the existing HDF5 provisional.
+
+## Through-Cell Study
+
+`python scripts/assess_reference.py --study spatial` compares x80/x160 while
+holding r320 fixed. It uses the same provisional limits and sampling windows.
+A sampled pass is evidence for this pair, not a certificate for all times,
+boundaries, or a combined spatial/radial reference choice.

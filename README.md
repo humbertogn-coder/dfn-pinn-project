@@ -268,3 +268,17 @@ interpolation. Reports 0-5 s, 5.05-10 s and the full interval against the existi
 1 mV and 0.1% concentration-scale criteria. Saves samples, peak locations, timing,
 CSV/JSON metrics and a figure. Internal fields and conservation are outside this
 focused check; spatial refinement and intersample extrema remain pending.
+
+## Through-Cell Refinement Assessment
+
+```bat
+python scripts/assess_reference.py --study spatial
+```
+
+Uses x80/x160 in all three through-cell regions with radial resolution fixed at
+320 in both electrodes. Applies the same voltage, concentration and global
+conservation criteria as the radial assessment. Concentrations are interpolated
+onto shared interior x80/r80 targets; electrolyte regions stay separate.
+Startup runs cover 0-5 s at 0.05 s output spacing; full runs use 10 s outputs.
+The 5-10 s interval and intersample extrema remain unresolved by this study.
+The default command without `--study` still performs the radial assessment.
