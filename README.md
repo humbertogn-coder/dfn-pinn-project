@@ -188,3 +188,16 @@ Outputs include pairwise maximum and unweighted RMS differences, scale-based
 percentages, sampled arrays, settings, coordinates, and a figure under `results/`.
 The report documents sampling and interpolation limits. No accuracy threshold
 or convergence certificate is implied by a successful run.
+
+## Initial Transient Investigation
+
+```bat
+python scripts/check_initial_transient.py
+```
+
+Runs six short 1C simulations over 120 seconds with half-second output. It
+separates radial and through-cell refinement for positive particle and surface
+concentrations, including 80-to-160 comparisons. Two interior query grids expose
+sampling sensitivity. Reports locate each maximum in time, x and r, and retain
+settings and sampled arrays. This diagnostic does not certify the full discharge
+or distinguish interpolation error from discretization error exactly.

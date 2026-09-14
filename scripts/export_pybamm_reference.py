@@ -19,12 +19,21 @@ import pybamm
 
 
 def run_discharge(points: int = 20, period: str = "10 seconds", *,
-                  rtol: float = 1e-6, atol: float = 1e-8):
+                  rtol: float = 1e-6, atol: float = 1e-8,
+                  radial_points: int | None = None, duration_s: float | None = None):
     """Solve the shared protocol with specified mesh and solver tolerances."""
     model = pybamm.lithium_ion.DFN(options={"thermal": "isothermal"})
     parameters = pybamm.ParameterValues("Chen2020")
     protocol = "Discharge at 1C for 2 hours or until 2.5 V"
+    if duration_s is not None:
+        if not np.isfinite(duration_s) or duration_s <= 0:
+            raise ValueError("duration_s must be positive and finite")
+        protocol = f"Discharge at 1C for {duration_s:g} seconds or until 2.5 V"
     mesh = {name: points for name in ("x_n", "x_s", "x_p", "r_n", "r_p")}
+    if radial_points is not None:
+        if not isinstance(radial_points, int) or radial_points < 2:
+            raise ValueError("radial_points must be an integer >= 2")
+        mesh.update(r_n=radial_points, r_p=radial_points)
     solver = pybamm.IDAKLUSolver(rtol=rtol, atol=atol)
     simulation = pybamm.Simulation(
         model,
