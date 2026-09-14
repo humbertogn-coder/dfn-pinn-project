@@ -157,3 +157,18 @@ The exporter reopens the file and checks exact equality against the simulation
 before naming it `reference.h5`. Outputs live in a new directory under `results/`.
 See [HDF5 schema](docs/HDF5_SCHEMA.md). Successful export verifies data fidelity,
 not physical accuracy or mesh convergence.
+
+## Visualize Stored Internal Fields
+
+```bat
+python scripts/plot_internal_fields.py
+```
+
+Reads the latest `results/internal_fields_*/reference.h5`, prints the chosen
+path, and generates three figures without importing or running PyBaMM. Use
+`--input PATH_TO_REFERENCE_H5` to select a specific file. New timestamped plot
+directories are created beside the input file. A JSON manifest records the
+source, actual sampled times, and electrode positions used for radial profiles.
+Figures show concentrations and currents at the start, near mid-discharge, and
+at cutoff. Radial curves use native centers, not exact particle boundaries.
+This visualization is not an accuracy or convergence certificate.
