@@ -201,3 +201,17 @@ concentrations, including 80-to-160 comparisons. Two interior query grids expose
 sampling sensitivity. Reports locate each maximum in time, x and r, and retain
 settings and sampled arrays. This diagnostic does not certify the full discharge
 or distinguish interpolation error from discretization error exactly.
+
+## Fast Radial Transient
+
+```bat
+python scripts/check_fast_radial_transient.py
+```
+
+Compares 80, 160, and 320 radial points in both electrodes for five seconds,
+with 0.05-second output samples and fixed 80-point through-cell meshes. Full
+particle concentrations are compared on the r80 native centers; surface values
+are compared separately without radial interpolation. CSV metrics, JSON settings
+and peak locations, NPZ samples, and a figure are saved under `results/`.
+This query grid differs from the earlier 20-center transient study. Maxima
+between output samples remain unresolved; no exact-reference claim is made.
