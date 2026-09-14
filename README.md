@@ -111,3 +111,22 @@ Voltage differences use shared one-second output times; cutoff times are
 compared separately. The tightest run is a provisional reference, not an exact
 solution. These sampled voltage checks do not certify internal-state accuracy,
 conservation, or behavior between output samples.
+
+## Current and Lithium Conservation
+
+```bat
+python scripts/check_conservation.py
+```
+
+This audits the baseline discharge at 80 points/domain with `rtol=1e-8` and
+`atol=1e-10`. Reaction-derived electrode currents are compared with the applied
+current, using oxidation-positive signs (+I negative, -I positive). Lithium
+inventories are summed across both electrodes and the electrolyte. Individual
+electrode changes are also compared with the applied charge divided by Faraday's
+constant. The CSV, JSON report, and plot are saved under `results/`.
+
+The audit uses PyBaMM's spatial averages and inventories, not an independent
+integration of exported fields. It reports sampled global balance residuals
+without imposing a pass threshold. Small balances alone do not establish local
+state accuracy or mesh convergence. These equations apply to the current model
+without side reactions and must be revisited if degradation is introduced.
