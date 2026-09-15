@@ -38,3 +38,31 @@ metadata; they are not measured file sizes. Keep the existing HDF5 provisional.
 holding r320 fixed. It uses the same provisional limits and sampling windows.
 A sampled pass is evidence for this pair, not a certificate for all times,
 boundaries, or a combined spatial/radial reference choice.
+
+## Fine Startup Sampling Audit
+
+`python scripts/check_radial_320_640.py --fine-startup` compares x80/r320 and
+x80/r640 over 0-0.2 s at 0.0005 s output spacing. Nested subsets at 0.001 s and
+0.05 s show how the reported maximum depends on output sampling. The existing
+1 mV and 0.1% concentration-scale limits remain unchanged. These are subsets of
+the same solver runs, not independent integration-step convergence studies.
+The audit does not establish a rigorous bound between output times.
+
+### Observed Fine-Startup Result
+
+Run `radial_320_640_fine_20260914T235112394264Z`, PyBaMM 26.8.0.0:
+
+| Quantity | Densest sampled maximum | Peak time |
+|---|---|---|
+| Voltage difference | 0.55696939 mV | 0.0285 s |
+| Negative surface concentration difference | 1.6719641 mol/m3 | 0.0045 s |
+| Positive surface concentration difference | 13.288261 mol/m3 | 0.0265 s |
+
+All three satisfy the existing limits. The 0.05-second grid missed part of each
+peak. Refining the output grid from 0.001 to 0.0005 seconds changes the voltage
+maximum by 0.00002655 mV, negative surface maximum by 0.002898 mol/m3, and positive
+surface maximum by 0.0008779 mol/m3. This supports closing the identified
+first-output-sample concern for these quantities at the present working limits.
+It is not a formal continuous-time bound or certification of other fields.
+The current exported x80/r80 HDF5 is unchanged; selection and export of a new
+working reference remain separate steps.

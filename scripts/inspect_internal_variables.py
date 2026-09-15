@@ -25,11 +25,12 @@ def coordinate_record(mesh, size, axis, domains):
             "values": values.tolist()}
 
 
-def collect_inventory():
+def collect_inventory(*, radial_points=80, output_period_s=10, duration_s=None):
     """Return the solved reference and checked inventory for reuse by exporters."""
-    print("Inspecting DFN internal fields: 80 points/domain, 10-second outputs...", flush=True)
+    print(f"Inspecting DFN fields: x80/r{radial_points}, output={output_period_s:g}s...", flush=True)
     solution, parameters, protocol, mesh, elapsed = run_discharge(
-        80, "10 seconds", rtol=1e-8, atol=1e-10
+        80, f"{output_period_s:g} seconds", rtol=1e-8, atol=1e-10,
+        radial_points=radial_points, duration_s=duration_s
     )
     specs = []
     for domain, suffix in (("Negative", "n"), ("Positive", "p")):
@@ -53,8 +54,10 @@ def collect_inventory():
     t = np.asarray(solution["Time [s]"].entries).reshape(-1)
     if not np.all(np.isfinite(t)) or not np.all(np.diff(t) > 0):
         raise RuntimeError("Invalid time coordinates.")
-    if abs(float(solution["Voltage [V]"].entries[-1]) - 2.5) > 0.01:
+    if duration_s is None and abs(float(solution["Voltage [V]"].entries[-1]) - 2.5) > 0.01:
         raise RuntimeError("The voltage cutoff was not reached.")
+    if duration_s is not None and abs(t[-1] - duration_s) > 1e-8:
+        raise RuntimeError("Requested short-run duration was not reached.")
     records = []
     for identifier, name, unit, role in specs:
         variable = solution[name]
@@ -96,7 +99,7 @@ def collect_inventory():
         "python_version": platform.python_version(), "model": "isothermal DFN",
         "parameter_set": "Chen2020", "protocol": protocol, "initial_soc": 1.0,
         "mesh_points": mesh, "rtol": 1e-8, "atol": 1e-10, "solver": "IDAKLUSolver",
-        "output_period_s": 10, "solve_wall_time_s": elapsed,
+        "output_period_s": output_period_s, "solve_wall_time_s": elapsed,
         "termination": str(solution.termination),
         "time": {"unit": "s", "values": t.tolist()},
         "layer_thicknesses_m": {d: float(parameters[f"{d} thickness [m]"])

@@ -282,3 +282,28 @@ onto shared interior x80/r80 targets; electrolyte regions stay separate.
 Startup runs cover 0-5 s at 0.05 s output spacing; full runs use 10 s outputs.
 The 5-10 s interval and intersample extrema remain unresolved by this study.
 The default command without `--study` still performs the radial assessment.
+
+## Fine Startup Sampling Audit
+
+```bat
+python scripts/check_radial_320_640.py --fine-startup
+```
+
+Uses 0.0005-second outputs over the first 0.2 seconds and compares the maxima
+captured by nested 0.05, 0.001 and 0.0005-second grids. Radial resolutions and
+acceptance limits are unchanged. This is an output-sampling audit, not a change
+to solver tolerances. The report records peak times and gaps to the densest
+sampled maximum. Earlier default 10-second runs remain supported.
+
+## Export Working Reference v1
+
+```bat
+python scripts/export_working_reference.py
+```
+
+Exports x80/r320 as three independently solved, verified HDF5 files: full
+discharge, startup, and fine startup. A completed manifest records mesh, time
+intervals, file sizes, and SHA-256 hashes. See [the selection decision](docs/WORKING_REFERENCE.md)
+for supporting evidence and remaining limitations. The previous x80/r80 files
+are preserved. To plot a new file, pass its explicit path with
+`python scripts/plot_internal_fields.py --input PATH_TO_FULL_H5`.
