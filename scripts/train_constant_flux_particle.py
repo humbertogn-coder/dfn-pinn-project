@@ -37,6 +37,41 @@ class FluxNet(nn.Module):
         return 1+.2*self.layers(features)
 
 
+class StartupFluxNet(nn.Module):
+    """Hard initial value, square-root time and a surface-layer input.
+
+    The exact-time-zero branch defines values only, not the right time
+    derivative at the incompatible corner. Physics is evaluated for t>0.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.layers = nn.Sequential(nn.Linear(3, 32), nn.Tanh(), nn.Linear(32, 32),
+                                    nn.Tanh(), nn.Linear(32, 1)).double()
+
+    def forward(self, p):
+        tau = p[:, 2:3]
+        positive = tau > 0
+        root = torch.sqrt(torch.where(positive, tau, torch.ones_like(tau)))
+        rho2 = p[:, :1]**2
+        layer = torch.exp(-(1-rho2)/(4*root))
+        features = torch.cat((2*rho2-1, 2*root/np.sqrt(END_TIME)-1, 2*layer-1), dim=1)
+        return torch.where(positive, 1+root*self.layers(features), 1+p[:, :1]*0)
+
+
+def build_model(variant):
+    """Preserve baseline random sampling despite different parameter counts."""
+    baseline = FluxNet()
+    if variant == "baseline":
+        return baseline
+    if variant != "startup":
+        raise ValueError("Unknown variant")
+    sampling_state = torch.get_rng_state()
+    model = StartupFluxNet()
+    torch.set_rng_state(sampling_state)
+    return model
+
+
 def terms(model, interior, initial, surface):
     pde = diffusion_residual(model, interior, SCALES).square().mean()
     ic = (model(initial)-1).square().mean()
@@ -69,7 +104,8 @@ def assess(model):
     error = prediction-exact
     positive = np.abs(error[:, 1:])
     peak = np.unravel_index(positive.argmax(), positive.shape)
-    residual = diffusion_residual(model, p, SCALES).detach().numpy().reshape(rr.shape)
+    positive_points = make_points(torch.tensor(rr[:, 1:].ravel()), torch.tensor(tt[:, 1:].ravel()))
+    residual = diffusion_residual(model, positive_points, SCALES).detach().numpy()
     metrics = {
         "initial_max_error": float(np.abs(error[:, 0]).max()),
         "positive_time_max_error": float(positive.max()),
@@ -82,7 +118,7 @@ def assess(model):
         "center_max_gradient": float(center.abs().max()),
         "max_volume_mean_balance_error": float(np.abs(means-(1-3*times)).max()),
         "max_volume_mean_change_error": float(np.abs(means-means[0]+3*times).max()),
-        "positive_time_pde_rms": float(np.sqrt(np.mean(residual[:, 1:]**2))),
+        "positive_time_pde_rms": float(np.sqrt(np.mean(residual**2))),
         "series_512_1024_max_difference": float(series_gap),
     }
     return metrics, dict(rho=radii, tau=times, prediction=prediction, reference=exact,
@@ -92,6 +128,7 @@ def assess(model):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--variant", choices=("baseline", "startup"), default="baseline")
     parser.add_argument("--adam-steps", type=int, default=2000)
     parser.add_argument("--lbfgs-steps", type=int, default=300)
     args = parser.parse_args()
@@ -100,7 +137,7 @@ def main():
     torch.manual_seed(args.seed)
     torch.set_num_threads(1)
     torch.use_deterministic_algorithms(True)
-    model = FluxNet()
+    model = build_model(args.variant)
     sample = torch.rand(512, 2, dtype=torch.float64)
     rho = .001+.999*sample[:, 0]
     rho[256:] = 1-.3*sample[256:, 0]
@@ -130,6 +167,7 @@ def main():
         return loss
 
     print("Training constant-flux sphere: uniform initial state, outward flux=1.", flush=True)
+    print(f"Variant: {args.variant}", flush=True)
     for step in range(args.adam_steps):
         optimizer.step(closure)
         if (step+1) % 500 == 0:
@@ -148,12 +186,13 @@ def main():
     report = {"config": vars(args), "torch_version": torch.__version__, "dtype": "float64",
               "device": "cpu", "threads": 1, "training_s": elapsed, "metrics": metrics,
               "time_interval": [0, END_TIME], "minimum_positive_time": MIN_TIME,
-              "diffusion_number": 1, "architecture": [2, 32, 32, 1],
+              "diffusion_number": 1, "architecture": [3 if args.variant == "startup" else 2, 32, 32, 1],
+              "initial_condition": "hard" if args.variant == "startup" else "soft",
               "interior_points": 512, "initial_points": 101, "surface_points": 128,
               "loss_weights": {"pde": 1, "initial": 100, "surface": 1},
               "adam_evaluations": adam_evaluations, "lbfgs_evaluations": len(history)-adam_evaluations,
               "scope": "Synthetic constant unit flux, one seed. No interior training labels, "
-                       "no conservation loss. Initial and flux conditions are soft; exact corner "
+                       "no conservation loss. Flux is soft; initial enforcement depends on variant. Exact corner "
                        "excluded from flux loss. Grid RMS uses logarithmic time sampling, not "
                        "physical-time weighting. Sampled diagnostics, not acceptance certification."}
     (output/"report.json").write_text(json.dumps(report, indent=2)+"\n", encoding="utf-8")

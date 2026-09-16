@@ -30,6 +30,47 @@ not just accepted optimizer iterates. This difficult startup case can have
 larger errors than the closed sphere. Completion is not an accuracy pass;
 review metrics before increasing model complexity or running a seed study.
 
+## Startup Variant
+
+Run `python scripts/train_constant_flux_particle.py --variant startup`.
+Default `--variant baseline` retains the original representation. Each run
+creates a new output directory and records its variant in report.json.
+
+The startup representation is `c=1+sqrt(t)*NN(rho^2,sqrt(t),layer)` for t>0,
+with `layer=exp(-(1-rho^2)/(4*sqrt(t)))` and c=1 at exactly zero. Center
+symmetry is preserved. This encodes a diffusion-length-inspired input, not
+the exact solution or interior labels. The t=0 branch supplies initial values
+only; no time derivative or PDE residual at zero is interpreted physically.
+
+The original 2x32 hidden architecture is retained but input dimension changes
+from two to three (32 additional weights). Initial loss is now identically zero;
+the nominal loss weights and optimizer budgets are unchanged. Collocation points
+are identical for a given seed, verified by a test. Weight initializations differ
+because the input architecture differs. This is a combined representation change,
+not an isolated test of initial enforcement or equal computational cost.
+The same positive-time evaluation and analytic reference are used for both.
+
+Startup run `constant_flux_pinn_20260916T193334358803Z`, seed 42, unchanged
+optimizer budgets, compared with the recorded baseline below:
+
+| Diagnostic | Baseline | Startup variant |
+|---|---:|---:|
+| Initial maximum error | 3.029476e-2 | 0 (hard constraint) |
+| Positive-time maximum concentration error | 2.687363e-2 | 1.864060e-3 |
+| Positive-time RMS concentration error | 3.595663e-3 | 1.849001e-4 |
+| Early maximum error, t <= 1e-3 | 2.687363e-2 | 2.459259e-4 |
+| Later maximum error, t > 1e-3 | 7.986483e-3 | 1.864060e-3 |
+| Maximum surface flux residual | 3.170935e-2 | 3.094076e-2 |
+| Maximum mean balance error | 1.598407e-4 | 4.901422e-4 |
+| Positive-time PDE RMS | 2.516330e-2 | 2.740897e-1 |
+
+The startup variant improves concentration accuracy but worsens mean balance
+and sampled PDE residual. It is not an across-the-board improvement and is not
+approved as a full-DFN building block. Its peak concentration error moved to
+rho=1, t=0.009292938. The figure was inspected and all 104 tests passed.
+Next: localize the PDE residual in radius/time and audit near-surface sampling
+before tuning losses. Do not infer derivative accuracy from concentration error.
+
 ## Recorded Baseline
 
 Run `constant_flux_pinn_20260916T192311166926Z`, seed 42, default settings:
