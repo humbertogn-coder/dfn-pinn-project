@@ -1,6 +1,7 @@
 """Physics-only PINN pilot for a sphere with suddenly applied unit outward flux."""
 
 import argparse
+import hashlib
 from datetime import datetime, timezone
 import json
 from pathlib import Path
@@ -80,6 +81,21 @@ def terms(model, interior, initial, surface):
     return pde, ic, flux
 
 
+def sample_interior(sample, sampling="legacy"):
+    """Map the same 512 uniform pairs to a fixed collocation design."""
+    if sample.shape != (512, 2) or sampling not in ("legacy", "full_radius"):
+        raise ValueError("Expected 512 pairs and a known sampling design")
+    rho = .001+.999*sample[:, 0]
+    rho[256:] = 1-.3*sample[256:, 0]
+    tau = MIN_TIME+(END_TIME-MIN_TIME)*sample[:, 1]
+    tau[256:] = MIN_TIME*(END_TIME/MIN_TIME)**sample[256:, 1]
+    if sampling == "full_radius":
+        index = torch.arange(128, device=sample.device)
+        rho[384:] = .001+.999*((index % 16+sample[384:, 0])/16)
+        tau[384:] = MIN_TIME*(END_TIME/MIN_TIME)**((index // 16+sample[384:, 1])/8)
+    return rho, tau
+
+
 def assess(model):
     radii = np.linspace(0, 1, 101)
     times = np.r_[0., np.geomspace(MIN_TIME, END_TIME, 120)]
@@ -129,6 +145,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--variant", choices=("baseline", "startup"), default="baseline")
+    parser.add_argument("--sampling", choices=("legacy", "full_radius"), default="legacy")
     parser.add_argument("--adam-steps", type=int, default=2000)
     parser.add_argument("--lbfgs-steps", type=int, default=300)
     args = parser.parse_args()
@@ -138,11 +155,9 @@ def main():
     torch.set_num_threads(1)
     torch.use_deterministic_algorithms(True)
     model = build_model(args.variant)
+    initial_weights_sha256 = hashlib.sha256(b"".join(p.detach().numpy().tobytes() for p in model.parameters())).hexdigest()
     sample = torch.rand(512, 2, dtype=torch.float64)
-    rho = .001+.999*sample[:, 0]
-    rho[256:] = 1-.3*sample[256:, 0]
-    tau = MIN_TIME+(END_TIME-MIN_TIME)*sample[:, 1]
-    tau[256:] = MIN_TIME*(END_TIME/MIN_TIME)**sample[256:, 1]
+    rho, tau = sample_interior(sample, args.sampling)
     interior = make_points(rho, tau)
     initial = make_points(torch.linspace(0, 1, 101, dtype=torch.float64), torch.zeros(101, dtype=torch.float64))
     bt = torch.cat((torch.linspace(MIN_TIME, END_TIME, 64, dtype=torch.float64),
@@ -168,6 +183,7 @@ def main():
 
     print("Training constant-flux sphere: uniform initial state, outward flux=1.", flush=True)
     print(f"Variant: {args.variant}", flush=True)
+    print(f"Sampling: {args.sampling}; early inner points: {int(((rho<.7)&(tau<=1e-4)).sum())}", flush=True)
     for step in range(args.adam_steps):
         optimizer.step(closure)
         if (step+1) % 500 == 0:
@@ -184,6 +200,8 @@ def main():
         datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ"))
     output.mkdir(exist_ok=False)
     report = {"config": vars(args), "torch_version": torch.__version__, "dtype": "float64",
+              "initial_weights_sha256": initial_weights_sha256,
+              "early_inner_points": int(((rho<.7)&(tau<=1e-4)).sum()),
               "device": "cpu", "threads": 1, "training_s": elapsed, "metrics": metrics,
               "time_interval": [0, END_TIME], "minimum_positive_time": MIN_TIME,
               "diffusion_number": 1, "architecture": [3 if args.variant == "startup" else 2, 32, 32, 1],
@@ -195,6 +213,9 @@ def main():
                        "no conservation loss. Flux is soft; initial enforcement depends on variant. Exact corner "
                        "excluded from flux loss. Grid RMS uses logarithmic time sampling, not "
                        "physical-time weighting. Sampled diagnostics, not acceptance certification."}
+    np.savez_compressed(output/"training_points.npz", interior=interior.detach().numpy(),
+                        initial=initial.detach().numpy(), surface=surface.detach().numpy())
+    report["training_points_sha256"] = hashlib.sha256((output/"training_points.npz").read_bytes()).hexdigest()
     (output/"report.json").write_text(json.dumps(report, indent=2)+"\n", encoding="utf-8")
     torch.save(model.state_dict(), output/"model.pt")
     np.savez_compressed(output/"evaluation.npz", **arrays)

@@ -13,7 +13,7 @@ from matplotlib.colors import LogNorm
 import numpy as np
 import torch
 
-from train_constant_flux_particle import build_model, make_points, MIN_TIME, END_TIME, SCALES
+from train_constant_flux_particle import build_model, make_points, sample_interior, MIN_TIME, END_TIME, SCALES
 from dfn_pinn.spherical_diffusion import _derivatives
 
 
@@ -60,7 +60,7 @@ def physical_quadrature(radial_order, time_order):
     return rho, wr, times, wt
 
 
-def resolve_run(results, variant, explicit=None):
+def resolve_run(results, variant, explicit=None, sampling="legacy"):
     if explicit is not None:
         candidates = [Path(explicit)]
     else:
@@ -70,7 +70,8 @@ def resolve_run(results, variant, explicit=None):
         if not report_path.is_file():
             continue
         report = json.loads(report_path.read_text(encoding="utf-8"))
-        if report["config"].get("variant", "baseline") == variant:
+        if (report["config"].get("variant", "baseline") == variant
+                and report["config"].get("sampling", "legacy") == sampling):
             return path, report
     raise ValueError(f"No completed {variant} run found")
 
@@ -86,11 +87,25 @@ def load_run(path, report, variant):
     with torch.random.fork_rng(devices=[]):
         torch.manual_seed(report["config"]["seed"])
         model = build_model(variant)
-        sample = torch.rand(512, 2, dtype=torch.float64).numpy()
-    rho = .001+.999*sample[:, 0]
-    rho[256:] = 1-.3*sample[256:, 0]
-    tau = MIN_TIME+(END_TIME-MIN_TIME)*sample[:, 1]
-    tau[256:] = MIN_TIME*(END_TIME/MIN_TIME)**sample[256:, 1]
+        initial_hash = hashlib.sha256(b"".join(p.detach().numpy().tobytes() for p in model.parameters())).hexdigest()
+        sample = torch.rand(512, 2, dtype=torch.float64)
+        r, t = sample_interior(sample, report["config"].get("sampling", "legacy"))
+    rho, tau = r.numpy(), t.numpy()
+    if "initial_weights_sha256" in report and report["initial_weights_sha256"] != initial_hash:
+        raise ValueError("Reconstructed initial weights differ")
+    if "training_points_sha256" in report:
+        artifact = path/"training_points.npz"
+        if hashlib.sha256(artifact.read_bytes()).hexdigest() != report["training_points_sha256"]:
+            raise ValueError("Training point checksum mismatch")
+        with np.load(artifact, allow_pickle=False) as saved:
+            points = saved["interior"]
+            if points.shape != (512, 3) or not np.isfinite(points).all():
+                raise ValueError("Invalid saved training points")
+            if not np.array_equal(points[:, 0], rho) or not np.array_equal(points[:, 2], tau):
+                raise ValueError("Saved/reconstructed collocation mismatch")
+            rho, tau = points[:, 0], points[:, 2]
+    elif report["config"].get("sampling", "legacy") != "legacy":
+        raise ValueError("New samplers must archive training points")
     model.load_state_dict(torch.load(path/"model.pt", map_location="cpu", weights_only=True), strict=True)
     model.eval()
     with np.load(path/"evaluation.npz", allow_pickle=False) as saved:
@@ -112,11 +127,18 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--baseline", type=Path)
     parser.add_argument("--startup", type=Path)
+    parser.add_argument("--sampling-comparison", action="store_true",
+                        help="Compare startup legacy vs full-radius sampling, not architectures")
     args = parser.parse_args()
     torch.set_num_threads(1)
     root = Path(__file__).resolve().parents[1]
-    paths = {v: resolve_run(root/"results", v, getattr(args, v)) for v in ("baseline", "startup")}
-    left, right = (paths[v][1] for v in ("baseline", "startup"))
+    if args.sampling_comparison:
+        if args.baseline or args.startup:
+            parser.error("Explicit architecture paths cannot be combined with --sampling-comparison")
+        paths = {s: resolve_run(root/"results", "startup", sampling=s) for s in ("legacy", "full_radius")}
+    else:
+        paths = {v: resolve_run(root/"results", v, getattr(args, v)) for v in ("baseline", "startup")}
+    left, right = (item[1] for item in paths.values())
     for key in ("seed", "adam_steps", "lbfgs_steps"):
         if left["config"][key] != right["config"][key]:
             raise ValueError(f"Comparison settings differ: {key}")
@@ -129,7 +151,7 @@ def main():
     reports, arrays, training_coordinates = {}, {"rho": rho, "tau": tau}, []
     for variant, (path, report) in paths.items():
         print(f"Reading {variant}: {path}", flush=True)
-        model, train_r, train_t, gap = load_run(path, report, variant)
+        model, train_r, train_t, gap = load_run(path, report, report["config"].get("variant", "baseline"))
         training_coordinates.append(np.stack((train_r, train_t)))
         train_residual = residual_components(model, train_r, train_t)[2]
         dt, diffusion, residual = [v.reshape(rr.shape) for v in residual_components(model, rr.ravel(), tt.ravel())]
@@ -159,6 +181,7 @@ def main():
                           "residual": float(residual[peak]), "time_derivative": float(dt[peak]),
                           "diffusion_term": float(diffusion[peak])},
                  "volume_time_rms": weighted, "regions": regions}
+        entry["early_inner_training_count"] = int(((train_r < .7)&(train_t <= 1e-4)).sum())
         reports[variant] = entry
         arrays.update({f"{variant}_residual": residual, f"{variant}_time_derivative": dt,
                        f"{variant}_diffusion": diffusion, f"{variant}_train_rho": train_r,
@@ -166,12 +189,16 @@ def main():
         print(f"{variant}: training RMS={entry['training']['rms']:.6e}, original grid RMS={old_rms:.6e}")
         print(f"  Dense peak: |R|={abs(residual[peak]):.6e}, rho={rho[peak[0]]:.6f}, tau={tau[peak[1]]:.6e}")
         print(f"  Volume/time RMS: coarse={weighted['r64_t4x16']:.6e}, fine={weighted['r128_t8x16']:.6e}", flush=True)
-    if not np.array_equal(*training_coordinates):
+    identical = np.array_equal(*training_coordinates)
+    if not args.sampling_comparison and not identical:
         raise ValueError("Reconstructed training points differ between variants")
+    if args.sampling_comparison and identical:
+        raise ValueError("Sampling experiment unexpectedly used identical points")
     output = root/"results"/("flux_residual_diagnosis_"+datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ"))
     output.mkdir(exist_ok=False)
     np.savez_compressed(output/"residual_maps.npz", **arrays)
-    payload = {"variants": reports, "training_points_identical": True,
+    payload = {"variants": reports, "training_points_identical": identical,
+               "comparison": "sampling" if args.sampling_comparison else "representation",
                "scope": "No retraining. Same-seed checkpoints and existing evaluation reproduced. "
                         "Training points reconstructed from current source/RNG, not archived points. "
                         "Map includes boundaries as diagnostic limits; not all map points are interior PDE points. "

@@ -55,3 +55,19 @@ def test_startup_gradients_and_matching_samples():
     assert ic.item() == 0
     (pde+ic+bc).backward()
     assert all(p.grad is not None and torch.isfinite(p.grad).all() for p in model.parameters())
+
+
+def test_sampling_only_change_and_coverage():
+    torch.manual_seed(42)
+    model = pilot.build_model("startup")
+    before = [p.detach().clone() for p in model.parameters()]
+    sample = torch.rand(512, 2, dtype=torch.float64)
+    original = sample.clone()
+    legacy_r, legacy_t = pilot.sample_interior(sample)
+    r, t = pilot.sample_interior(sample, "full_radius")
+    assert torch.equal(sample, original)
+    assert torch.equal(r[:384], legacy_r[:384]) and torch.equal(t[:384], legacy_t[:384])
+    assert len(r) == 512 and ((r > 0) & (r <= 1)).all()
+    assert ((t >= pilot.MIN_TIME) & (t <= pilot.END_TIME)).all()
+    assert ((r < .7) & (t <= 1e-4)).sum() > 0
+    assert all(torch.equal(p, old) for p, old in zip(model.parameters(), before))
