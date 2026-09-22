@@ -71,3 +71,18 @@ def test_sampling_only_change_and_coverage():
     assert ((t >= pilot.MIN_TIME) & (t <= pilot.END_TIME)).all()
     assert ((r < .7) & (t <= 1e-4)).sum() > 0
     assert all(torch.equal(p, old) for p, old in zip(model.parameters(), before))
+
+
+def test_surface_layer_preserves_core_and_total_budget():
+    torch.manual_seed(42)
+    pilot.build_model("startup")
+    sample = torch.rand(512, 2, dtype=torch.float64)
+    old_r, old_t = pilot.sample_interior(sample, "full_radius")
+    r, t = pilot.sample_interior(sample, "surface_layer")
+    assert r.shape == t.shape == (512,)
+    for section in (slice(0, 320), slice(384, 512)):
+        assert torch.equal(r[section], old_r[section])
+        assert torch.equal(t[section], old_t[section])
+    assert ((r<.7)&(t<=1e-4)).sum() == ((old_r<.7)&(old_t<=1e-4)).sum()
+    assert ((1-r<=.001)&(t<=1e-4)).sum() >= 24
+    assert ((r>0)&(r<1)).all() and ((t>=pilot.MIN_TIME)&(t<=pilot.END_TIME)).all()

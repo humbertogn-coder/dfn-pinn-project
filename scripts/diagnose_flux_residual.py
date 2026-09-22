@@ -13,7 +13,7 @@ from matplotlib.colors import LogNorm
 import numpy as np
 import torch
 
-from train_constant_flux_particle import build_model, make_points, sample_interior, MIN_TIME, END_TIME, SCALES
+from train_constant_flux_particle import build_model, make_points, predict, sample_interior, MIN_TIME, END_TIME, SCALES
 from dfn_pinn.spherical_diffusion import _derivatives
 
 
@@ -71,7 +71,8 @@ def resolve_run(results, variant, explicit=None, sampling="legacy"):
             continue
         report = json.loads(report_path.read_text(encoding="utf-8"))
         if (report["config"].get("variant", "baseline") == variant
-                and report["config"].get("sampling", "legacy") == sampling):
+                and report["config"].get("sampling", "legacy") == sampling
+                and report["config"].get("mass_weight", 0) == 0):
             return path, report
     raise ValueError(f"No completed {variant} run found")
 
@@ -111,7 +112,7 @@ def load_run(path, report, variant):
     with np.load(path/"evaluation.npz", allow_pickle=False) as saved:
         rr, tt = np.meshgrid(saved["rho"], saved["tau"], indexing="ij")
         with torch.no_grad():
-            actual = model(make_points(torch.tensor(rr.ravel()), torch.tensor(tt.ravel()))).numpy().reshape(rr.shape)
+            actual = predict(model, make_points(torch.tensor(rr.ravel()), torch.tensor(tt.ravel()))).numpy().reshape(rr.shape)
         discrepancy = float(np.abs(actual-saved["prediction"]).max())
         if not np.allclose(actual, saved["prediction"], atol=1e-12, rtol=1e-12):
             raise ValueError("Loaded model does not reproduce archived predictions")
@@ -129,13 +130,20 @@ def main():
     parser.add_argument("--startup", type=Path)
     parser.add_argument("--sampling-comparison", action="store_true",
                         help="Compare startup legacy vs full-radius sampling, not architectures")
+    parser.add_argument("--surface-layer-comparison", action="store_true",
+                        help="Compare startup full-radius vs targeted surface-layer sampling")
     args = parser.parse_args()
     torch.set_num_threads(1)
     root = Path(__file__).resolve().parents[1]
+    if args.sampling_comparison and args.surface_layer_comparison:
+        parser.error("Choose one sampling comparison")
+    if args.surface_layer_comparison:
+        args.sampling_comparison = True
     if args.sampling_comparison:
         if args.baseline or args.startup:
             parser.error("Explicit architecture paths cannot be combined with --sampling-comparison")
-        paths = {s: resolve_run(root/"results", "startup", sampling=s) for s in ("legacy", "full_radius")}
+        pair = ("full_radius", "surface_layer") if args.surface_layer_comparison else ("legacy", "full_radius")
+        paths = {s: resolve_run(root/"results", "startup", sampling=s) for s in pair}
     else:
         paths = {v: resolve_run(root/"results", v, getattr(args, v)) for v in ("baseline", "startup")}
     left, right = (item[1] for item in paths.values())

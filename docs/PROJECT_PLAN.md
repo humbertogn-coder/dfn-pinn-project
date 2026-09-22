@@ -78,6 +78,20 @@ Estimated time: 4-8 weeks.
 
 ## Immediate Next Ticket
 
-Create `scripts/export_pybamm_reference.py`.
+Status reviewed 2026-09-20: Phase 2 is in progress. A working PyBaMM reference,
+HDF5 pipeline, constitutive/kinetic/projection primitives and spherical residual
+tests exist. A no-flux particle PINN was tested with five seeds. Switched-flux
+particle training still has startup accuracy tradeoffs. No coupled DFN PINN has
+been trained; implemented projection/kinetic primitives do not complete Phase 3.
 
-The script should start small: run one 1C PyBaMM DFN simulation and print/save enough metadata to prove the solver, parameters, and protocol are reproducible.
+The next controlled experiment targets thin early surface layers while keeping
+512 collocation points and preserving early-core coverage. Do not indefinitely
+tune one synthetic case: establish an explicit accuracy budget and a go/no-go
+review before coupling electrolyte and charge residuals.
+
+Remaining effort estimates from this status, assuming regular researcher work:
+roughly 4-8 weeks for a first coupled DFN PINN prototype, 3-5 months for a strong
+comparative/inverse study, and 5-8 months for a manuscript-ready study including
+experimental evaluation. These are planning ranges, not calendar promises or
+computed completion percentages. Convergence, identifiability and data access
+may extend them. HPRC research deployment remains to be verified separately.
