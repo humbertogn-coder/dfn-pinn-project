@@ -19,3 +19,6 @@
 - Preserve the documented ramp startup overshoot and wrong-sign flux limitation.
 - Do not infer full DFN validation or resume training, seed studies, Grace jobs,
   or coupling work from historical next-step notes; await an explicit new request.
+- The owner subsequently authorized the next stage after uploading the closeout.
+  Current bounded work is documented in `docs/PARTICLE_COUPLING_STAGE.md`;
+  the closed pilot's limitations remain in force.

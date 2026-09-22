@@ -90,6 +90,10 @@ has been trained. Future work requires a new owner decision.
 
 ## Historical Planning Context
 
+Subsequent owner authorization: the next stage starts with the local physical
+particle-inventory/current contract. See `PARTICLE_COUPLING_STAGE.md`. The
+pilot remains closed; no new full-DFN training or Grace deployment is implied.
+
 Status reviewed 2026-09-20: Phase 2 is in progress. A working PyBaMM reference,
 HDF5 pipeline, constitutive/kinetic/projection primitives and spherical residual
 tests exist. A no-flux particle PINN was tested with five seeds. Switched-flux
