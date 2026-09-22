@@ -76,7 +76,19 @@ Estimated time: 4-8 weeks.
 - strong research result: 3-5 months
 - serious publishable result: 5-8 months
 
-## Immediate Next Ticket
+## Pilot Closeout (2026-09-22)
+
+The single-particle exploratory pilot is CLOSED at the owner's request after
+the final ramp audit. Read `PILOT_CLOSEOUT.md` for evidence, reproducible paths
+and retained limitations. Constant-flux projection passed exploratory targets
+across five seeds. The ramp has one seed, a small concentration overshoot and
+an incorrect local flux sign at early time despite excellent global inventory.
+No further training, seeds, Grace runs or DFN coupling are scheduled.
+
+The overall research project and Phase 2 are not complete: no coupled DFN PINN
+has been trained. Future work requires a new owner decision.
+
+## Historical Planning Context
 
 Status reviewed 2026-09-20: Phase 2 is in progress. A working PyBaMM reference,
 HDF5 pipeline, constitutive/kinetic/projection primitives and spherical residual
@@ -84,10 +96,11 @@ tests exist. A no-flux particle PINN was tested with five seeds. Switched-flux
 particle training still has startup accuracy tradeoffs. No coupled DFN PINN has
 been trained; implemented projection/kinetic primitives do not complete Phase 3.
 
-The next controlled experiment targets thin early surface layers while keeping
+The then-proposed controlled experiment targeted thin early surface layers while keeping
 512 collocation points and preserving early-core coverage. Do not indefinitely
 tune one synthetic case: establish an explicit accuracy budget and a go/no-go
-review before coupling electrolyte and charge residuals.
+review before coupling electrolyte and charge residuals. This historical ticket
+is superseded by the closeout above, not an instruction to resume experiments.
 
 Remaining effort estimates from this status, assuming regular researcher work:
 roughly 4-8 weeks for a first coupled DFN PINN prototype, 3-5 months for a strong
