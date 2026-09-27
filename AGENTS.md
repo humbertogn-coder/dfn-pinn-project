@@ -22,3 +22,16 @@
 - The owner subsequently authorized the next stage after uploading the closeout.
   Current bounded work is documented in `docs/PARTICLE_COUPLING_STAGE.md`;
   the closed pilot's limitations remain in force.
+
+- The owner approved the revised full-DFN methodology on 2026-09-25.
+  Read `docs/RESEARCH_ROADMAP_V2.md` and `docs/DFN_PDE_AUDIT.md` for current
+  scope, evidence and the next bounded step. Do not silently resume old plans.
+  Historical audit integration is documented in `docs/DFN_COMBINED_AUDIT.md`;
+  the completed bounded dry run is documented in `docs/DFN_DRY_RUN.md`.
+  The first completed full-budget baseline and its failed independent audit
+  are recorded in `docs/DFN_FULL_BASELINE.md`. Preserve this C0 result. The
+  next bounded decision is the controlled current-constraint comparison;
+  do not extend budgets, relabel C0 as soft-current C, or claim validation.
+  The hard-current variant building block and bounded technical probe are
+  documented in `docs/DFN_PROJECTED_CURRENT.md`. A full projected comparison
+  still requires explicit variant-aware loading and independent audits.

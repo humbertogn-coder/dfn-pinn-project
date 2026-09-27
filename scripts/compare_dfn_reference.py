@@ -11,6 +11,7 @@ import numpy as np
 import torch
 
 from dfn_pinn.dfn_smoke import DFNSmoke
+from dfn_pinn.dfn_full_run import verify_checkpoint
 
 
 def digest(path):
@@ -56,12 +57,14 @@ def main():
     if digest(reference / "reference.h5") != ref_report["reference_sha256"]:
         raise ValueError("Reference data hash mismatch")
     saved = torch.load(run / "checkpoint.pt", weights_only=True, map_location="cpu")
-    if saved["settings"] != training["settings"] or saved["settings"] != ref_report["settings"]:
-        raise ValueError("Checkpoint/reference settings mismatch")
+    checkpoint_hash = digest(run / "checkpoint.pt")
+    verify_checkpoint(saved, training, ref_report, checkpoint_hash,
+                      digest(root / "configs/dfn_baseline_v1.json"))
     torch.set_num_threads(1)
     model = DFNSmoke(saved["settings"])
     model.load_state_dict(saved["model"])
     model.eval()
+    model.requires_grad_(False)
     with torch.no_grad():
         for key, value in model.snapshot(saved["samples"]).items():
             torch.testing.assert_close(value, saved["predictions"][key], rtol=0, atol=0)
@@ -115,7 +118,9 @@ def main():
                 results[key] = metrics(predicted, expected, scale, limit)
     output = run / ("reference_comparison_" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ"))
     output.mkdir()
-    report = {"status": "SMOKE_DIAGNOSTIC_ONLY", "metrics": results,
+    if digest(run / "checkpoint.pt") != checkpoint_hash:
+        raise ValueError("Checkpoint changed during field comparison")
+    report = {"status": "FIELD_DIAGNOSTIC_ONLY", "metrics": results,
               "criteria": "Exploratory field-error screening, not full physical acceptance. Fixed before future training; not preregistered for this existing smoke.",
               "limitations": "Sampled native-grid comparison only. No independent PDE, flux, interface or global inventory acceptance audit. Fine mesh is provisional; no rigorous error bounds.",
               "checkpoint_sha256": digest(run / "checkpoint.pt"),
@@ -125,7 +130,7 @@ def main():
     (output / "report.json").write_text(json.dumps(report, indent=2, allow_nan=False), encoding="utf-8")
     for key, value in results.items():
         print(f"{key}: max={value['max_abs_error']:.6e}, limit={value['limit']:.6e}, pass={value['pass']}")
-    print(f"SMOKE_DIAGNOSTIC_ONLY; no training. Report: {output / 'report.json'}")
+    print(f"FIELD_DIAGNOSTIC_ONLY; no training. Report: {output / 'report.json'}")
 
 
 if __name__ == "__main__":
