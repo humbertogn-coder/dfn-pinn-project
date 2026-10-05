@@ -1,0 +1,35 @@
+{
+  "name": "v2_forward_1C_t3300",
+  "description": "Same as v2_forward_1C.json but the training/time domain extends to 3300 s so that the 3000 s data window ends at an interior point (test of the end-of-domain voltage error, docs/V2_RESULTS.md 7).",
+  "reference": "results/v2_reference/ref_I5A_t3300s_ramp30s_x80_r120.npz",
+  "protocol": {
+    "current_A": 5.0,
+    "ramp_s": 30.0,
+    "t_end_s": 3300.0
+  },
+  "cell": {},
+  "train": {
+    "seed": 0,
+    "dtype": "float32",
+    "width": 64,
+    "depth": 4,
+    "kinetics": "inverse",
+    "projection": true,
+    "inventory": "soft",
+    "fourier_t": 4,
+    "n_electrode": 512,
+    "n_separator": 128,
+    "n_particle": 1024,
+    "n_boundary": 128,
+    "adam_steps": 20000,
+    "lr": 0.002,
+    "lr_final": 2e-05,
+    "adaptive": true,
+    "lbfgs_iters": 0,
+    "log_every": 250,
+    "eval_every": 2000,
+    "checkpoint_every": 5000,
+    "salt_conservation": true,
+    "collector_bc": "hard"
+  }
+}

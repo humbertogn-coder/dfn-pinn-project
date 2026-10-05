@@ -1,5 +1,9 @@
 # Direct-Kinetics Hard-Current Projection
 
+Update: the subsequent matched full-budget attempt and its independent failed
+audit are documented in DFN_PROJECTED_FULL.md. The original probe evidence
+below is preserved; it was not a physical acceptance result.
+
 Status: implemented and technically probed; no full-budget ablation or physical
 acceptance. September 26, 2026 local time (September 27 UTC artifacts).
 

@@ -6,10 +6,9 @@ import json
 from pathlib import Path
 import torch
 
-from dfn_pinn.dfn_smoke import DFNSmoke
 from dfn_pinn.dfn_balance_audit import audit_balances
 from dfn_pinn.dfn_pde_audit import audit_pdes
-from dfn_pinn.dfn_full_run import verify_checkpoint
+from dfn_pinn.dfn_variants import verify_checkpoint, restore_model
 from prepare_dfn_baseline import sha256, verify_reference
 
 
@@ -32,8 +31,7 @@ def main():
     saved = torch.load(checkpoint, weights_only=True, map_location='cpu')
     verify_checkpoint(saved, training, reference, before, sha256(config_path))
     torch.set_num_threads(1)
-    model = DFNSmoke(saved['settings'])
-    model.load_state_dict(saved['model'])
+    model = restore_model(saved)
     model.eval()
     model.requires_grad_(False)
     with torch.no_grad():
@@ -45,7 +43,7 @@ def main():
         raise ValueError('Checkpoint changed during audit')
     for name, value in model.state_dict().items():
         torch.testing.assert_close(value, saved['model'][name], rtol=0, atol=0)
-    result.update({'checkpoint_sha256': before, 'config_sha256': sha256(config_path),
+    result.update({'variant': saved.get('variant'), 'checkpoint_sha256': before, 'config_sha256': sha256(config_path),
                    'reference_sha256': reference['reference_sha256'], 'replay_exact': True,
                    'checkpoint_unmodified': True, 'source_hashes': {str(p.relative_to(root)): sha256(p)
                     for p in [Path(__file__), root/'scripts/prepare_dfn_baseline.py', *sorted((root/'src/dfn_pinn').glob('*.py'))]}})

@@ -1,0 +1,35 @@
+{
+  "name": "v2_forward_1C",
+  "description": "Forward DFN PINN, Chen2020 (LG M50), 5 A (1C) discharge from SOC 1 with a 30 s tanh current ramp, 0-3000 s. Reference used only for evaluation. fourier_t=4 adds sin/cos(2 pi k t) time features (k=1..4), which removed the systematic 2.6 mV voltage bias of the plain (2t-1, 2g-1) inputs (docs/V2_RESULTS.md 2e). collector_bc=hard makes the zero-flux / zero-current conditions at the two collectors exact (docs/V2_RESULTS.md 7); the soft version violated them at the graphite-staging current peaks.",
+  "reference": "results/v2_reference/ref_I5A_t3000s_ramp30s_x80_r120.npz",
+  "protocol": {
+    "current_A": 5.0,
+    "ramp_s": 30.0,
+    "t_end_s": 3000.0
+  },
+  "cell": {},
+  "train": {
+    "seed": 0,
+    "dtype": "float32",
+    "width": 64,
+    "depth": 4,
+    "kinetics": "inverse",
+    "projection": true,
+    "inventory": "soft",
+    "fourier_t": 4,
+    "n_electrode": 512,
+    "n_separator": 128,
+    "n_particle": 1024,
+    "n_boundary": 128,
+    "adam_steps": 20000,
+    "lr": 0.002,
+    "lr_final": 2e-05,
+    "adaptive": true,
+    "lbfgs_iters": 0,
+    "log_every": 250,
+    "eval_every": 2000,
+    "checkpoint_every": 5000,
+    "salt_conservation": true,
+    "collector_bc": "hard"
+  }
+}

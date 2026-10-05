@@ -1,0 +1,43 @@
+{
+  "name": "v2_inverse_synthetic",
+  "description": "Synthetic inverse problem (1C, 1 mV Gaussian noise on the 436 reference voltage samples): recover the multipliers of D_p, k_n and D_n (true value 1) starting from 2.5, 0.4 and 0.6, with fields and parameters trained jointly from scratch. Parameter choice from scripts/v2_identifiability.py (CRLB at 1C: 0.6 %, 3 %, 4.5 %). Warm start from a forward run with --init is optional.",
+  "reference": "results/v2_reference/ref_I5A_t3000s_ramp30s_x80_r120.npz",
+  "protocol": {
+    "current_A": 5.0,
+    "ramp_s": 30.0,
+    "t_end_s": 3000.0
+  },
+  "cell": {},
+  "train": {
+    "seed": 1,
+    "dtype": "float32",
+    "width": 64,
+    "depth": 4,
+    "kinetics": "inverse",
+    "projection": true,
+    "adam_steps": 15000,
+    "lr": 0.002,
+    "lr_final": 2e-05,
+    "adaptive": true,
+    "log_every": 250,
+    "eval_every": 2500,
+    "checkpoint_every": 2500,
+    "inverse_params": [
+      "D_p",
+      "k_n",
+      "D_n"
+    ],
+    "inverse_init": {
+      "D_p": 2.5,
+      "k_n": 0.4,
+      "D_n": 0.6
+    },
+    "data_path": "results/v2_reference/data_V_I5A_t3000s.npz",
+    "data_noise_mV": 1.0,
+    "data_scale_mV": 1.0,
+    "param_lr": 0.01,
+    "fourier_t": 4,
+    "inventory": "soft",
+    "collector_bc": "hard"
+  }
+}

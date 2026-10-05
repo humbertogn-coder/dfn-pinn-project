@@ -10,8 +10,7 @@ import h5py
 import numpy as np
 import torch
 
-from dfn_pinn.dfn_smoke import DFNSmoke
-from dfn_pinn.dfn_full_run import verify_checkpoint
+from dfn_pinn.dfn_variants import verify_checkpoint, restore_model
 
 
 def digest(path):
@@ -61,8 +60,7 @@ def main():
     verify_checkpoint(saved, training, ref_report, checkpoint_hash,
                       digest(root / "configs/dfn_baseline_v1.json"))
     torch.set_num_threads(1)
-    model = DFNSmoke(saved["settings"])
-    model.load_state_dict(saved["model"])
+    model = restore_model(saved)
     model.eval()
     model.requires_grad_(False)
     with torch.no_grad():
@@ -120,7 +118,7 @@ def main():
     output.mkdir()
     if digest(run / "checkpoint.pt") != checkpoint_hash:
         raise ValueError("Checkpoint changed during field comparison")
-    report = {"status": "FIELD_DIAGNOSTIC_ONLY", "metrics": results,
+    report = {"status": "FIELD_DIAGNOSTIC_ONLY", "metrics": results, "variant": saved.get('variant'),
               "criteria": "Exploratory field-error screening, not full physical acceptance. Fixed before future training; not preregistered for this existing smoke.",
               "limitations": "Sampled native-grid comparison only. No independent PDE, flux, interface or global inventory acceptance audit. Fine mesh is provisional; no rigorous error bounds.",
               "checkpoint_sha256": digest(run / "checkpoint.pt"),

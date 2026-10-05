@@ -1,0 +1,40 @@
+{
+  "status": "SPECIFICATION_ONLY_NOT_EXECUTABLE",
+  "experiment": "joint_kinetics_feasibility_v1",
+  "source_run": "results/paired_confined_startup_20260929T090202400051Z",
+  "checkpoint": "confined_0200.pt",
+  "checkpoint_sha256": "08e37dcad1002a268c694d8c46fe7b1baf853a95c9e7e055a1776841e3d199f0",
+  "source_report_sha256": "b900d8b65f6ba03ce9378d0df908d4928df5d87b285881e618d89dbadf3b0110",
+  "samples_sha256": "cdda49f0f1de9c65eff5bf1fa2452dc55af78dad1967ca0d9b62f479f354f8ff",
+  "arms": ["joint_direct", "joint_inverse"],
+  "initialization": "Identical copies of the pinned confined checkpoint; fresh full-model Adam states",
+  "trainable_scope": "All model parameters; no frozen reaction or electrolyte branches",
+  "unchanged": ["physical settings", "architecture", "hard solid-current boundaries", "confined particle representation", "training samples", "nonkinetic residual definitions", "unit term weights"],
+  "direct_kinetic_residual": "(j - direct_bv(eta,j0,T))/j_ref",
+  "inverse_kinetic_residual": "(eta - inverse_bv(j,j0,T))/phi_ref",
+  "common_kinetic_audit": "abs(j-direct_bv(eta,j0,T))/j_ref, for both arms",
+  "term_count": 34,
+  "training": {
+    "adam_steps_per_arm": 200,
+    "learning_rate": 0.001,
+    "lbfgs_steps": 0,
+    "milestones": [0, 20, 50, 100, 200],
+    "paired_wall_cap_s": 1200,
+    "dtype": "float64",
+    "device": "cpu",
+    "threads": 1,
+    "automatic_extension": false,
+    "reference_labels_in_loss": false
+  },
+  "evaluation": {
+    "additional_sampling_seed": 20261001,
+    "minimum_positive_time_s": 0.000001,
+    "acceptance_config": "configs/dfn_baseline_v1.json",
+    "milestone_diagnostics": ["per-equation PDE RMS and maxima", "particle flux", "local inventory", "common direct kinetic consistency", "interior total current", "interface and boundary residuals", "concentration ranges"],
+    "diagnostics_are_full_validation": false
+  },
+  "stop_policy": "Stop the affected arm on nonfinite values/gradients, invalid constitutive domain, sampled out-of-range concentration or identity/replay failure. Preserve failure; no clipping or silent retries.",
+  "decision_policy": "Report each physical metric, not different raw kinetic losses as if equivalent. No automatic full run. Full acceptance still requires all unchanged independent reference/balance/PDE criteria; missing evidence is INCOMPLETE.",
+  "implementation_requirements": ["explicit joint direct/inverse variant metadata", "shared learned j in every physical term", "all branches unfrozen", "strict source identity and paired initialization checks", "common physical audit adapter", "optimizer checkpoint replay"],
+  "scope": "One warm-start feasibility pair, not the original C-F factorial study or a robustness claim"
+}

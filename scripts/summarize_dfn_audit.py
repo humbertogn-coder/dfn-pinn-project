@@ -8,8 +8,8 @@ from pathlib import Path
 import torch
 
 from dfn_pinn.dfn_audit_summary import combine
-from dfn_pinn.dfn_smoke import DFNSmoke
-from dfn_pinn.dfn_full_run import verify_checkpoint, completion_gate
+from dfn_pinn.dfn_full_run import completion_gate
+from dfn_pinn.dfn_variants import verify_checkpoint, restore_model
 from prepare_dfn_baseline import sha256, verify_reference
 
 
@@ -35,15 +35,17 @@ def main():
     saved = torch.load(checkpoint, weights_only=True, map_location='cpu')
     verify_checkpoint(saved, training, reference, checkpoint_hash, sha256(config_path))
     torch.set_num_threads(1)
-    model = DFNSmoke(saved['settings']).eval().requires_grad_(False)
-    model.load_state_dict(saved['model'])
+    model = restore_model(saved).eval().requires_grad_(False)
     with torch.no_grad():
         for name, value in model.snapshot(saved['samples']).items():
             torch.testing.assert_close(value, saved['predictions'][name], rtol=0, atol=0)
     paths = {key: run/getattr(args, key) for key in ('fields', 'balances', 'pdes')}
     reports = {key: json.loads(path.read_text()) for key, path in paths.items()}
+    if any(report.get('variant') != saved.get('variant') for report in reports.values()):
+        raise ValueError('Component report variant mismatch')
     result = combine(reports, config, saved['settings'], checkpoint_hash,
                      reference['reference_sha256'], sha256(config_path), training)
+    result['variant'] = saved.get('variant')
     if completion_gate(training, config):
         result['completion'] = training['completion']
         result['status'] = {'FAIL': 'FULL_ATTEMPT_AUDITED_FAIL',

@@ -1,5 +1,42 @@
 # Research Direction v2
 
+## Current Decision (September 29)
+
+September 30 potential diagnosis: see `DFN_CHARGE_KINETIC_OFFSETS.md`.
+Frozen kinetics has a negative-electrode potential-level deficit, while
+electrolyte spatial slopes remain insufficient for the applied current.
+Disposable constant shifts separate the effects but do not solve the DFN.
+Next specify a controlled potential level/shape intervention; no new
+representation or training has run. This supersedes next-step notes below.
+
+September 30 closeout: the fixed inventory-weight pair is complete; see
+`DFN_INVENTORY_WEIGHT_RESULTS.md`. Exact control replay passed. Inventory
+improves but negative diffusion and positive surface flux worsen; charge and
+kinetics remain unsolved. Close the experiment without another weight search
+or automatic training extension. Earlier implementation-pending notes below
+are historical.
+
+Latest: the recorded-loss review is complete; see
+`DFN_LOSS_WEIGHTING_DECISION.md`. The next specified intervention isolates
+particle-inventory weighting in a matched direct-kinetics pair, with unchanged
+physical acceptance criteria. No weighted trainer or new run exists yet.
+This supersedes the next-step suggestions below, not their recorded evidence.
+
+Update: the joint direct/inverse feasibility pair is now implemented and
+complete; see `DFN_JOINT_KINETICS_RESULTS.md`. Both 200-step runs trained all
+fields and passed technical replay checks, but fail multiple common physical
+criteria. Close this pair without automatic extensions or architecture changes.
+The specification status mentioned below is historical, not current execution.
+
+The local potential/particle representation sequence is closed with partial,
+unvalidated improvements. See `DFN_PAIRED_CONFINED_STARTUP.md` and
+`DFN_JOINT_TRAINING_DECISION.md`. The next bounded implementation is a matched
+joint direct/inverse kinetic feasibility pair on the same confined candidate,
+with all fields trainable and unchanged common physical acceptance criteria.
+The pinned config is specification-only; this experiment has not run. This
+supersedes earlier next-step notes below, not historical results or the planned
+C-F factorial study. No further local variant or full-budget run is automatic.
+
 Recorded September 25, 2026 after the owner's updated methodology and approval
 to proceed. This document supersedes historical next-step suggestions, not
 historical results. All closed-pilot limitations and failed trials remain.
@@ -67,16 +104,20 @@ or hidden kinetic regularization may be introduced as an unreported change.
    result; indefinite baseline convergence is not required before ablations.
 6. Controlled C-F feasibility experiments, then matched seeds and longer
    protocols if warranted. Consider Grace only for justified larger jobs.
-   The direct-kinetics hard-current building block and 20-step technical probe
-   are complete; see DFN_PROJECTED_CURRENT.md. Variant-aware full-run loading
-   and the first full projected comparison remain next.
+   The direct-kinetics hard-current building block, technical probe, explicit
+   variant loading and one matched full C0/F comparison are complete. Both
+   full attempts failed physical criteria; see DFN_PROJECTED_FULL.md. Frozen
+   charge/kinetic/flux gradient diagnosis is now complete; see
+   DFN_GRADIENT_DIAGNOSIS.md for saturation, scaling and sampling evidence.
 7. Synthetic inverse recovery with noise, parameter sensitivities and
    correlations, then held-out experimental protocols if feasible.
 
 Steps 1-5 have evidence, including one failed full-budget C0 attempt. The next
-step is a full controlled current-constraint ablation following its completed
-technical probe, not an unbounded baseline retry. No full ablation campaign,
-sweep or Grace job has been executed.
+step is a controlled potential-representation/scaling proposal informed by
+the frozen diagnosis, not an unbounded retry. Projection fixed source
+integrals but not local physics. Keep representation changes distinct from
+the planned direct/inverse kinetics comparison.
+No multi-seed ablation campaign, sweep or Grace job has been executed.
 
 ## Literature and Data Follow-up
 
