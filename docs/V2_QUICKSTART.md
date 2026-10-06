@@ -180,3 +180,85 @@ default): `kinetics=hard` (phi_e defined by inverse BV in the electrodes),
 `inventory=derived` (j derived from the learned particle mean),
 `causal=true` (causal time weights), `x_edge_fraction=0.3` (denser sampling
 at the separator side), `adaptive=false fixed_group_weights={...}`.
+
+## 6. Aged cells / commercial-cell data (step C)
+
+Aging enters the inverse problem through five new parameters of `DFNPINN`
+(V2_RESULTS.md section 8): `theta_n0`, `theta_p0` (initial stoichiometries,
+loss of lithium inventory), `eps_am_n`, `eps_am_p` (active-material volume
+fractions, loss of active material; they scale the specific area a = 3
+eps_am / R everywhere, the hard current projection included) and `R0`
+(lumped series resistance in Ohm, applied to the measured terminal voltage
+only: V_terminal = V_electrochemical - R0 I). All are multipliers of the
+fresh Chen2020 values except R0, which is linear (`R0_SCALE` = 5 mOhm per
+unit, so `param_log_bound = 0.7` allows +/- 3.5 mOhm).
+
+Synthetic stand-in for the LG M50 degradation data set (PyBaMM DFN +
+O'Kane 2022 degradation, 1C CC-CV cycling at 25 C; about 8 s per cycle with
+`--coarse`):
+
+```bat
+python scripts/v2_make_aging_dataset.py --cycles 200 --save-every 25 --coarse --out results/aging_synthetic/cellA
+```
+
+Each saved cycle is `cycles/cycle_XXXX.npz` with t, I, V of the discharge and
+the true aged state (theta_n0, theta_p0, eps_am_n, eps_am_p, SEI thickness,
+LLI/LAM, capacity); `summary.csv` collects them. The real data set is
+converted to the same layout with
+
+```bat
+python scripts/v2_import_lgm50.py --cell-dir <folder of cell p1c1> --out results/aging_lgm50/p1c1 --every 50
+```
+
+(generic reader: one long table with a cycle column or one file per cycle;
+column names are matched case-insensitively; the discharge is the block of
+|I| > 0.5 A with the largest voltage drop. Adjust `COLUMN_ALIASES` /
+`TRUTH_ALIASES` to the real files.) One cycle is then inverted with
+
+```bat
+python scripts/v2_inverse_aging.py --cycle results/aging_synthetic/cellA/cycles/cycle_0200.npz --init results/v2_runs/<fresh forward run>/final.pt --name aging_c200
+```
+
+The CC part of the discharge defines the protocol (current, duration), the
+voltage for t >= 100 s is the data (the real current is a step, the PINN
+uses a 30 s ramp), the networks start from the fresh forward model (the
+architecture is taken from the checkpoint) and the estimates, the truth and
+the misfit are written to `aging_result.json`. Config:
+`configs/v2_inverse_aging.json` (10 000 steps, 500-step parameter warm-up,
+`lr` 5e-4 for the warm-started fields).
+
+
+## 7. Li-SPAN reference model (`src/dfn_pinn/lispan`, 2026-10-06)
+
+Finite-volume reference of the Simanjuntak 2024 Li-SPAN cell (no PyBaMM needed; scipy only).
+
+```bash
+# discharges at several rates + comparison with the paper's digitized curves (Fig. 4b, Z_CC = 0.025)
+python scripts/lispan_discharge.py --crates 0.05 0.1 0.2 1 --zcc 0.025 --out results/lispan/ref_Zcc0.025
+# Z_CC = 0 against Fig. 6a (the cleanest comparison) + species against Fig. 5a
+python scripts/lispan_discharge.py --crates 0.1 1 --zcc 0 --out results/lispan/ref_Zcc0 --fig6a
+# re-digitize the paper (needs poppler's pdftoppm and the open-access PDF in ../references/)
+python scripts/lispan_digitize_paper.py
+# refit the three effective frequency factors to Fig. 6a
+python scripts/lispan_fit_paper.py --out results/lispan/fit_k0.json
+python -m pytest tests/test_lispan_reference.py -q      # 7 tests, ~1 min
+```
+
+Python use:
+
+```python
+from dfn_pinn.lispan import LiSPANParams, LiSPANProtocol, solve, export, load
+p = LiSPANParams(Z_CC=0.025)                      # paper defaults; k0 are the fitted effective values
+model, res = solve(p, LiSPANProtocol.from_crate(0.1))
+res["t"], res["V"], res["Q_mAh_gS"], res["c_S4"], res["c_S"], res["eps_L"], res["dphi"], res["phi_e"], res["i_e"]
+```
+
+What is and is not fixed by the paper (effective kinetics, irreversible reaction 3, S2- references) is in
+`docs/LI_SPAN_MODEL_FORMULATION.md` section 5.
+
+## 8. Aging data: stress-induced diffusion
+
+`scripts/v2_make_aging_dataset.py --no-stress-diffusion` generates synthetic aged cells without PyBaMM's
+stress-induced diffusion (on by default with particle mechanics; V2_RESULTS.md section 8 end). Use
+`--ramp 1.0` in `scripts/v2_aging_mismatch_diagnosis.py` and `ramp_s <= 1 s` in the aging inverse: the data
+have a current step.

@@ -1,172 +1,361 @@
 # Li-SPAN continuum model: formulation for a numerical reference and a PINN
 
-Status: working draft (2026-10-03). Source: E.K. Simanjuntak, T. Danner, P. Wang,
-M.R. Buchmeiser, A. Latz, "A novel modeling approach for sulfurized
-polyacrylonitrile (SPAN) electrodes in Li metal batteries", Electrochimica Acta
-497 (2024) 144571, https://doi.org/10.1016/j.electacta.2024.144571 (open access,
-CC BY 4.0).
-
-The main text gives the reaction network, rate laws and all parameter values,
-but the complete transport equations are in the Supporting Information (SI),
-which is NOT yet in this repository. Items marked **[SI]** must be checked
-against it before any result is reported. Items marked **[assumption]** are my
-reconstruction from the main text and from the authors' earlier framework
-(Danner et al., Electrochim. Acta 184 (2015) 124; Danner & Latz, Electrochim.
-Acta 322 (2019) 134719).
+Status: equations complete (2026-10-05); numerical reference implemented and validated against Figs 5a, 6a, 6b (2026-10-06, section 5).
+Source: E.K. Simanjuntak, T. Danner, P. Wang, M.R. Buchmeiser, A. Latz, "A
+novel modeling approach for sulfurized polyacrylonitrile (SPAN) electrodes in
+Li metal batteries", Electrochimica Acta 497 (2024) 144571,
+https://doi.org/10.1016/j.electacta.2024.144571 (open access, CC BY 4.0), main
+text + Supplementary Material (SI, 17 pp., equations S1-S42, Table S1, Figs
+S1-S5). Equation numbers below: (n) = main text, (Sn) = SI. Items still
+marked **[open]** are the only ones not fixed by paper + SI.
 
 ## 1. What changes with respect to the DFN
 
 | Aspect | Li-ion DFN (Chen2020) | Li-SPAN (Simanjuntak 2024) |
 | --- | --- | --- |
-| Negative electrode | porous graphite, particle diffusion | Li metal foil = planar interface at y = L_tot (BV, U = 0) |
-| Positive electrode | NMC particles with radial diffusion | SPAN: sulfur covalently bound to PAN; **no solid diffusion**, 4 local species |
-| Reactions | 1 intercalation reaction per electrode | 3 sequential electrochemical reactions + Li2S precipitation (chemical) |
-| Electrolyte species | binary salt LiPF6 | Li+, PF6-, S2- (S2- trace, 1e-12 to 1e-3 mol/m3) |
-| Solid phases | fixed | Li2S volume fraction grows; porosity decreases |
-| Extra physics | none in benchmark | double layer (0.1 F/m2), contact resistance Z_CC |
+| Negative electrode | porous graphite, particle diffusion | Li metal foil, not resolved: planar plating/stripping reaction at y = L_tot (S7-S10), U_eq,0 = 0 V |
+| Positive electrode | NMC particles with radial diffusion | SPAN: sulfur covalently bound to PAN; **no solid-state diffusion**, 4 local species c_S4, c_S3, c_S2, c_S1 (ODEs in time at each y) |
+| Reactions | 1 intercalation reaction per electrode | 3 sequential electrochemical SPAN reactions (1)-(3) + Li2S precipitation (9), chemical, on cathode surfaces |
+| Electrolyte species | binary salt LiPF6 (concentrated-solution theory) | Li+, PF6-, S2- with Nernst-Planck fluxes (S17-S19) and CST-equivalent D_Li+, D_PF6- (S20-S21); S2- trace species |
+| Solid phases | fixed | Li2S volume fraction grows (S39); porosity (S42) and active areas (S40-S41) change |
+| Extra physics | none in the benchmark | double layer current i_DL = a_SPAN c_DL d(Delta phi)/dt (S30); contact resistance Z_CC (S38) |
 | Coordinates | (x, r, t) | (y, t) only |
 
 The PINN therefore loses the radial dimension (cheaper) but gains several
 local state variables, multi-reaction kinetics, a trace species spanning nine
-orders of magnitude and a nucleation-type threshold.
+orders of magnitude and a precipitation threshold.
 
-## 2. Geometry and parameters (paper Tables 1-3)
+## 2. Geometry and parameters (main text Tables 1-3, SI Table S1)
 
-* y = 0 cathode current collector, y = L_cat = 100 um cathode/separator,
-  y = L_tot = L_cat + L_sep, L_sep = 618 um (two Whatman GF separators,
-  2 x 309 um), Li foil at y = L_tot.
-* Cathode volume fractions: carbon+binder 0.032, SPAN 0.0945, Li2S 1e-5
-  (initial), porosity 0.87; specific SPAN area a = 1e7 1/m; Li2S surface
-  exponent xi = 1.5 **[SI: definition of the Li2S surface area]**.
-* Separator solid fraction 0.11, porosity 0.89; Bruggeman 1.5 (cathode),
-  1 (separator).
-* Electrolyte 1 M LiPF6 in EC:DEC: D_LiPF6 2.52e-10 m2/s (concentration
-  dependent, Lundgren 2014 **[SI: functional form]**), D_S2- 4.7e-10 m2/s,
-  t+ 0.1625, kappa 0.796 S/m **[SI: kappa(c)]**, thermodynamic factor 1.6.
-* Initial: c_Li+ = 1000.02, c_PF6- = 1000, c_S2- = 0.01 mol/m3.
-* SPAN conductivity 1 S/m; double layer 0.1 F/m2; Z_CC = 0.025 Ohm m2
-  (Table 2; the text quotes best agreement at 0.035 Ohm m2, to be clarified).
+Two cells appear in the paper. The **validated cell** (main text, Figs 4-6,
+compared with experiments) is the one to reproduce first:
+
+* y = 0 cathode current collector, y = L_cat = 100 um cathode/separator
+  interface, y = L_tot = L_cat + L_sep, L_sep = 618 um (two Whatman GF
+  separators, 2 x 309 um), Li foil surface at y = L_tot (anode not resolved).
+* Cathode: carbon+binder eps_CB = 0.032 (rho 1810 kg/m3), SPAN eps_SPAN =
+  0.0945 (rho 1440 kg/m3), Li2S eps_Li2S,0 = 1e-5 (rho 1659 kg/m3), porosity
+  0.87; a_SPAN,0 = 1e7 1/m; surface exponent xi = 1.5; Bruggeman beta_cat = 1.5.
+* Separator: glass fibre eps_sep = 0.11, porosity 0.89, Bruggeman beta_sep = 1.
+* Electrolyte 1 M LiPF6 in EC:DEC: D_LiPF6 = 2.52e-10 m2/s, D_S2- = 4.7e-10
+  m2/s (constant), t+ = 0.1625, kappa = 0.796 S/m, thermodynamic factor
+  (1 + dln f/dln c) = 1.6. The paper uses the concentration-dependent Lundgren
+  2014 correlations for D_LiPF6(c), kappa(c) **[open: functional forms not in
+  the SI; use the 1 M values as constants first, the salt gradients at <= 1C
+  (1 mA/cm2) are small]**.
+* Initial: c_Li+ = 1000.02, c_PF6- = 1000, c_S2- = 0.01 mol/m3; SPAN species
+  c_S4 = 598, c_S3 = c_S2 = c_S1 = 1e-5 mol/m3 (Table 2); reference
+  concentrations 598, 598, 598, 1196 mol/m3 for S4, S3Li, S2Li, S1Li
+  (volume basis: cathode volume, consistent with eps_SPAN rho_SPAN and the
+  capacity 47.45 Ah/m2 of Table S1 for the designed cell).
+* SPAN conductivity kappa_SPAN = 1 S/m (kappa_eff = kappa_SPAN eps_SPAN^beta,
+  S34); double layer c_DL = 0.1 F/m2; Z_CC = 0.025 Ohm m2 (Table 2; main
+  text quotes best agreement at 0.035 Ohm m2, Fig. 6).
 * 1/10 C = 0.1 mA/cm2 (1 C = 10 A/m2); voltage window 1.0-3.0 V. Temperature
-  not stated **[assumption: 298.15 K]**.
+  **[open: not stated; assume 298.15 K]**.
+
+The **designed cell** of SI Table S1 (eps_SPAN 0.6, L_sep 20 um, L_an 25 um,
+526 Wh/kg) is only used for the energy-density projections (S43-S62) and is
+not needed for the PINN.
 
 ## 3. Reaction network (discharge direction)
 
     (1) 1/2 PAN-S4-PAN + e- + Li+  ->  1/2 PAN-S3Li + 1/2 PAN-S1Li
     (2) 1/2 PAN-S3Li  + e-         ->  1/2 PAN-S2Li + 1/2 S2-
     (3) 1/2 PAN-S2Li  + e-         ->  1/2 PAN-S1Li + 1/2 S2-
-    (4) 2 Li+ + S2-               <=>  Li2S(s)            (chemical, on cathode surfaces)
-    (A) Li+ + e-                  <=>  Li(s)              (anode, planar)
+    (9) 2 Li+ + S2-               <=>  Li2S(s)            (chemical, cathode surfaces only)
+    (S7) Li+ + e-                 <=>  Li(s)              (anode surface, planar)
 
-Six electrons per PAN-S4-PAN chain (1.5 e- per S, i.e. 75 % of 1672 mAh/gS),
-consistent with the ~1250 mAh/gS capacity in the paper. Initial c_S4 = 598
-mol/m3 (electrode volume **[SI: confirm volume basis]**); the reference
-concentrations are 598, 598, 598 and 1196 mol/m3 for S4, S3Li, S2Li, S1Li.
+n = 1 electron per reaction step (1)-(3). Six electrons per PAN-S4-PAN chain
+(1.5 e- per S, 75 % of the 1672 mAh/gS of elemental sulfur), consistent with
+the ~1250 mAh/gS capacity in the paper and with the SI statement that chains
+of length 8 to 2 are reducible (C_SPAN,theo = 6/8 C_S8 w_SPAN, S47).
 
-### Rate laws (paper Eqs. 4-8, 10-14)
+### Rate laws (S1-S6, main text (4)-(8), (10)-(14))
 
-For electrochemical reaction i (n = 1), with reduction counted positive:
+Generalized Butler-Volmer form for every reaction m (S1):
 
-    R_i = k0_i a_ed^(1-alpha) a_prod^alpha [exp(-alpha dmu_i/RT) - exp((1-alpha) dmu_i/RT)]
-    dmu_i = F (phi_s - phi_e - U_i)
-    U_i  = U0_i - b_i zeta_i + (RT/F) ln(a_ed / a_prod),   zeta_i = 1 - c~_reactant
+    r_m = k0_m a_ed^(1-alpha_m) a_prod^alpha_m [exp(-alpha_m dmu_m/RT) - exp((1-alpha_m) dmu_m/RT)]
+    a_ed = prod_i a_i^|nu_i|  (educts),  a_prod = prod_i a_i^|nu_i|  (products)   (S2-S3)
+    a_i = c_i / c_i^0  (ideal solution; solids 1; SPAN species a = gamma c~)      (S4)
+    dmu_m = sum_i nu_i mu_i,  mu_i = mu_i^0 + RT ln a_i + z_i F phi_k             (S5-S6)
 
-a_ed and a_prod are products of activities raised to |stoichiometric
-coefficient| (ideal electrolyte, c~ = c/c_ref; SPAN species a = gamma c~).
-The paper's Eq. 7-8 combine Delta mu0 and RT ln gamma into the linear
-U0 - b zeta; whether the ln(a_ed/a_prod) term is kept separately in U_i
-**[SI]**. Parameters: k0 = 1e-2, 1e-2, 1e-4 mol/m2/s; U0 = 2.2, 1.9, 1.66 V;
-b = 0.3, 0.28, 0.62 V; alpha = 0.5.
+SPAN reactions (main text):
 
-Li2S: R_Li2S = k0_Li2S (a_Li+^2 a_S2-)^alpha [exp(-alpha dmu/RT) - exp((1-alpha) dmu/RT)],
-dmu = RT ln K_sp - RT ln(a_Li+^2 a_S2-), K_sp = 10, k0_Li2S = 2e2 mol/m2/s.
-Anode: BV with k0 = 3.94 mol/m2/s, alpha = 0.5, U = 0.
+    dmu_Sx = F (phi_elode - phi_elyte - U_Sx^eq)
+    U_Sx^eq = (1/F) [dmu0_Sx + RT ln gamma_Sx(c~_Sx) + RT ln(c~_ed / c~_prod)]      (7)
+    U_Sx^eq,ref = U_Sx^eq,0 - b_Sx zeta_Sx,   zeta_Sx = 1 - c~_Sx                    (8)
 
-## 4. Governing equations [assumption, to be verified against SI]
+i.e. the standard + activity-coefficient part is a straight line in the local
+reaction coordinate zeta (fitted to the measured OCV, Table 3), and the
+ln(c~_ed/c~_prod) term of (7) remains. Parameters (Table 3): k0 = 1e-2,
+1e-2, 1e-4 mol/m2/s; U^eq,0 = 2.2, 1.9, 1.66 V; b = 0.3, 0.28, 0.62 V;
+alpha = 0.5.
+
+Li2S (S11-S16, (9)-(10)): r_Li2S = k0_Li2S (a_Li+ a_S2-)^alpha [exp(-alpha dmu/RT) - exp((1-alpha) dmu/RT)],
+dmu_Li2S = RT ln K_sp - RT ln(a_Li+ a_S2-), K_sp = exp(dmu0/RT) = 10, k0 = 2e2
+mol/m2/s. (Both main text (10) and SI (12), (16) use a_Li+ to the first
+power although the stoichiometry is 2 Li+; a_Li+ ~ 1 so the difference is
+numerically small. Keep the paper's form to reproduce its figures.)
+
+Anode (S7-S10): r_Li = k0_Li a_Li+^(1-alpha) [...], dmu_Li = F (phi_elode -
+phi_elyte - U_Li^eq), U_Li^eq = 0 + (RT/F) ln a_Li+, k0 = 3.94 mol/m2/s,
+alpha = 0.5, phi_elode(anode) = 0 is the potential reference (S37). No
+polysulfide reactions at the anode (carbonate electrolyte, S1.2).
+
+## 4. Governing equations (SI S1.3-S1.4, now confirmed)
 
 Unknowns on the cathode y in [0, L_cat]: c_S4, c_S3, c_S2, c_S1, eps_Li2S,
-c_e (salt), c_S (S2-), phi_s, phi_e. On the separator: c_e, c_S, phi_e.
+c_Li+, c_PF6-, c_S2-, phi_elode, phi_elyte. On the separator [L_cat, L_tot]:
+c_Li+, c_PF6-, c_S2-, phi_elyte.
 
-Local balances (cathode, a = a_SPAN):
+Local SPAN balances (no transport; a = a_SPAN(y, t), rates r_m per unit SPAN area):
 
-    d c_S4/dt = -1/2 a R1
-    d c_S3/dt = +1/2 a R1 - 1/2 a R2
-    d c_S2/dt = +1/2 a R2 - 1/2 a R3
-    d c_S1/dt = +1/2 a R1 + 1/2 a R3
-    d eps_Li2S/dt = V_Li2S a_Li2S R_Li2S,   V_Li2S = M/rho = 2.77e-5 m3/mol
-    eps_e = eps_e0 - eps_Li2S
+    d c_S4/dt = -1/2 a r1
+    d c_S3/dt = +1/2 a r1 - 1/2 a r2
+    d c_S2/dt = +1/2 a r2 - 1/2 a r3
+    d c_S1/dt = +1/2 a r1 + 1/2 a r3
 
-Charge (faradaic + double layer), i_F = F (R1 + R2 + R3) per unit SPAN area:
+Two invariants follow (sulfur atoms, chain ends): e.g. 4 c_S4 + 3 c_S3 + 2 c_S2
++ c_S1 + (S2- released) = const; useful as hard constraints in the PINN.
 
-    d i_e/dy = -a i_F - a C_DL d(phi_s - phi_e)/dt      (sign: i_e > 0 toward cathode in discharge)
-    i_s = -sigma_eff d phi_s/dy,  d i_s/dy = -d i_e/dy
+Li2S and volume fractions (S39-S42):
 
-Electrolyte. Because c_S2- <= 1e-3 mol/m3 << c_e ~ 1000 mol/m3, a defensible
-simplification is a binary LiPF6 electrolyte (DFN-type salt and current
-equations with eps_e(t)) plus a trace S2- Nernst-Planck equation in the
-electric field of that electrolyte. The paper uses an extension of
-concentrated solution theory with all three ions **[SI]**; the simplification
-must be shown to reproduce the full model (Fig. 5b) before it is used.
+    d eps_Li2S/dt = (MW_Li2S / rho_Li2S) a_Li2S r_Li2S
+    a_Li2S = a_SPAN eps_Li2S                                   (empirical, S40)
+    a_SPAN = a_SPAN,0 (eps_elyte / eps_elyte,0)^xi              (S41)
+    eps_elyte = 1 - eps_SPAN - eps_Li2S - eps_CB                (S42)
 
-    d(eps_e c_e)/dt = d/dy(eps_e^b D(c_e) d c_e/dy) - (1 - t+) a i_F / F   [cathode]
-    d(eps_e c_S)/dt = d/dy(eps_e^b D_S d c_S/dy + migration) + 1/2 a (R2 + R3) - a_Li2S R_Li2S
+Electrolyte mass balances, dilute-solution Nernst-Planck form (S17-S19):
 
-Boundary conditions: y = 0: zero salt and S2- flux, i_e = 0, i_s = i_app.
-y = L_cat: continuity of c, phi_e, fluxes; i_s = 0. y = L_tot (Li foil):
-i_e = i_app, Li+ flux = i_app/F (salt flux (1 - t+) i_app/F convention **[SI]**),
-S2- flux 0 (no shuttle; the paper neglects polysulfide reactions at the anode),
-BV: phi_s,anode - phi_e(L_tot) = eta_A with phi_s,anode = 0 (gauge).
+    d(eps_elyte c_i)/dt = -dN_i/dy + s_i^chem + s_i^echem,   i = Li+, PF6-, S2-
+    N_i = -D_i^eff dc_i/dy - D_i^eff c_i (z_i F / RT) dphi_elyte/dy
+    D_i^eff = D_i^0 eps_elyte^beta   (beta_cat = 1.5, beta_sep = 1)
 
-Cell voltage: V = phi_s(0) - Z_CC i_app.
+with the CST-equivalent coefficients for the salt ions (S20-S21):
 
-Initial conditions: SPAN at the initial concentrations, c_e = 1000, c_S = 0.01,
-eps_Li2S = 1e-5, potentials at equilibrium (consistent with the double layer).
+    D_Li+^0  = D_LiPF6 + kappa0 RT (t+ - 1) t+ / (F^2 c_Li+) (1 + dln f/dln c)
+    D_PF6-^0 = D_LiPF6 + kappa0 RT (t+ - 1)(1 - t+) / (F^2 c_Li+) (1 + dln f/dln c)
 
-## 5. Numerical reference (needed before any PINN work)
+(as printed in the SI; check the dimensional consistency when implementing:
+kappa0 RT/(F^2 c) has units of m2/s). D_S2- constant. Sources (S22-S24):
 
-PyBaMM has no Li-SPAN model. Plan:
+    s_S2-^echem = +1/2 a (r2 + r3)      (S22 in the SI's chain-length notation)
+    s_S2-^chem  = -a_Li2S r_Li2S
+    s_Li+^chem  = -2 a_Li2S r_Li2S
+    s_Li+^echem = -a r1  (reaction 1 consumes one Li+ per electron)
 
-1. Implement the model as a custom `pybamm.BaseModel` (rhs for the local
-   species, eps_Li2S, c_e, c_S, the double-layer potential; algebraic for
-   phi_e, phi_s), 1D finite volumes, Casadi solver. A small scipy method-of-
-   lines solver is an independent cross-check.
-2. Reproduce the paper's Figs. 4b (rate curves), 5a/5b (species and Li2S)
-   and 6b (Z_CC) within plotting accuracy. Only then use it as ground truth.
+Boundary conditions (S25-S26): y = 0, N_i = 0 for all species; y = L_tot,
+N = 0 for S2- and PF6-, N_Li+ = -r_Li (plating/stripping).
+
+Electrolyte charge (S27-S30):
+
+    0 = -di_elyte/dy + i_F + i_DL
+    i_elyte = sum_i z_i F N_i
+    i_F  = -2 F s_S2-^echem                                     (S29)
+    i_DL = a_SPAN c_DL d(phi_elode - phi_elyte)/dt              (S30)
+
+**Settled (section 5.1):** S29 ties the faradaic current to S2- production
+only (reactions 2 and 3), but reaction (1) also transfers one electron and
+consumes one Li+ per step while releasing no S2-; phase 1 carries one third
+of the capacity in Fig. 5a, so the stoichiometrically consistent form
+i_F = F a (r1 + r2 + r3) (with the Li+ sink -a r1 in the cathode) is the one
+implemented.
+
+Solid charge (S31-S37):
+
+    di_elode/dy + di_elyte/dy = 0,   i_elode = -kappa_eff dphi_elode/dy  (sign per S33/S36)
+    kappa_eff = kappa_SPAN eps_SPAN^beta_cat
+    y = L_cat:  dphi_elode/dy = 0;   y = 0:  -kappa_eff dphi_elode/dy = I;   phi_elode(L_tot) = 0
+
+Cell voltage (S38): E_cell = phi_elode(0) - phi_elode(L_tot) + Z_CC I, with the
+SI's sign convention for I (discharge current negative in their convention
+so that Z_CC lowers the voltage; confirm against Fig. 6, where larger Z_CC
+gives lower voltage at high rate).
+
+Initial conditions: SPAN species at Table 2 values, c_Li+ = 1000.02, c_PF6- =
+1000, c_S2- = 0.01, eps_Li2S = 1e-5, potentials at equilibrium (consistent
+with the double layer; the double layer removes the algebraic t = 0 corner).
+
+## 5. Numerical reference (implemented, 2026-10-06)
+
+`src/dfn_pinn/lispan/` (params.py, model.py), `scripts/lispan_discharge.py`,
+`scripts/lispan_digitize_paper.py`, `scripts/lispan_fit_paper.py`,
+`tests/test_lispan_reference.py` (7 tests). PyBaMM has no Li-SPAN model, so
+the reference is our own 1-D finite-volume method-of-lines code (scipy BDF
+with a sparse finite-difference Jacobian; 20 cathode + 10 separator volumes
+as in the paper; a 0.1 C discharge takes 4 s, 1 C 6 s).
+
+### 5.1 Formulation as implemented (conventions of model.py)
+
+* y = 0 collector, y = L_cat = 100 um cathode/separator interface, y = L_tot
+  = 718 um Li surface (phi_s(Li) = 0). Discharge current I > 0 [A/m2]; the
+  ionic current i_e(y) (in +y) is 0 at y = 0 and -I in the separator,
+  i_s + i_e = -I in the cathode.
+* States per cathode volume: ln c_S4, ln c_S3, ln c_S2, ln c_S1 (SPAN
+  species), ln eps_Li2S, Delta phi = phi_s - phi_e (double layer); per volume
+  of the whole cell: c_PF6- and ln c_S2-. c_Li+ = c_PF6- + 2 c_S2-
+  (electroneutrality). Log states because the species span many decades and
+  the sqrt(activity) factors of (S1) make the plain form singularly stiff near
+  zero; floors (1e-6 mol/m3 SPAN species, 1e-14 mol/m3 S2-) soften the log
+  dynamics below physically meaningful levels.
+* Rates (mass-action form of (S1)/(4)-(8), reduction positive):
+  r_m = k0_m [a_ed,m e^(-x_m) - a_prod,m e^(+x_m)], x_m = F(Delta phi -
+  U0_m + b_m zeta_m)/(2RT), zeta_1 = 1 - c_S4/598, zeta_2 = 1 - c_S3/598,
+  zeta_3 = 1 - c_S2/598; a_ed = (a_S4^1/2 a_Li, a_S3^1/2, a_S2^1/2),
+  a_prod = ((a_S3 a_S1)^1/2, (a_S2 a_S)^1/2, (a_S1 a_S)^1/2), a_S =
+  c_S2-/c_S,ref. Species: dc_S4/dt = -a r1/2, dc_S3/dt = a(r1 - r2)/2,
+  dc_S2/dt = a(r2 - r3)/2, dc_S1/dt = a(r1 + r3)/2 (1 S4 chain -> 1 S3Li +
+  1 SLi, so c_S1 reaches 598 after phase 1 and 1196 at the end, as in Fig.
+  5a). Faradaic current i_F = F a (r1 + r2 + r3): phase 1 carries one third
+  of the capacity in Fig. 5a, so S29 (S2- production only) cannot be the
+  current definition - open item 2 settled.
+* Li2S: r_L = (k0_L / K_sp^1/2)(a_Li a_S^L - K_sp) (= (S12),(16) with alpha =
+  1/2), a_S^L = c_S2- K_sp / c_sat, a_L = a_SPAN (eps_Li2S + eps_seed) for
+  precipitation and a_SPAN eps_Li2S for dissolution (a permanent nucleation
+  seed eps_seed = 1e-5, the paper's initial value; without it the seed
+  dissolves within microseconds at the start of discharge and Li2S could
+  never nucleate), d eps_Li2S/dt = (M/rho) a_L r_L, a_SPAN = a0
+  (eps_e/eps_e0)^xi, eps_e = 1 - eps_SPAN - eps_CB - eps_Li2S.
+* Electrolyte: Nernst-Planck fluxes with the dilute ion diffusivities D+ =
+  D_salt/(2(1 - t+)), D- = D_salt/(2 t+) (salt diffusion coefficient and t+
+  exact) and the *measured* conductivity kappa0 (c/c0) eps^beta for the
+  migration current (the diffusion-potential coefficient then agrees with
+  concentrated-solution theory within 10 %; the SI's (S20)-(S21) as printed
+  give t+ = 0.94 and were not used). Zero fluxes at y = 0; at the Li
+  surface N_PF6- = N_S2- = 0 and N_Li+ = -I/F.
+* Charge: a c_DL d(Delta phi)/dt = di_e/dy + F a sum r_m; i_e at interior
+  cathode faces follows algebraically from Delta phi' = (I + i_e)/kappa_s +
+  (i_e + B)/kappa_e (B = F sum z_i D_i dc_i/dy), so no linear solve is needed.
+  phi_e(L_tot) = -(RT/F) ln a_Li - (2RT/F) asinh(I/(2 F k0_Li a_Li^1/2)),
+  E = Delta phi(0) + phi_e(0) - I dy/(2 kappa_s) - Z_CC I (Z_CC lowers the
+  voltage, as Fig. 6b requires).
+* Initial state: Table 2 concentrations; Delta phi from r1 = 0 (2.67 V, the
+  initial spike of Figs 4a/6); S2- equilibrated with the reverse of (2) (the
+  paper's 0.01 mol/m3 would be oxidised within microseconds); current ramp
+  I tanh(t/1 s). Stop at E = 1.0 V. Specific capacity in mAh/g_S uses the
+  sulfur implied by the SPAN concentrations (4 x 598 mol/m3 x 32.07 g/mol x
+  L_cat = 0.767 mg/cm2, theoretical 1254 mAh/g_S = 6 e- per chain), which is
+  what the paper's axes use (1 C = 1 mA/cm2 = 0.96 mAh/cm2), not the 0.6
+  mg/cm2 quoted in its text.
+
+### 5.2 What paper + SI do not fix, and how it was settled
+
+Reproducing Figs 5a, 6a and 6b exposed three places where the literal
+parameter values cannot have produced the published curves:
+
+1. **Kinetic regime.** With Table 3 (k0 = 1e-2, 1e-2, 1e-4 mol/m2/s) and
+   a_SPAN = 1e7 1/m the exchange rates exceed the demand (1e-8 mol/m2/s at
+   0.1 C) by six orders of magnitude and the SPAN reactions sit at
+   equilibrium: no rate dependence beyond ohmic/concentration effects, and
+   an electrode-mediated comproportionation S3 + S1 -> 2 S2 that puts
+   PAN-S2Li in the cathode from the first mAh/g on. The paper's Fig. 6a shows
+   instead a Tafel slope of 0.118 V per decade of k0 and 0.17 V between 0.1 C
+   and 1 C at Z_CC = 0: its simulations run in the Tafel regime, i.e. with
+   exchange rates comparable to the demand. Only the products a_SPAN k0 enter,
+   so we keep a_SPAN and fit three *effective* k0 to the digitized Fig. 6a
+   curves (0.1 C and 1 C, Z_CC = 0): k0_eff = (2.95e-8, 2.39e-8, 2.34e-8)
+   mol/m2/s (`results/lispan/fit_k0.json`, rms 18 mV), i.e. about 1e-6 times
+   Table 3 for reactions 1-2 and 1e-4 times for reaction 3 - the three
+   effective prefactors are nearly equal, unlike Table 3's 100:100:1.
+2. **Reversibility of reaction (3).** With the mass-action reverse term the
+   oxidation S2- + PAN-SLi -> PAN-S2Li + e- runs strongly during phases 1-2
+   (Delta phi is 0.5-0.9 V above U_3), consuming PAN-SLi and keeping S2- at
+   1e-16 mol/m3; Fig. 5a shows c_S1 flat at 598 mol/m3 until reaction 3
+   starts and Fig. 7e shows S2- rising exponentially in equilibrium with
+   reaction (2) to the solubility limit at ~350 mAh/g. Reaction (3) is
+   therefore treated as irreversible in discharge (parameter `reversible =
+   (True, True, False)`); its reverse is the charging reaction, outside the
+   paper's scope.
+3. **S2- references.** Fig. 7f shows the saturation concentration scaling with
+   K_sp and equal to 1e-5 mol/m3 for K_sp = 10 (also the plateau of Figs 5b
+   and 7e), which is not K_sp x 0.01 mol/m3; the model OCV break points of
+   Fig. 3 (1.97 V, 1.73 V) on the other hand need the Nernst shift of a S2-
+   activity referred to 0.01 mol/m3 (+0.09 V on U_2, U_3). We use c_S,ref =
+   0.01 mol/m3 (Table 2, "initial condition" as the text says) in the SPAN
+   kinetics and c_sat = 1e-5 mol/m3 at K_sp = 10 in the Li2S driving force.
+
+Also found: Fig. 4b is consistent with Z_CC = 0.025 Ohm m2 (Table 2), not
+with the 0.035 quoted as best fit in the text; and the SI's (S20)-(S21)
+swap the roles of t+ and 1 - t+.
+
+### 5.3 Validation against the paper (results/lispan/)
+
+| Quantity | this reference | paper (digitized) |
+| --- | --- | --- |
+| 0.1 C, Z_CC = 0: voltage vs Fig. 6a | rms 16 mV, max 32 mV | - |
+| 1 C, Z_CC = 0: voltage vs Fig. 6a | rms 18 mV, max 39 mV | - |
+| 0.1 C / 1 C capacity to 1.0 V, Z_CC = 0 | 1248 / 1177 mAh/g_S | ~1230 / 1236 |
+| 0.05 / 0.1 / 0.2 / 1 C capacity, Z_CC = 0.025 | 1254 / 1240 / 1212 / 1025 | 1252 / 1214 / 1229 / 994 (Fig. 4b) |
+| Species vs Fig. 5a (0.1 C) | S3 peak 490 at 400, S2 peak 540 at 830, c_S1 598 -> 1196, Li2S onset ~350, eps_Li2S end 0.032 | S3 520 at 400, S2 533 at 800, same plateau, onset ~350, 0.028-0.030 |
+| 1 C - 0.1 C at 300 mAh/g, Z_CC = 0 | 0.17 V | 0.17 V |
+| Z_CC effect at 1 C | 0.25 V per 0.025 Ohm m2 | same (Fig. 6b) |
+| k0 sensitivity, phase 1 | 0.09 V/decade | 0.12 V/decade |
+
+Figures: `results/lispan/ref_Zcc0/discharge_vs_paper.png` (Fig. 6a overlay +
+species), `results/lispan/ref_Zcc0.025/discharge_vs_paper.png` (Fig. 4b
+overlay; the digitized 0.05-0.2 C points of Fig. 4b overlap and are noisy),
+`fields_0.1C.png` (profiles of c_Li+, c_S2-, phi_e, Delta phi, c_S2Li,
+eps_Li2S). Grid convergence 10/5 vs 30/15 volumes: < 5 mV rms. Sulfur and
+electron balances close to 2e-3 and 5e-3 (tests).
+
+The reference is good enough for its purpose (ground truth for the forward
+Li-SPAN PINN and synthetic data for the inverse problem): the equations are
+the paper's, the parameters that the paper does not pin down are documented
+above and exposed as explicit parameters, and the owner can ask T. Danner
+(DLR) for the MATLAB implementation to replace the three effective k0 and the
+two S2- references by the authors' values if an exact reproduction is ever
+needed.
 
 ## 6. PINN design notes for Li-SPAN
 
 * Inputs (y, t); no radial coordinate. Reuse the v2 ingredients: physical
   output scales, hard initial conditions, tanh current ramp, resampling,
-  adaptive group weights, PyBaMM-style reference only for evaluation.
-* Local species: hard IC and hard element conservation. Sulfur and chain-end
-  balances give two algebraic invariants (e.g. c_S4 + c_S3/2 + c_S2/2 + ...),
-  which can be built into the parametrization so only 2 of 4 species are
-  learned.
-* S2- must be learned as log(c_S2-) (range 1e-12 to 1e-3 mol/m3).
-* Learned reaction current: with three parallel reactions sharing one
-  potential difference, the v1/v2 "learned j + inverse BV" idea does not
-  invert reaction by reaction. Two options to compare:
-  (a) learn the interfacial potential difference dphi = phi_s - phi_e and
-      evaluate R1-R3 directly; (b) learn the total faradaic current i_F with
-      the hard electrode-integral projection (as in v2) and recover dphi by a
-      differentiable monotone root solve of sum_i R_i(dphi) = i_F/F
-      (implicit-function gradients). Option (b) is the natural extension of
-      the current research question to multi-reaction chemistry.
+  adaptive group weights, Fourier time features, hard zero-flux collector
+  features (section 7 of V2_RESULTS.md), reference only for evaluation.
+* Local species: hard IC and the two conservation invariants built into the
+  parametrization so only 2 of the 4 SPAN species (plus S2-) are learned.
+* S2- must be learned as log(c_S2-) (1e-12 to 1e-3 mol/m3) and eps_Li2S as a
+  non-negative, monotone-in-time quantity in discharge.
+* Reaction currents: with three reactions sharing one potential difference
+  Delta phi = phi_elode - phi_elyte, the v2 "learned j + inverse BV" idea does
+  not invert reaction by reaction. Two options to compare, in the order the
+  C-F factorial suggests:
+  (b) learn the total faradaic current i_F with the hard electrode-integral
+      projection (as in v2) and recover Delta phi by a differentiable
+      monotone root solve of F a sum_m r_m(Delta phi) = i_F (implicit-function
+      gradients) - the natural extension of the inverse-BV idea;
+  (a) learn Delta phi and evaluate r1-r3 directly (direct BV; expected to be
+      harder, as the factorial showed for the DFN).
 * Li2S nucleation is a threshold phenomenon (S2- pinned near K_sp after
-  ~400 mAh/g). Expect a sharp time feature: use a time-marching/causal
-  schedule or a feature built from the precipitation driving force.
-* The double layer removes the algebraic t = 0 corner and is helpful for the
-  PINN; keep it.
+  ~400 mAh/g): expect a sharp time feature; use the hard-IC factor and a
+  time feature built from the precipitation driving force if needed.
+* Keep the double layer (it regularizes t = 0).
 * Inverse problem (the scientifically interesting part): identify a small,
-  identifiable subset of {U0_i, b_i, k0_i, K_sp, Z_CC, Bruggeman} from
-  discharge curves at several C-rates (paper data on request from the authors,
-  or the group's own Li-SPAN cells). Check identifiability with sensitivities
-  before fitting; the paper itself reports low sensitivity to k0 (Fig. S1).
+  identifiable subset of {U^eq,0_i, b_i, k0_i, K_sp, Z_CC, beta} from
+  discharge curves at several C-rates. Check identifiability with
+  sensitivities first (as in V2_RESULTS.md 3.0); the paper itself reports low
+  sensitivity to k0 (Fig. S1: curves for 1e-2 and 1e-3 nearly coincide) and
+  strong sensitivity to beta and eps_SPAN at 1 C (Figs S3-S4).
 
-## 7. Open items for the owner
+## 7. Data for the Li-SPAN work
 
-1. Obtain the Supporting Information PDF (full equations, Lundgren D(c) and
-   kappa(c), Li2S surface-area law, volume basis of c_S4).
-2. Decide the target data: paper curves (digitized), authors' data on
-   request, or in-house Li-SPAN cells from the Balbuena group.
-3. Confirm Z_CC (0.025 vs 0.035 Ohm m2) and temperature with the authors or
-   by refitting.
+* Forward PINN: no data; physics only. The numerical reference of section 5
+  is used for evaluation.
+* Inverse PINN, stage 1: synthetic voltage curves from the numerical
+  reference (known parameters, controlled noise), as done for the DFN.
+* Inverse PINN, stage 2: the paper's experimental discharge curves at 0.05,
+  0.1, 0.2 and 1 C (Fig. 4 / Fig. S1; digitize the circles, or request the
+  data from the corresponding author, T. Danner, DLR), then any in-house
+  Li-SPAN cells of the Balbuena group.
+
+## 8. Remaining open items
+
+1. Lundgren 2014 correlations D_LiPF6(c), kappa(c): constants at 1 M with
+   kappa scaled linearly in c; the salt gradient at 1 C is only 3 % (Fig.
+   `fields_0.1C.png`: 25 mol/m3 at 0.1 C), so the correlations matter little.
+2. ~~i_F definition~~ settled: stoichiometric sum (section 5.1).
+3. Temperature assumed 25 C; sign of I fixed by Fig. 6b (Z_CC lowers E).
+4. Experimental data points: figures only, unless the authors share them.
+5. Effective kinetics and S2- references (section 5.2): fitted/inferred from
+   the figures; ask the authors for the implementation to confirm.
