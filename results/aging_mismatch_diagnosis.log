@@ -1,0 +1,8 @@
+/home/claude/v2/repo/scripts/v2_aging_mismatch_diagnosis.py:49: DeprecationWarning: pybamm.CasadiSolver is deprecated and will be removed in a future release. Use pybamm.IDAKLUSolver instead.
+  solver=pybamm.CasadiSolver(mode="safe", dt_max=60), var_pts=var_pts)
+all (no cracking)                   : cycle 60, CC 3500 s, LLI 1.65 %, theta0 0.9023/0.2668, eps_am rel 0.9817/0.9917, porosity_n 0.2350 | plain DFN(theta0, eps_am): 56.6 mV rms, 85.8 max, best R0 -10.28 mOhm -> 23.6 | +porosity: 59.9 rms, R0 -11.02 -> 23.4   (301 s)
+no lithium plating                  : cycle 60, CC 3510 s, LLI 1.51 %, theta0 0.9073/0.2664, eps_am rel 0.9816/0.9917, porosity_n 0.2364 | plain DFN(theta0, eps_am): 56.2 mV rms, 101.9 max, best R0 -9.87 mOhm -> 26.9 | +porosity: 59.0 rms, R0 -10.53 -> 26.7   (287 s)
+SEI without porosity change         : cycle 60, CC 3500 s, LLI 1.65 %, theta0 0.9023/0.2668, eps_am rel 0.9817/0.9917, porosity_n 0.2350 | plain DFN(theta0, eps_am): 56.6 mV rms, 85.8 max, best R0 -10.28 mOhm -> 23.6 | +porosity: 59.9 rms, R0 -11.02 -> 23.4   (297 s)
+no SEI                              : FAILED ()
+no LAM                              : cycle 60, CC 3543 s, LLI 0.59 %, theta0 0.8967/0.2665, eps_am rel 1.0000/1.0000, porosity_n 0.2349 | plain DFN(theta0, eps_am): 56.4 mV rms, 85.5 max, best R0 -10.20 mOhm -> 24.2 | +porosity: 59.7 rms, R0 -10.94 -> 23.9   (170 s)
+no plating, no SEI porosity change  : cycle 60, CC 3511 s, LLI 1.51 %, theta0 0.9073/0.2664, eps_am rel 0.9817/0.9917, porosity_n 0.2500 | plain DFN(theta0, eps_am): 58.4 mV rms, 100.2 max, best R0 -10.41 mOhm -> 26.6 | +porosity: 58.4 rms, R0 -10.41 -> 26.6   (274 s)

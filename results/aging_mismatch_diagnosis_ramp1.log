@@ -1,0 +1,2 @@
+all (no cracking)                   : cycle 60, CC 3500 s, LLI 1.65 %, theta0 0.9023/0.2668, eps_am rel 0.9817/0.9917, porosity_n 0.2350 | plain DFN(theta0, eps_am): 63.2 mV rms, 90.4 max, best R0 -11.99 mOhm -> 19.9 | +porosity: 66.6 rms, R0 -12.73 -> 19.7   (319 s)
+no LAM                              : cycle 60, CC 3543 s, LLI 0.59 %, theta0 0.8967/0.2665, eps_am rel 1.0000/1.0000, porosity_n 0.2349 | plain DFN(theta0, eps_am): 62.7 mV rms, 90.1 max, best R0 -11.89 mOhm -> 19.8 | +porosity: 66.2 rms, R0 -12.63 -> 19.7   (164 s)

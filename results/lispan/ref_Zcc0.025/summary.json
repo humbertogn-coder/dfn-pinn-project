@@ -1,0 +1,175 @@
+{
+  "params": {
+    "L_cat": 0.0001,
+    "L_sep": 0.000618,
+    "eps_SPAN": 0.0945,
+    "eps_CB": 0.032,
+    "eps_L0": 1e-05,
+    "a_SPAN0": 10000000.0,
+    "xi": 1.5,
+    "beta_cat": 1.5,
+    "kappa_SPAN": 1.0,
+    "c_DL": 0.1,
+    "Z_CC": 0.025,
+    "rho_SPAN": 1440.0,
+    "rho_CB": 1810.0,
+    "w_S": 0.436,
+    "eps_sep": 0.11,
+    "beta_sep": 1.0,
+    "D_salt": 2.52e-10,
+    "D_S": 4.7e-10,
+    "t_plus": 0.1625,
+    "kappa0": 0.796,
+    "tdf": 1.6,
+    "c_Li0": 1000.02,
+    "c_PF6_0": 1000.0,
+    "c_S0": 0.01,
+    "c_S_ref": 0.01,
+    "c_S_sat": 1e-05,
+    "k0": [
+      2.95e-08,
+      2.39e-08,
+      2.34e-08
+    ],
+    "k0_table3": [
+      0.01,
+      0.01,
+      0.0001
+    ],
+    "U0": [
+      2.2,
+      1.9,
+      1.66
+    ],
+    "b": [
+      0.3,
+      0.28,
+      0.62
+    ],
+    "alpha": 0.5,
+    "c_ref": [
+      598.0,
+      598.0,
+      598.0,
+      1196.0
+    ],
+    "c_init": [
+      598.0,
+      1e-05,
+      1e-05,
+      1e-05
+    ],
+    "kin_scale": 1.0,
+    "reversible": [
+      true,
+      true,
+      false
+    ],
+    "K_sp": 10.0,
+    "k0_L": 200.0,
+    "precip_scale": 1.0,
+    "M_L": 0.04594,
+    "rho_L": 1659.0,
+    "eps_L_seed": 1e-05,
+    "c_floor_SPAN": 1e-06,
+    "c_floor_S": 1e-14,
+    "k0_Li": 3.94,
+    "alpha_Li": 0.5,
+    "T": 298.15,
+    "L_tot": 0.000718,
+    "eps_e0": 0.87349,
+    "kappa_s_eff": 0.029050105421495463,
+    "m_S_model": 0.007669948000000001,
+    "Q_theo_Ah_m2": 9.616371434626668
+  },
+  "runs": [
+    {
+      "crate": 0.05,
+      "I_A_m2": 0.5,
+      "Q_end_mAh_gS": 1253.7386753001579,
+      "Q_end_Ah_m2": 9.616110445141096,
+      "V_end": 0.9999999999999993,
+      "t_end_s": 69236.68835219645,
+      "eps_L_end": 0.032894117849694864,
+      "solver": {
+        "success": true,
+        "message": "A termination event occurred.",
+        "nfev": 4137,
+        "njev": 207,
+        "nlu": 458,
+        "method": "BDF",
+        "rtol": 1e-06
+      },
+      "wall_s": 3.689547013000265,
+      "paper_rms_mV": 39.52818363261629,
+      "paper_max_mV": 100.96625486160882,
+      "paper_Q_end": 1252.1739130434783
+    },
+    {
+      "crate": 0.1,
+      "I_A_m2": 1.0,
+      "Q_end_mAh_gS": 1240.158677114175,
+      "Q_end_Ah_m2": 9.511952565214512,
+      "V_end": 1.0000000000000002,
+      "t_end_s": 34243.7223819528,
+      "eps_L_end": 0.03235782394181768,
+      "solver": {
+        "success": true,
+        "message": "A termination event occurred.",
+        "nfev": 4231,
+        "njev": 217,
+        "nlu": 482,
+        "method": "BDF",
+        "rtol": 1e-06
+      },
+      "wall_s": 3.6211961340000016,
+      "paper_rms_mV": 44.83885599824691,
+      "paper_max_mV": 118.71645326852209,
+      "paper_Q_end": 1214.4927536231885
+    },
+    {
+      "crate": 0.2,
+      "I_A_m2": 2.0,
+      "Q_end_mAh_gS": 1211.8284736375317,
+      "Q_end_Ah_m2": 9.29466137771924,
+      "V_end": 1.0,
+      "t_end_s": 16731.08362707519,
+      "eps_L_end": 0.0312390539219475,
+      "solver": {
+        "success": true,
+        "message": "A termination event occurred.",
+        "nfev": 4358,
+        "njev": 210,
+        "nlu": 489,
+        "method": "BDF",
+        "rtol": 1e-06
+      },
+      "wall_s": 3.5001512649996585,
+      "paper_rms_mV": 44.43465238367972,
+      "paper_max_mV": 153.3938033572546,
+      "paper_Q_end": 1228.9855072463768
+    },
+    {
+      "crate": 1.0,
+      "I_A_m2": 10.0,
+      "Q_end_mAh_gS": 1025.398434533939,
+      "Q_end_Ah_m2": 7.864752672156717,
+      "V_end": 1.0,
+      "t_end_s": 2832.0041091569783,
+      "eps_L_end": 0.023883600800160668,
+      "solver": {
+        "success": true,
+        "message": "A termination event occurred.",
+        "nfev": 7311,
+        "njev": 242,
+        "nlu": 662,
+        "method": "BDF",
+        "rtol": 1e-06
+      },
+      "wall_s": 4.869700924999961,
+      "paper_rms_mV": 45.575292633724544,
+      "paper_max_mV": 115.07879651787367,
+      "paper_Q_end": 994.2028985507247
+    }
+  ]
+}
