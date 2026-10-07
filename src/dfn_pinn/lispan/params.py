@@ -77,6 +77,7 @@ class LiSPANParams:
     c_init: tuple = (598.0, 1e-5, 1e-5, 1e-5)      # initial concentrations
     kin_scale: float = 1.0               # common multiplier of the three k0 (parameter studies)
     reversible: tuple = (True, True, False)  # keep the oxidation (reverse) term of each SPAN reaction (see docstring)
+    frozen_S2m: bool = False             # PINN simplification check: a_S2- in the SPAN kinetics fixed at saturation
     # --- Li2S precipitation (Table 3)
     K_sp: float = 10.0
     k0_L: float = 2e2                    # [mol/m2/s]

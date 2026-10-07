@@ -1,0 +1,43 @@
+{
+ "cycle": "results/aging_synthetic/cellC/cycles/cycle_0200.npz",
+ "protocol": {
+  "current_A": 5.0,
+  "ramp_s": 30.0,
+  "t_end_s": 3389.974301089204
+ },
+ "estimates": {
+  "theta_n0": 1.0243628025054932,
+  "theta_p0": 0.98382169008255,
+  "eps_am_n": 0.921698272228241,
+  "eps_am_p": 0.9739035964012146,
+  "R0_mOhm": 5.912942811846733
+ },
+ "truth": {
+  "theta_n0": 1.0104527208169338,
+  "theta_p0": 0.9888104210281008,
+  "eps_am_n": 0.9368615442387321,
+  "eps_am_p": 0.9722431695198577
+ },
+ "raw_truth": {
+  "cycle": 200.0,
+  "theta_n0": 0.9108194537143798,
+  "theta_p0": 0.26697756011468027,
+  "eps_am_n": 0.7026461581790491,
+  "eps_am_p": 0.6465417077307054,
+  "SEI_thickness_m": 7.734299050357006e-08,
+  "a_n_ratio": 0.9368615442387321,
+  "a_p_ratio": 0.9722431695198576,
+  "roughness_n": 1.0,
+  "porosity_n": 0.2221206131001364,
+  "porosity_p": 0.33499999999999996,
+  "Capacity_[A.h]": 4.827181650734934,
+  "Loss_of_lithium_inventory_[%]": 4.726263496381819,
+  "Loss_of_active_material_in_negative_electrode_[%]": 6.346742238621687,
+  "Loss_of_active_material_in_positive_electrode_[%]": 2.7756832586884315,
+  "Total_lithium_lost_[mol]": 0.01342098597952579,
+  "Loss_of_capacity_to_negative_SEI_[A.h]": 0.06343375712660028,
+  "Loss_of_capacity_to_negative_lithium_plating_[A.h]": 0.02157726154137554
+ },
+ "misfit_mV": 0.21387620149193567,
+ "n_points": 56
+}

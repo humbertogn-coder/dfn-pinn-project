@@ -144,7 +144,7 @@ def train_multirate(cfg: TrainConfig, cell: CellParams, protocols, data_paths, o
         for k, (m, res, sampler, aw) in enumerate(zip(models, residuals, samplers, weights)):
             batch = sampler.draw()
             terms = residual_terms(res, batch, cell)
-            terms["data_V"] = (m.voltage(data[k][0]) - data[k][1]) / (cfg.data_scale_mV * 1e-3)
+            terms["data_V"] = (m.terminal_voltage(data[k][0]) - data[k][1]) / (cfg.data_scale_mV * 1e-3)
             losses = term_losses(terms)
             if cfg.adaptive and (step == 1 or step % cfg.adaptive_every == 0):
                 aw.update(m, losses)
@@ -160,8 +160,9 @@ def train_multirate(cfg: TrainConfig, cell: CellParams, protocols, data_paths, o
         opt.step()
         sched.step()
         with torch.no_grad():
-            for p in phys_params:
-                p.clamp_(-cfg.param_log_bound, cfg.param_log_bound)
+            for n, p in zip(cfg.inverse_params, phys_params):
+                b = cfg.param_bounds.get(n, cfg.param_log_bound)
+                    p.clamp_(0.0 if n == "R0" else -b, b)   # R0 >= 0; per-parameter bound overrides
         if step % cfg.log_every == 0 or step == 1:
             params = shared.parameter_values()
             rec = {"step": step, "loss": total, "time_s": time.perf_counter() - t0, "losses": step_losses,

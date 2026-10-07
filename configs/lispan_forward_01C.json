@@ -1,0 +1,42 @@
+{
+  "name": "lispan_f01C",
+  "description": "Li-SPAN forward PINN, 0.1 C discharge of the Simanjuntak 2024 cell (Z_CC 0.025), 30 s current ramp. Reference: finite-volume model with c_DL -> 0. Reactions 2 and 3 irreversible (benchmark choice: the mass-action reverse term of reaction 2 at high Delta phi slaves c_S2 to an equilibrium that spans 10 decades, a stiff constraint a PINN cannot resolve; the finite-volume reference shows a 2.6 mV rms / 10 mol/m3 effect at 0.1 C and 0.1 mV at 1 C).",
+  "params": {
+    "Z_CC": 0.025,
+    "reversible": [
+      true,
+      false,
+      false
+    ]
+  },
+  "protocol": {
+    "current": 1.0,
+    "ramp_s": 30.0
+  },
+  "t_end": null,
+  "train": {
+    "seed": 0,
+    "dtype": "float32",
+    "width": 64,
+    "depth": 4,
+    "fourier_t": 4,
+    "short_t": [
+      60.0,
+      600.0
+    ],
+    "ic_tau_s": 60.0,
+    "quad_order": 12,
+    "adam_steps": 10000,
+    "lr": 0.001,
+    "lr_final": 1e-05,
+    "n_cathode": 512,
+    "n_separator": 256,
+    "n_boundary": 96,
+    "adaptive": true,
+    "adaptive_every": 50,
+    "log_every": 100,
+    "eval_every": 1000,
+    "checkpoint_every": 2500,
+    "latest_every": 250
+  }
+}

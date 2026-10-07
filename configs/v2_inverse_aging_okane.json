@@ -1,0 +1,54 @@
+{
+  "name": "v2_inverse_aging_okane",
+  "description": "Inverse problem on one aged-cell 1C discharge generated with PyBaMM's OKane2022 parameter set (synthetic cells of scripts/v2_make_aging_dataset.py and the LG M50 data set). OKane2022 applies a Bruggeman exponent 1.5 to the SOLID conductivities (Chen2020: 0), so the fresh cell of the PINN uses the effective values sigma_n = 215*0.75^1.5, sigma_p = 0.18*0.665^1.5 (otherwise a +1 mOhm lumped resistance is needed and 3-5 mV rms remain). Estimated: theta_n0, theta_p0 (LLI), eps_am_n, eps_am_p (LAM), R0. Data placed at t + ramp ln 2 (charge-equivalent alignment, dfn_pinn.v2.aging). The PINN includes PyBaMM's stress-enhanced diffusion D_k(c) = D_k (1 + theta_M_k c) with the OKane2022 mechanical parameters (theta_M_n 1.846e-5, theta_M_p 6.566e-3 m3/mol), which the degradation data set switches on by default (V2_RESULTS.md section 8).",
+  "reference": null,
+  "protocol": {
+    "current_A": 5.0,
+    "ramp_s": 30.0,
+    "t_end_s": 3500.0
+  },
+  "cell": {
+    "sigma_n": 139.64659636024072,
+    "sigma_p": 0.09761239598534603,
+    "theta_M_n": 1.846e-05,
+    "theta_M_p": 0.006566
+  },
+  "train": {
+    "seed": 1,
+    "dtype": "float32",
+    "width": 64,
+    "depth": 4,
+    "kinetics": "inverse",
+    "projection": true,
+    "adam_steps": 8000,
+    "lr": 0.0005,
+    "lr_final": 1e-05,
+    "adaptive": true,
+    "log_every": 250,
+    "eval_every": 100000,
+    "checkpoint_every": 2500,
+    "inverse_params": [
+      "theta_n0",
+      "theta_p0",
+      "eps_am_n",
+      "eps_am_p",
+      "R0"
+    ],
+    "inverse_init": {
+      "theta_n0": 1.0,
+      "theta_p0": 1.0,
+      "eps_am_n": 1.0,
+      "eps_am_p": 1.0,
+      "R0": 0.0
+    },
+    "data_path": "",
+    "data_noise_mV": 0.0,
+    "data_scale_mV": 1.0,
+    "param_lr": 0.005,
+    "param_warmup_steps": 1000,
+    "param_log_bound": 0.5,
+    "fourier_t": 4,
+    "inventory": "soft",
+    "collector_bc": "hard"
+  }
+}

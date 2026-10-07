@@ -49,9 +49,17 @@ stress-induced diffusion, switched on by default with the particle-mechanics
 submodel of the degradation model: it multiplies the NMC diffusivity by
 100-400, so the data have no positive-particle diffusion polarization while
 the PINN's DFN has Chen2020's D_p. Not an aging effect: a 2-cycle cell shows
-the same 75 mV. Fix: generate the synthetic cells without it, and add
-D_k(c) = D_k0 (1 + theta_M,k c) to the PINN (or release D_p) for the real
-LG M50 data set, which has the same feature.
+the same 75 mV. Generating the cells without it is not viable (the
+stress-driven LAM then collapses the NMC), so the PINN got the physics:
+D_k(theta) = D_k0 (1 + theta_M,k cmax theta) in the particle residual and
+flux condition, OKane2022's solid Bruggeman conductivities, and a
+charge-equivalent alignment of the stepped data with the ramped current.
+With the consistent model the cycle-200 inverse (cellC: LLI 4.7 %, LAM_n
+6.3 %, LAM_p 2.8 %, SEI 77 nm) recovers theta_p0, eps_am_p, R0 and the
+negative-electrode lithium content to 0.2-0.5 % and the (theta_n0,
+eps_am_n) pair to 1.5 % along its degenerate valley, misfit 0.21 mV
+(end of section 8); the LLI/LAM_n split needs low-rate or CV-tail data,
+which the real LG M50 set has.
 
 ## 1. Forward problem, first run (plain time inputs)
 
@@ -995,6 +1003,82 @@ a first hierarchical stage on the fresh cycle. The 30 s tanh current ramp
 of the protocol also lags the data's current step by 20.8 s of charge
 (18.5 mV rms / 128 mV max against the fresh cell at 1C; 7 mV with a 1 s
 ramp): use `ramp_s` <= 1 s, or ramp the data, for the aging fits.
+
+**Follow-up (2026-10-06 evening).** (i) The remaining 6.5-8.6 mV of the
+variants without mechanics is another parameter-set difference: OKane2022
+applies a Bruggeman exponent 1.5 to the *solid* conductivities (Chen2020:
+0), so sigma_p,eff = 0.18 x 0.665^1.5 = 0.098 S/m and sigma_n,eff = 140 S/m;
+Chen2020-vs-Chen2020 agrees to 1.7 mV. (ii) Generating aging data with
+`"stress-induced diffusion": "false"` is NOT a way out: the stress-driven
+LAM then sees the full NMC concentration gradients, loses 35 % of the
+positive active material in one cycle and the DAE solver fails (a 200-cycle
+attempt ran for 1.5 h without finishing; `--charge-crate 0.5` did not
+help). The mechanics parametrization of O'Kane 2022 presupposes the
+enhanced diffusion. (iii) The PINN therefore got the physics: `CellParams`
+has `theta_M_n`, `theta_M_p` (D_k(theta) = D_k (1 + theta_M,k cmax theta);
+flux condition with D(theta_bar), particle residual with D(theta) lap +
+D' |grad theta|^2, same functions in the PyBaMM reference), test
+`test_stress_enhanced_diffusion_enters_consistently`. Check with PyBaMM on
+the cycle-60 "all (no cracking)" discharge (LLI 1.65 %): plain DFN at the
+true aged state 63 mV rms without, **12.7 mV rms / 40 max with D(theta) and
+sigma_eff, best lumped R0 +2.35 mOhm, 4.9 mV residual after R0** - the
+remaining resistance is the SEI film and plating, i.e. exactly what the R0
+parameter of the aging DFN is for. (iv) Charge-equivalent alignment of the
+stepped data with the ramped model (`dfn_pinn.v2.aging.charge_shift`,
+default in `v2_inverse_aging.py`): 18.3 -> 6.7 mV rms on the fresh cell.
+(v) Config `configs/v2_inverse_aging_okane.json` (sigma_eff, theta_M, bound
+0.5) for the redo of the cellC cycle-200 inverse, below.
+
+**Aging inverse with the consistent model** (cellC cycle 200: LLI 4.7 %,
+LAM_n 6.3 %, LAM_p 2.8 %, SEI 77 nm, no cracking; runs
+`C3_aging_cellC_c200_Dstress_stage1_20261006T200401Z` and
+`C3b_aging_cellC_c200_Dstress_R0free_20261006T211155Z`, logs
+`results/C3*_aging_cellC_c200_Dstress*.log`). Stage 1: 4000 forward steps
+from the width-96 hard-collector model of section 9 with the fresh
+parameters, D(theta) and sigma_eff, protocol lengthened to 3390 s by the
+charge shift (the particle residual needed `w_scale` divided by the
+diffusivity factor at theta_0, otherwise it stalls at 0.1). Stage 2: 8000
+steps with the 56 voltage samples (t >= 100 s, 60 s spacing), the five
+aging parameters released at once, bounds 0.5 in log, R0 in [0, 10 mOhm]
+(a first stage-2 attempt with the old R0 <= 2.5 mOhm bound was stopped at
+step 1750 with R0 pinned at the bound: the bound was the earlier runs'
+problem, not only the model form). 1.5 h on one thread.
+
+| parameter | truth (multiplier) | estimate | error |
+| --- | ---: | ---: | ---: |
+| theta_n0 | 1.0105 | 1.0244 | +1.4 % |
+| theta_p0 | 0.9888 | 0.9838 | -0.5 % |
+| eps_am_n | 0.9369 | 0.9217 | -1.6 % |
+| eps_am_p | 0.9722 | 0.9739 | +0.2 % |
+| R0 | 5.47 mOhm (PyBaMM best lumped R0 at the true state) | 5.91 mOhm | +0.4 mOhm |
+| theta_n0 x eps_am_n (negative-electrode lithium) | 0.9467 | 0.9442 | -0.3 % |
+| LLI from the state (cell lithium inventory) | 4.8 % (PyBaMM variable 4.7 %) | 5.1 % | +0.3 pt |
+| LAM_n / LAM_p | 6.3 / 2.8 % | 7.8 / 2.6 % | +1.5 / -0.2 pt |
+
+Final misfit 0.21 mV rms (the fresh-cell forward model reaches 0.25 mV).
+The parameters were still creeping towards the truth when the budget
+ended (per 1000 steps: theta_n0 -0.0006, eps_am_n +0.0002, R0 +0.1 mOhm;
+the 1000-step warm-up holds them at the fresh values, the first 1000
+released steps do most of the move), so a longer stage 2 or a second
+pass at a lower learning rate should trim the remaining 1.5 %. Against
+the cellB attempts of
+the same section (errors 10-14 % on theta_n0, theta_p0, eps_am_n and R0 at
+the bound), the positive-electrode state (theta_p0, eps_am_p), the
+resistance and the capacity-type combination are now recovered to 0.2-0.5
+%, and the (theta_n0, eps_am_n) pair to 1.5 %, still along its degenerate
+valley (+1.4 / -1.6 % with the product right to 0.3 %). The residual split
+error is consistent with section 3.0's identifiability analysis: the OCV
+features that separate LLI from LAM_n are worth tenths of a millivolt in
+a 1C discharge, i.e. the size of the forward error. R0 lands 0.4 mOhm
+above the PyBaMM lumped value fitted at the true state; that value is
+the constant-resistance part of the SEI-film and plating signature (its
+4.4 mV residual is the rest), and the PINN fits R0 jointly with the four
+other parameters, so the two need not coincide exactly. So, with the
+model form fixed, the 5-parameter aging DFN is adequate for
+the synthetic degradation data at 1C, and the remaining LLI/LAM
+ambiguity is the one the data (not the method) leave; the C/100 CV tail
+or a low-rate discharge of the same cycle, which the real data set has, is
+the way to close it.
 
 ## 9. Best forward model: hard collectors x width 96 x 40 000 steps (`f4_hardbc_w96_40k_20261005T194145Z`)
 

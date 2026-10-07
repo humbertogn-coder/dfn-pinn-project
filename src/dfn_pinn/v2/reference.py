@@ -69,6 +69,11 @@ def parameter_values(cell: CellParams, protocol: Protocol):
         "Lower voltage cut-off [V]": 2.0,
         "Current function [A]": lambda t: current * pybamm.tanh(t / ramp),
     }, check_already_exists=False)
+    # stress-enhanced diffusion (PyBaMM / Ai 2019 eq. 12) as concentration-dependent diffusivities
+    if cell.theta_M_n:
+        p.update({"Negative particle diffusivity [m2.s-1]": lambda sto, T: cell.D_n * (1 + cell.theta_M_n * cell.cmax_n * sto)})
+    if cell.theta_M_p:
+        p.update({"Positive particle diffusivity [m2.s-1]": lambda sto, T: cell.D_p * (1 + cell.theta_M_p * cell.cmax_p * sto)})
     return p
 
 

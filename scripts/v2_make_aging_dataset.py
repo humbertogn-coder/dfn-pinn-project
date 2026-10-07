@@ -39,6 +39,9 @@ def main():
     ap.add_argument("--scale-sei", type=float, default=1.0, help="x SEI solvent diffusivity (solvent-diffusion limited SEI)")
     ap.add_argument("--no-cracking", action="store_true",
                     help="swelling only, no cracks / SEI on cracks")
+    ap.add_argument("--charge-crate", type=float, default=1.0,
+                    help="CC charge rate of the cycling protocol (the LG M50 data set uses 1C; without stress-induced "
+                         "diffusion the 1C charge saturates the graphite surface and the DAE solver fails -> use 0.5)")
     ap.add_argument("--no-stress-diffusion", action="store_true",
                     help="switch off PyBaMM's stress-induced diffusion (on by default with particle mechanics; it "
                          "multiplies the NMC diffusivity by 100-400 and is what made the aged cells unrepresentable by "
@@ -75,7 +78,7 @@ def main():
                 print(f"WARNING: parameter {key!r} not in OKane2022, not scaled")
     var_pts = {"x_n": 10, "x_s": 5, "x_p": 10, "r_n": 15, "r_p": 15} if args.coarse else \
               {"x_n": 20, "x_s": 10, "x_p": 20, "r_n": 30, "r_p": 30}
-    cycle = ["Charge at 1C until 4.2 V", "Hold at 4.2 V until C/100", "Rest for 5 minutes",
+    cycle = [f"Charge at {args.charge_crate:g}C until 4.2 V", "Hold at 4.2 V until C/100", "Rest for 5 minutes",
              "Discharge at 1C until 2.5 V", "Hold at 2.5 V until C/100", "Rest for 5 minutes"]
     exp = pybamm.Experiment([tuple(cycle)] * args.cycles)     # one tuple = one cycle (6 steps)
     solver = pybamm.CasadiSolver(mode="safe", dt_max=60)

@@ -40,6 +40,11 @@ SCALARS = {
     "R_p": "Positive particle radius [m]",
     "R_n": "Negative particle radius [m]",
     "t_plus": "Cation transference number",
+    # aging parameters (step C): initial stoichiometries (LLI) and active-material fractions (LAM)
+    "theta_n0": "Initial concentration in negative electrode [mol.m-3]",
+    "theta_p0": "Initial concentration in positive electrode [mol.m-3]",
+    "eps_am_n": "Negative electrode active material volume fraction",
+    "eps_am_p": "Positive electrode active material volume fraction",
 }
 FUNCTIONS = {  # multiplier applied to a parameter function
     "k_n": "Negative electrode exchange-current density [A.m-2]",
@@ -93,6 +98,9 @@ def main():
     ap.add_argument("--nx", type=int, default=40)
     ap.add_argument("--nr", type=int, default=60)
     ap.add_argument("--out", default=str(ROOT / "results" / "v2_identifiability"))
+    ap.add_argument("--add-R0", action="store_true", help="append a lumped series resistance: dV per 1 mOhm = -I(t)")
+    ap.add_argument("--t-end", type=float, default=None, help="protocol duration [s] (default 3000/rate, max 7000)")
+    ap.add_argument("--t-min", type=float, default=0.0, help="first sampled time [s] (data window)")
     args = ap.parse_args()
 
     cell = CellParams()
@@ -101,13 +109,16 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     sigma = args.noise_mV * 1e-3
     t0 = time.perf_counter()
-    S_all, V0_all, report = [], {}, {"params": args.params, "noise_mV": args.noise_mV, "dlog": args.dlog,
+    S_all, V0_all, report = [], {}, {"params": list(args.params) + (["R0"] if args.add_R0 else []), "noise_mV": args.noise_mV, "dlog": args.dlog,
                                      "dt_s": args.dt, "rates": {}}
     for rate in args.rates:
-        protocol = Protocol(current_A=5.0 * rate, ramp_s=30.0, t_end_s=min(3000.0 / rate, 7000.0))
-        times = np.arange(0.0, protocol.t_end_s + 1e-9, args.dt)
+        protocol = Protocol(current_A=5.0 * rate, ramp_s=30.0, t_end_s=args.t_end or min(3000.0 / rate, 7000.0))
+        times = np.arange(args.t_min, protocol.t_end_s + 1e-9, args.dt)
         V0 = voltage(cell, protocol, {}, times, mesh)
-        S = np.zeros((len(args.params), len(times)))
+        names = list(args.params) + (["R0"] if args.add_R0 else [])
+        S = np.zeros((len(names), len(times)))
+        if args.add_R0:   # linear parameter: sensitivity per 1 mOhm (the CRLB below is then in mOhm)
+            S[-1] = -1e-3 * protocol.current(times)
         for i, name in enumerate(args.params):
             Vp = voltage(cell, protocol, {name: np.exp(args.dlog)}, times, mesh)
             Vm = voltage(cell, protocol, {name: np.exp(-args.dlog)}, times, mesh)
@@ -117,12 +128,12 @@ def main():
         S_all.append(S)
         V0_all[rate] = V0
         F = S @ S.T / sigma ** 2
-        report["rates"][str(rate)] = analyse(F, S, args.params, sigma, label=f"{rate:g}C alone")
-        np.savez(out / f"sensitivities_{rate:g}C.npz", t=times, V=V0, S=S, params=np.array(args.params))
+        report["rates"][str(rate)] = analyse(F, S, names, sigma, label=f"{rate:g}C alone")
+        np.savez(out / f"sensitivities_{rate:g}C.npz", t=times, V=V0, S=S, params=np.array(names))
     if len(args.rates) > 1:
         S = np.concatenate(S_all, axis=1)
         F = S @ S.T / sigma ** 2
-        report["combined"] = analyse(F, S, args.params, sigma, label="all rates combined")
+        report["combined"] = analyse(F, S, names, sigma, label="all rates combined")
     (out / "identifiability.json").write_text(json.dumps(report, indent=1))
     print(f"\nSaved {out / 'identifiability.json'}")
 

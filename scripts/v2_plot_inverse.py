@@ -23,7 +23,9 @@ def main(run):
     names = cfg["inverse_params"]
     cell = CellParams()
     true = {"D_n": cell.D_n, "D_p": cell.D_p, "k_n": cell.k_n, "k_p": cell.k_p, "sigma_p": cell.sigma_p,
-            "D_e": 1.0, "kappa_e": 1.0}                 # electrolyte functions: reported as multipliers
+            "D_e": 1.0, "kappa_e": 1.0,                 # electrolyte functions: reported as multipliers
+            "eps_am_n": cell.eps_am_n, "eps_am_p": cell.eps_am_p, "theta_n0": cell.theta_n0, "theta_p0": cell.theta_p0}
+    names = [n for n in names if n in true]             # R0 (Ohm, fresh value 0) has no ratio: printed only
     rows = [h for h in hist if "parameters" in h]
     steps = [h["step"] for h in rows]
     fig, ax = plt.subplots(1, 2, figsize=(11, 4))
@@ -47,6 +49,8 @@ def main(run):
     print(out)
     for n in names:
         print(f"{n}: estimate {last[n]:.4g}, true {true[n]:.4g}, error {100 * (last[n] / true[n] - 1):+.1f} %")
+    if "R0" in cfg["inverse_params"]:
+        print(f"R0: estimate {1e3 * last['R0']:.3f} mOhm")
 
 
 if __name__ == "__main__":

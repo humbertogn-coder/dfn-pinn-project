@@ -1,0 +1,31 @@
+Output: /home/claude/v2/repo/results/v2_runs/C3_aging_cellC_c200_Dstress_20261006T200401Z
+Cycle results/aging_synthetic/cellC/cycles/cycle_0200.npz: CC 5.000 A for 3390 s (incl. charge shift 20.8 s); 56 voltage samples from t >= 100.0 s
+Truth (multipliers of the fresh cell): theta_n0 1.0105, theta_p0 0.9888, eps_am_n 0.9369, eps_am_p 0.9722; SEI_thickness_m 7.734e-08, Capacity_[A.h] 4.827, Loss_of_lithium_inventory_[%] 4.726, Loss_of_active_material_in_negative_electrode_[%] 6.347, Loss_of_active_material_in_positive_electrode_[%] 2.776, Loss_of_capacity_to_negative_SEI_[A.h] 0.06343, Loss_of_capacity_to_negative_lithium_plating_[A.h] 0.02158
+Stage 1: forward re-adaptation to t_end = 3390 s, 4000 steps, no data
+step      1 loss 1.520e+03 | mass 8.92e-04 charge_e 9.38e-03 solid 6.16e-04 particle 1.96e-01 inventory 2.13e-04 kinetics 6.76e+00 conservation 5.37e-02 | 1s
+step    250 loss 7.566e+00 | mass 2.62e-04 charge_e 7.15e-04 solid 2.60e-05 particle 3.31e-03 inventory 3.68e-03 kinetics 1.05e-02 conservation 5.99e-02 | 174s
+step    500 loss 5.075e+00 | mass 2.02e-04 charge_e 6.50e-04 solid 1.65e-05 particle 2.50e-03 inventory 3.00e-03 kinetics 6.01e-03 conservation 3.76e-02 | 346s
+step    750 loss 4.519e+00 | mass 2.21e-04 charge_e 9.46e-04 solid 1.32e-05 particle 2.16e-03 inventory 2.54e-03 kinetics 5.24e-03 conservation 1.11e-01 | 520s
+step   1000 loss 3.402e+00 | mass 1.70e-04 charge_e 5.52e-04 solid 1.69e-05 particle 1.87e-03 inventory 2.08e-03 kinetics 3.97e-03 conservation 4.00e-02 | 694s
+step   1250 loss 2.879e+00 | mass 2.16e-04 charge_e 5.20e-04 solid 1.16e-05 particle 1.63e-03 inventory 1.82e-03 kinetics 4.34e-03 conservation 2.21e-02 | 854s
+step   1500 loss 3.017e+00 | mass 1.91e-04 charge_e 8.21e-04 solid 1.17e-05 particle 1.40e-03 inventory 1.67e-03 kinetics 7.48e-03 conservation 4.18e-02 | 1022s
+step   1750 loss 2.371e+00 | mass 1.66e-04 charge_e 4.30e-04 solid 1.39e-05 particle 1.38e-03 inventory 1.40e-03 kinetics 3.99e-03 conservation 7.67e-02 | 1187s
+step   2000 loss 1.878e+00 | mass 1.77e-04 charge_e 4.59e-04 solid 6.90e-06 particle 1.12e-03 inventory 1.31e-03 kinetics 2.83e-03 conservation 9.64e-03 | 1352s
+step   2250 loss 1.893e+00 | mass 1.67e-04 charge_e 3.84e-04 solid 1.02e-05 particle 1.03e-03 inventory 1.20e-03 kinetics 4.83e-03 conservation 1.81e-02 | 1513s
+step   2500 loss 1.748e+00 | mass 1.88e-04 charge_e 5.78e-04 solid 1.12e-05 particle 7.41e-04 inventory 1.17e-03 kinetics 5.63e-03 conservation 7.93e-03 | 1675s
+step   2750 loss 1.292e+00 | mass 1.72e-04 charge_e 3.40e-04 solid 8.95e-06 particle 8.66e-04 inventory 9.57e-04 kinetics 2.90e-03 conservation 1.17e-02 | 1839s
+step   3000 loss 1.295e+00 | mass 1.54e-04 charge_e 5.26e-04 solid 6.86e-06 particle 6.93e-04 inventory 9.70e-04 kinetics 3.66e-03 conservation 1.61e-02 | 2002s
+step   3250 loss 1.090e+00 | mass 1.24e-04 charge_e 3.99e-04 solid 6.58e-06 particle 7.35e-04 inventory 8.58e-04 kinetics 3.22e-03 conservation 1.05e-02 | 2160s
+step   3500 loss 1.069e+00 | mass 1.43e-04 charge_e 3.34e-04 solid 5.08e-06 particle 6.65e-04 inventory 8.93e-04 kinetics 3.16e-03 conservation 1.17e-02 | 2329s
+step   3750 loss 9.455e-01 | mass 1.32e-04 charge_e 3.24e-04 solid 5.35e-06 particle 6.42e-04 inventory 8.54e-04 kinetics 2.63e-03 conservation 1.04e-02 | 2668s
+step   4000 loss 1.003e+00 | mass 1.21e-04 charge_e 4.18e-04 solid 5.52e-06 particle 5.76e-04 inventory 7.89e-04 kinetics 4.62e-03 conservation 1.08e-02 | 2831s
+Stage 2: aging parameters released with the voltage data
+Inverse problem: learning ['theta_n0', 'theta_p0', 'eps_am_n', 'eps_am_p', 'R0'], initial {'D_n': 3.3e-14, 'D_p': 4e-15, 'k_n': 6.48e-07, 'k_p': 3.42e-06, 'sigma_p': 0.09761239598534603, 'D_e': 1.0, 'kappa_e': 1.0, 'eps_am_n': 0.75, 'eps_am_p': 0.665, 'theta_n0': 0.9013973983641687, 'theta_p0': 0.2699987322515213, 'R0': 0.0}
+step      1 loss 1.806e+04 | mass 1.37e-04 charge_e 3.38e-04 solid 4.10e-06 particle 6.52e-04 inventory 8.02e-04 kinetics 3.32e-03 data 1.98e+04 conservation 7.83e-03 | 1s | theta_n0=0.9014 theta_p0=0.27 eps_am_n=0.75 eps_am_p=0.665 R0=0
+step    250 loss 5.496e+01 | mass 3.35e-02 charge_e 1.58e-02 solid 2.35e-02 particle 3.79e-02 inventory 3.16e-02 kinetics 1.23e-01 data 3.21e+01 conservation 1.12e-02 | 164s | theta_n0=0.9014 theta_p0=0.27 eps_am_n=0.75 eps_am_p=0.665 R0=0
+step    500 loss 3.015e+01 | mass 2.16e-02 charge_e 1.67e-02 solid 1.70e-02 particle 1.97e-02 inventory 1.97e-02 kinetics 9.46e-02 data 1.31e+01 conservation 6.86e-03 | 330s | theta_n0=0.9014 theta_p0=0.27 eps_am_n=0.75 eps_am_p=0.665 R0=0
+step    750 loss 2.567e+01 | mass 1.35e-02 charge_e 6.04e-03 solid 1.38e-02 particle 1.76e-02 inventory 1.69e-02 kinetics 1.02e-01 data 8.95e+00 conservation 6.48e-03 | 496s | theta_n0=0.9014 theta_p0=0.27 eps_am_n=0.75 eps_am_p=0.665 R0=0
+step   1000 loss 2.118e+01 | mass 9.91e-03 charge_e 5.96e-03 solid 1.02e-02 particle 1.45e-02 inventory 1.30e-02 kinetics 1.01e-01 data 6.34e+00 conservation 3.94e-03 | 662s | theta_n0=0.9014 theta_p0=0.27 eps_am_n=0.75 eps_am_p=0.665 R0=0
+step   1250 loss 5.900e+00 | mass 6.34e-03 charge_e 2.07e-03 solid 1.43e-03 particle 1.08e-03 inventory 8.82e-04 kinetics 3.09e-02 data 2.96e+00 conservation 4.37e-03 | 829s | theta_n0=0.9235 theta_p0=0.2775 eps_am_n=0.6868 eps_am_p=0.6198 R0=0.001359
+step   1500 loss 4.223e+00 | mass 6.09e-03 charge_e 1.70e-03 solid 4.99e-04 particle 7.27e-04 inventory 4.93e-04 kinetics 2.15e-02 data 2.25e+00 conservation 3.48e-03 | 1000s | theta_n0=0.9315 theta_p0=0.2772 eps_am_n=0.6831 eps_am_p=0.6323 R0=0.002276
+step   1750 loss 3.759e+00 | mass 6.33e-03 charge_e 1.52e-03 solid 2.99e-04 particle 4.50e-04 inventory 3.32e-04 kinetics 2.04e-02 data 1.92e+00 conservation 5.69e-03 | 1169s | theta_n0=0.9336 theta_p0=0.2762 eps_am_n=0.6817 eps_am_p=0.6334 R0=0.0025

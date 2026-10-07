@@ -307,36 +307,133 @@ above and exposed as explicit parameters, and the owner can ask T. Danner
 two S2- references by the authors' values if an exact reproduction is ever
 needed.
 
-## 6. PINN design notes for Li-SPAN
+## 6. Li-SPAN forward PINN (implemented 2026-10-06, `src/dfn_pinn/lispan/pinn.py`)
 
-* Inputs (y, t); no radial coordinate. Reuse the v2 ingredients: physical
-  output scales, hard initial conditions, tanh current ramp, resampling,
-  adaptive group weights, Fourier time features, hard zero-flux collector
-  features (section 7 of V2_RESULTS.md), reference only for evaluation.
-* Local species: hard IC and the two conservation invariants built into the
-  parametrization so only 2 of the 4 SPAN species (plus S2-) are learned.
-* S2- must be learned as log(c_S2-) (1e-12 to 1e-3 mol/m3) and eps_Li2S as a
-  non-negative, monotone-in-time quantity in discharge.
-* Reaction currents: with three reactions sharing one potential difference
-  Delta phi = phi_elode - phi_elyte, the v2 "learned j + inverse BV" idea does
-  not invert reaction by reaction. Two options to compare, in the order the
-  C-F factorial suggests:
-  (b) learn the total faradaic current i_F with the hard electrode-integral
-      projection (as in v2) and recover Delta phi by a differentiable
-      monotone root solve of F a sum_m r_m(Delta phi) = i_F (implicit-function
-      gradients) - the natural extension of the inverse-BV idea;
-  (a) learn Delta phi and evaluate r1-r3 directly (direct BV; expected to be
-      harder, as the factorial showed for the DFN).
-* Li2S nucleation is a threshold phenomenon (S2- pinned near K_sp after
-  ~400 mAh/g): expect a sharp time feature; use the hard-IC factor and a
-  time feature built from the precipitation driving force if needed.
-* Keep the double layer (it regularizes t = 0).
-* Inverse problem (the scientifically interesting part): identify a small,
-  identifiable subset of {U^eq,0_i, b_i, k0_i, K_sp, Z_CC, beta} from
-  discharge curves at several C-rates. Check identifiability with
-  sensitivities first (as in V2_RESULTS.md 3.0); the paper itself reports low
-  sensitivity to k0 (Fig. S1: curves for 1e-2 and 1e-3 nearly coincide) and
-  strong sensitivity to beta and eps_SPAN at 1 C (Figs S3-S4).
+Scripts: `scripts/lispan_train.py` (config `configs/lispan_forward_01C.json`,
+`--resume`, `--init`), `scripts/lispan_plot_run.py`. Same philosophy as the
+v2 DFN PINN: everything the physics fixes exactly is built into the
+parametrization, the rest is a residual with adaptive group weights.
+
+### 6.1 Fields and hard structure
+
+* Inputs (y, t) -> (Y, T) with the v2 time features (2T-1, 2g-1, Fourier
+  modes, short-time exponentials), g = tanh(t/tau_ramp).
+* Reaction extents. Three networks outputs P_m = exp(net_m) > 0 define the
+  remaining educt fractions e_m = exp(-T P_m) and the extents xi_1 = 1 - e_1,
+  xi_2 = xi_1 (1 - e_2), xi_3 = xi_2 (1 - e_3), so that 0 <= xi_3 <= xi_2 <=
+  xi_1 < 1 and xi(0) = 0 are exact. Species: c_S4 = c_S4,0 e_1, c_S3 = c_S4,0
+  xi_1 e_2, c_S2 = c_S4,0 xi_2 e_3, c_S1 = c_S4,0 (xi_1 + xi_3) (one PAN-S4-PAN
+  chain gives one S3Li and one SLi), eps_Li2S = eps_L0 + V_m c_S4,0 (xi_2 +
+  xi_3): sulfur conservation, positivity, initial conditions and the Li2S
+  inventory are exact. The dissolved S2- (< 1e-8 of the sulfide) is
+  neglected and its activity in the kinetics is fixed at saturation; the
+  finite-volume reference run the same way differs from the full model by
+  0.03 mV in voltage and 0.04 mol/m3 in species (section 5).
+* Total reduction rate R(y,t) = (I/F) rho / int_0^L a rho dy with rho =
+  exp(net) > 0: the electrode integral of the faradaic current equals the
+  applied current exactly (hard projection, Gauss-Legendre in y at every
+  sample), and the ionic current i_e(y,t) = -I int_0^y a rho / int_0^L a rho
+  follows.
+* Kinetics exact: Delta phi(y,t) is the root of sum_m f_m(Delta phi) = R
+  (bracketed bisection + Newton, gradients by the implicit function theorem
+  with the slope floored at -F R/(2RT) so that the sensitivity stays at the
+  Tafel scale where the educts are exhausted during training). The
+  individual rates f_m(Delta phi) then split R among the three reactions.
+* Electrolyte: salt c_e = c_0 (1 + s tanh(net) (1 - e^{-t/tau_ic})) (initial
+  condition exact, bounded deviation so that kappa_e never collapses), phi_e
+  = phi_e,anode(t) + (1 - Y) net (anode kinetics built in).
+* Voltage E = Delta phi(0,t) + phi_e(0,t) - Z_CC I(t).
+
+### 6.2 Residuals (dimensionless, adaptive group weights as in v2)
+
+1. extents: d xi_m/dT - t_end a f_m/(2 c_S4,0), m = 1, 2, 3 (the ODEs tie the
+   extents to the kinetic split; the sum is exact by the projection);
+2. solid Ohm / kinetics consistency in the cathode: d(Delta phi)/dy = (I +
+   i_e)/kappa_s + (i_e + B)/kappa_e with B = F (D+ - D-) eps^beta dc/dy;
+3. electrolyte Ohm in both regions: d phi_e/dy = -(i_e + B)/kappa_e;
+4. salt balance in both regions (binary electrolyte, transference form):
+   d(eps c)/dt = d/dy(D_eff dc/dy) - (1 - t+) a R (cathode; the Li+ sink is
+   one Li+ per electron once the sulfide precipitates) and the three flux
+   conditions (zero at the collector, (1 - t+) I/F at the Li surface,
+   continuity at the interface).
+
+Residuals 2 and 3 use a Huber loss (quadratic below 3, linear above): the
+Tafel relation turns any spatial roughness of the species into very large
+d(Delta phi)/dy early in training (residuals of 1e4 were seen), which with a
+plain square dominated the gradient and stalled the run. No double layer
+(time constant < 1 s); the reference for the evaluation is run with c_DL ->
+0 and the same current ramp.
+
+### 6.3 What had to be changed to make it trainable (negative results)
+
+* **Reaction (2) reversible = stiff.** With the mass-action reverse term the
+  S2Li concentration at high Delta phi is slaved to an equilibrium c_S2 ~
+  exp(-2x_2) that spans ten decades; a representation error of 1e-5 in
+  c_S2/c_ref produces a reverse rate 20x the demand. The finite-volume
+  reference handles this with log states; a PINN cannot. Reaction (2) is
+  therefore treated as irreversible like reaction (3) in the PINN benchmark
+  (`reversible = (True, False, False)`): the reference changes by 2.6 mV rms
+  / 5.6 mV max and 10 mol/m3 at 0.1 C, 0.1 mV at 1 C. Reaction (1) keeps its
+  reverse term (its operating point is within 1-2 kT of equilibrium in phase
+  1, no stiffness).
+* **float32 cancellation.** Computing c_S4 = c_S4,0 (1 - xi_1) with xi_1 =
+  1 - e^{-T P} loses the educt entirely once T P > 17 (1 - e^{-17} rounds to
+  1) and makes the forward Tafel term of reaction (1) jump; the species are
+  computed from the remaining fractions e_m directly. Before this fix the ODE
+  residuals plateaued at 0.1-0.6 and the voltage error at 150 mV; after it
+  the residuals fell by two orders of magnitude within 500 steps.
+* **Implicit-root sensitivity.** Where the extents overshoot during training
+  (educts exhausted before the end), sum f_m < R for every Delta phi, the
+  root sits at the bracket edge and the implicit derivative diverges; the
+  slope floor and a clamped (straight-through) Newton correction fix it.
+
+### 6.4 Status
+
+Run A (`runA_floor1e-12_lispan_f01C_20261006T184521Z`, 0.1 C, width 64,
+fourier_t 4, activity floor 1e-12 mol/m3): plateau at 24 mV rms / 79 mV
+max from step 1000 on. Cause: the floor let the exhausted educt of reaction
+1 keep 1.4 % of the current after phase 1 through the e^{-x} = 130-1e5 Tafel
+amplification at low Delta phi, which the extents (xi_1 <= 1) could not
+follow; the ODE residual sat at a uniform -0.04.
+
+Run `lispan_f01C_20261006T190806Z` (same architecture, floor 1e-30 in
+activity units, exponent cap 60; 10 000 Adam steps, 45 min on one core):
+voltage **1.18 mV rms / 3.9 mV max** against the finite-volume reference
+(points t > 100 s, first 98 % of the discharge), Delta phi(0) 1.2 mV rms,
+species 0.09 / 0.61 / 1.03 / 1.31 mol/m3 rms (S4 / S3 / S2 / S1, 0.1-0.2 %
+of 598), eps_Li2S 5e-5, phi_e 0.025 mV, c_e 1.17 mol/m3 rms (a 0.1 %
+inventory offset: the salt balance is local, so the global inventory
+drifts; run B adds the global inventory residual of v2). The
+S3 -> S2 -> S1 hand-overs at 450 and 900 mAh/g are resolved. Figures:
+`results/lispan_runs/<run>/plot_final.png`.
+
+Run B (`lispan_f01C_w96_20261006T194300Z`, `configs/lispan_forward_01C_w96.json`:
+width 96, fourier_t 8, 20 000 steps, 768 cathode points, global salt
+residual; 1 h 45 min on one core): final **1.0 mV rms / 3.4 mV max**,
+species 0.1 / 0.5 / 0.8 / 1.0 mol/m3, eps_Li2S 4e-5, c_e 0.16 mol/m3 (the
+global inventory residual removed the offset), phi_e 0.03 mV. The
+checkpoints along the run evaluate between 0.39 / 1.4 mV (step 5000) and
+1.4 / 4.5 mV (step 10 000) although every residual keeps falling (ODE
+terms 2e-5, Ohm 5e-6 at the end): the solution wanders along a direction
+the residuals constrain only weakly. Tracing the error (same root solve
+applied to the finite-volume species and rates reproduces the reference
+Delta phi to 1e-4 V): in phase 3 a 0.5 % deficit of c_S2 (1.7 mol/m3)
+costs 1.9 mV through the OCV slope b_3 = 0.62 V (1 mV per mol/m3 of S2Li),
+so the late-time voltage is an integrated-extent accuracy problem, not a
+kinetics one. Remedies for the next run, in order: a fixed extra weight on
+the extent ODEs (the adaptive scheme equalizes gradient norms, not
+importance for the voltage), parameter averaging over the last checkpoints
+(EMA), and the v2 L-BFGS polish. Figures:
+`results/lispan_runs/<run>/plot_final.png`.
+
+### 6.5 Inverse problem (planned)
+
+Identify a small, identifiable subset of {U0_m, b_m, k0_m, Z_CC, D_salt,
+kappa0} (all exposed as log-multipliers / offsets in `LiSPANPINN.PARAMETERS`)
+from discharge curves at several C-rates; sensitivities first (as in
+V2_RESULTS.md 3.0). The paper itself reports low sensitivity to k0 in the
+Tafel regime for the voltage *shape* but 0.118 V per decade in level, and
+strong sensitivity to beta and eps_SPAN at 1 C (Figs S3-S4).
 
 ## 7. Data for the Li-SPAN work
 

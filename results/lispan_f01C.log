@@ -1,0 +1,114 @@
+Output: /home/claude/v2/repo/results/lispan_runs/lispan_f01C_20261006T190806Z; reference /home/claude/v2/repo/results/lispan/pinn_reference_0.1C_rii_Zcc0.025.npz (t_end ref 34098 s, PINN t_end 33416 s)
+step      1 loss 7.012e+00 | ode1 1.77e+00 ode2 4.39e-01 ode3 6.29e-04 charge_s 6.07e-01 charge_e 4.60e-01 salt_c 9.95e-01 salt_s 1.12e-04 bc_c0 3.65e-04 bc_an 1.04e+00 bc_if 1.13e-03 | 0s
+step    100 loss 7.805e-01 | ode1 2.89e-01 ode2 1.85e-01 ode3 2.97e-02 charge_s 1.11e-02 charge_e 3.77e-02 salt_c 5.20e-03 salt_s 9.46e-03 bc_c0 4.43e-03 bc_an 1.37e-03 bc_if 1.87e-03 | 18s
+step    200 loss 5.424e-01 | ode1 5.49e-02 ode2 7.26e-02 ode3 2.38e-02 charge_s 7.88e-02 charge_e 2.29e-02 salt_c 2.86e-03 salt_s 1.29e-03 bc_c0 2.20e-03 bc_an 1.52e-03 bc_if 2.85e-03 | 33s
+step    300 loss 3.363e-01 | ode1 1.09e-02 ode2 1.44e-02 ode3 7.76e-03 charge_s 5.67e-02 charge_e 1.37e-02 salt_c 7.41e-04 salt_s 8.53e-03 bc_c0 4.91e-04 bc_an 1.62e-03 bc_if 5.16e-04 | 49s
+step    400 loss 1.351e-01 | ode1 2.54e-03 ode2 5.31e-03 ode3 2.42e-03 charge_s 2.35e-02 charge_e 9.94e-03 salt_c 4.73e-04 salt_s 7.02e-04 bc_c0 5.41e-04 bc_an 1.30e-03 bc_if 3.01e-04 | 64s
+step    500 loss 1.099e-01 | ode1 1.02e-03 ode2 2.66e-03 ode3 1.48e-03 charge_s 7.74e-03 charge_e 2.21e-02 salt_c 3.20e-04 salt_s 3.45e-04 bc_c0 2.60e-03 bc_an 3.84e-04 bc_if 1.72e-03 | 79s
+step    600 loss 9.220e-02 | ode1 1.36e-03 ode2 4.73e-03 ode3 8.71e-04 charge_s 5.87e-03 charge_e 1.00e-02 salt_c 6.76e-04 salt_s 4.61e-04 bc_c0 1.92e-04 bc_an 6.22e-04 bc_if 2.07e-04 | 96s
+step    700 loss 1.342e-01 | ode1 6.87e-04 ode2 2.62e-03 ode3 9.03e-04 charge_s 5.26e-03 charge_e 9.32e-03 salt_c 2.42e-04 salt_s 4.71e-04 bc_c0 2.62e-03 bc_an 3.01e-04 bc_if 2.88e-03 | 112s
+step    800 loss 5.252e-02 | ode1 5.06e-04 ode2 1.65e-03 ode3 5.32e-04 charge_s 1.57e-03 charge_e 7.47e-03 salt_c 1.82e-04 salt_s 2.26e-04 bc_c0 6.90e-04 bc_an 3.42e-04 bc_if 5.86e-04 | 129s
+step    900 loss 4.539e-02 | ode1 3.68e-04 ode2 2.02e-03 ode3 4.95e-04 charge_s 4.71e-03 charge_e 5.20e-03 salt_c 6.30e-05 salt_s 1.70e-04 bc_c0 1.67e-04 bc_an 9.75e-04 bc_if 1.82e-04 | 146s
+step   1000 loss 4.364e-02 | ode1 6.22e-04 ode2 1.16e-03 ode3 3.97e-04 charge_s 2.92e-03 charge_e 4.05e-03 salt_c 2.11e-04 salt_s 2.45e-04 bc_c0 1.54e-04 bc_an 2.88e-04 bc_if 1.69e-04 | 162s
+  eval: V_rmse_mV 3.173, V_max_mV 8.746, c_S4_rmse 0.3637, c_S3_rmse 2.094, c_S2_rmse 2.92, c_S1_rmse 3.416, eps_L_rmse 0.0001357, c_e_rmse 1.165, c_e_max 3.862, phi_e_rmse_mV 0.05759, dphi0_rmse_mV 3.209
+step   1100 loss 2.264e-02 | ode1 3.82e-04 ode2 1.08e-03 ode3 2.81e-04 charge_s 1.26e-03 charge_e 3.11e-03 salt_c 3.14e-05 salt_s 1.43e-04 bc_c0 1.06e-04 bc_an 3.30e-04 bc_if 7.19e-05 | 176s
+step   1200 loss 1.622e-02 | ode1 2.49e-04 ode2 9.07e-04 ode3 3.09e-04 charge_s 1.09e-03 charge_e 3.68e-03 salt_c 2.56e-05 salt_s 9.77e-05 bc_c0 3.32e-05 bc_an 3.13e-04 bc_if 6.52e-05 | 193s
+step   1300 loss 2.334e-02 | ode1 3.37e-04 ode2 1.22e-03 ode3 2.64e-04 charge_s 9.39e-04 charge_e 4.47e-03 salt_c 8.66e-05 salt_s 2.61e-04 bc_c0 4.12e-05 bc_an 3.44e-04 bc_if 3.60e-05 | 209s
+step   1400 loss 1.907e-02 | ode1 2.23e-04 ode2 9.73e-04 ode3 2.38e-04 charge_s 6.70e-04 charge_e 2.84e-03 salt_c 3.21e-05 salt_s 1.72e-04 bc_c0 7.09e-05 bc_an 9.05e-04 bc_if 5.29e-05 | 225s
+step   1500 loss 3.842e-02 | ode1 1.63e-03 ode2 2.75e-03 ode3 7.08e-04 charge_s 6.55e-03 charge_e 3.16e-03 salt_c 2.45e-04 salt_s 2.55e-04 bc_c0 3.35e-05 bc_an 1.55e-04 bc_if 1.04e-04 | 241s
+step   1600 loss 1.253e-02 | ode1 5.82e-04 ode2 6.60e-04 ode3 2.15e-04 charge_s 8.00e-04 charge_e 1.89e-03 salt_c 3.39e-05 salt_s 9.45e-05 bc_c0 4.58e-05 bc_an 3.63e-04 bc_if 1.55e-05 | 256s
+step   1700 loss 9.601e-03 | ode1 2.80e-04 ode2 8.59e-04 ode3 3.50e-04 charge_s 1.02e-03 charge_e 2.95e-03 salt_c 2.82e-05 salt_s 6.79e-05 bc_c0 3.51e-05 bc_an 3.89e-05 bc_if 2.86e-05 | 273s
+step   1800 loss 1.492e-02 | ode1 2.55e-04 ode2 5.60e-04 ode3 2.64e-04 charge_s 9.49e-04 charge_e 2.10e-03 salt_c 2.68e-05 salt_s 2.79e-04 bc_c0 2.16e-05 bc_an 6.92e-05 bc_if 2.80e-05 | 288s
+step   1900 loss 1.629e-02 | ode1 2.60e-04 ode2 5.94e-04 ode3 2.30e-04 charge_s 7.50e-04 charge_e 1.94e-03 salt_c 4.86e-05 salt_s 2.73e-04 bc_c0 5.34e-05 bc_an 1.88e-04 bc_if 8.04e-05 | 304s
+step   2000 loss 1.082e-02 | ode1 2.54e-04 ode2 7.84e-04 ode3 1.82e-04 charge_s 6.30e-04 charge_e 1.48e-03 salt_c 5.57e-05 salt_s 1.20e-04 bc_c0 5.53e-05 bc_an 7.70e-05 bc_if 2.50e-05 | 319s
+  eval: V_rmse_mV 2.993, V_max_mV 8.085, c_S4_rmse 0.4135, c_S3_rmse 1.72, c_S2_rmse 2.588, c_S1_rmse 2.958, eps_L_rmse 0.000117, c_e_rmse 1.136, c_e_max 3.319, phi_e_rmse_mV 0.04687, dphi0_rmse_mV 3.016
+step   2100 loss 8.981e-03 | ode1 1.50e-04 ode2 7.37e-04 ode3 1.46e-04 charge_s 5.41e-04 charge_e 9.40e-04 salt_c 1.46e-05 salt_s 1.04e-04 bc_c0 5.57e-05 bc_an 3.37e-04 bc_if 4.68e-05 | 335s
+step   2200 loss 1.146e-02 | ode1 8.56e-04 ode2 1.08e-03 ode3 4.31e-04 charge_s 2.16e-03 charge_e 2.49e-03 salt_c 4.51e-05 salt_s 5.79e-05 bc_c0 4.48e-05 bc_an 1.07e-04 bc_if 5.19e-05 | 351s
+step   2300 loss 7.554e-03 | ode1 4.63e-04 ode2 6.45e-04 ode3 1.74e-04 charge_s 6.66e-04 charge_e 9.15e-04 salt_c 1.89e-05 salt_s 1.09e-04 bc_c0 1.38e-05 bc_an 2.59e-05 bc_if 9.65e-06 | 367s
+step   2400 loss 3.193e-02 | ode1 1.54e-03 ode2 1.82e-03 ode3 1.17e-03 charge_s 1.59e-03 charge_e 1.41e-03 salt_c 1.86e-05 salt_s 5.79e-04 bc_c0 7.03e-05 bc_an 6.17e-04 bc_if 1.47e-05 | 381s
+step   2500 loss 1.118e-02 | ode1 1.40e-03 ode2 6.70e-04 ode3 2.08e-04 charge_s 1.15e-03 charge_e 7.03e-04 salt_c 2.03e-05 salt_s 3.52e-05 bc_c0 5.31e-05 bc_an 2.45e-04 bc_if 2.90e-05 | 397s
+step   2600 loss 9.421e-03 | ode1 5.00e-04 ode2 7.02e-04 ode3 2.06e-04 charge_s 6.09e-04 charge_e 1.08e-03 salt_c 5.37e-05 salt_s 6.30e-05 bc_c0 4.54e-05 bc_an 8.77e-05 bc_if 6.00e-05 | 412s
+step   2700 loss 7.343e-03 | ode1 2.73e-04 ode2 5.51e-04 ode3 1.67e-04 charge_s 5.44e-04 charge_e 1.00e-03 salt_c 1.79e-05 salt_s 9.41e-05 bc_c0 1.59e-05 bc_an 2.76e-05 bc_if 4.26e-05 | 429s
+step   2800 loss 3.327e-03 | ode1 1.43e-04 ode2 2.45e-04 ode3 1.41e-04 charge_s 4.87e-04 charge_e 6.90e-04 salt_c 1.12e-05 salt_s 2.82e-05 bc_c0 7.43e-06 bc_an 4.87e-05 bc_if 1.69e-05 | 444s
+step   2900 loss 3.976e-03 | ode1 2.94e-04 ode2 4.42e-04 ode3 1.36e-04 charge_s 4.62e-04 charge_e 7.21e-04 salt_c 1.43e-05 salt_s 2.87e-05 bc_c0 8.42e-06 bc_an 2.42e-05 bc_if 1.04e-05 | 459s
+step   3000 loss 7.909e-03 | ode1 1.00e-03 ode2 6.12e-04 ode3 1.90e-04 charge_s 6.73e-04 charge_e 6.26e-04 salt_c 3.48e-05 salt_s 4.09e-05 bc_c0 9.04e-06 bc_an 1.30e-04 bc_if 1.41e-05 | 474s
+  eval: V_rmse_mV 3.825, V_max_mV 9.74, c_S4_rmse 0.5588, c_S3_rmse 1.977, c_S2_rmse 3.117, c_S1_rmse 3.542, eps_L_rmse 0.0001323, c_e_rmse 1.139, c_e_max 3.224, phi_e_rmse_mV 0.03065, dphi0_rmse_mV 3.867
+step   3100 loss 5.130e-03 | ode1 1.93e-04 ode2 3.46e-04 ode3 1.40e-04 charge_s 5.88e-04 charge_e 7.38e-04 salt_c 1.89e-05 salt_s 3.73e-05 bc_c0 2.47e-05 bc_an 1.06e-04 bc_if 2.36e-05 | 492s
+step   3200 loss 8.748e-03 | ode1 6.44e-04 ode2 5.28e-04 ode3 1.42e-04 charge_s 8.88e-04 charge_e 7.31e-04 salt_c 1.91e-05 salt_s 8.90e-05 bc_c0 3.30e-05 bc_an 1.30e-04 bc_if 1.04e-05 | 507s
+step   3300 loss 6.601e-03 | ode1 3.22e-04 ode2 6.46e-04 ode3 1.15e-04 charge_s 5.08e-04 charge_e 5.25e-04 salt_c 5.27e-05 salt_s 4.90e-05 bc_c0 1.94e-05 bc_an 4.93e-05 bc_if 1.07e-05 | 523s
+step   3400 loss 5.318e-03 | ode1 1.88e-04 ode2 4.37e-04 ode3 1.05e-04 charge_s 3.93e-04 charge_e 7.02e-04 salt_c 8.85e-06 salt_s 5.30e-05 bc_c0 2.01e-05 bc_an 1.72e-04 bc_if 2.13e-05 | 539s
+step   3500 loss 7.938e-03 | ode1 7.28e-04 ode2 8.88e-04 ode3 5.57e-04 charge_s 9.25e-04 charge_e 4.10e-04 salt_c 1.50e-05 salt_s 6.70e-05 bc_c0 5.77e-06 bc_an 3.19e-05 bc_if 1.55e-05 | 556s
+step   3600 loss 6.680e-03 | ode1 1.89e-04 ode2 6.54e-04 ode3 1.97e-04 charge_s 5.99e-04 charge_e 6.78e-04 salt_c 1.26e-05 salt_s 9.95e-05 bc_c0 1.29e-05 bc_an 5.85e-05 bc_if 2.96e-05 | 572s
+step 3677: non-finite loss, batch skipped
+step   3700 loss 1.088e-02 | ode1 4.58e-04 ode2 8.12e-04 ode3 4.94e-04 charge_s 1.63e-03 charge_e 6.03e-04 salt_c 2.27e-05 salt_s 1.46e-04 bc_c0 2.98e-05 bc_an 3.91e-05 bc_if 4.50e-05 | 587s
+step   3800 loss 6.657e-03 | ode1 1.68e-04 ode2 4.70e-04 ode3 9.71e-05 charge_s 3.22e-04 charge_e 6.53e-04 salt_c 2.13e-05 salt_s 1.15e-04 bc_c0 1.41e-05 bc_an 8.74e-05 bc_if 1.99e-05 | 604s
+step   3900 loss 4.904e-03 | ode1 1.10e-04 ode2 3.97e-04 ode3 9.23e-05 charge_s 3.23e-04 charge_e 4.37e-04 salt_c 8.82e-06 salt_s 1.16e-04 bc_c0 8.45e-06 bc_an 1.09e-05 bc_if 1.51e-05 | 619s
+step   4000 loss 7.637e-03 | ode1 1.92e-04 ode2 6.59e-04 ode3 9.48e-05 charge_s 3.91e-04 charge_e 7.47e-04 salt_c 1.56e-05 salt_s 1.96e-04 bc_c0 1.06e-05 bc_an 1.46e-05 bc_if 9.05e-06 | 635s
+  eval: V_rmse_mV 1.964, V_max_mV 5.8, c_S4_rmse 0.2572, c_S3_rmse 1.144, c_S2_rmse 1.768, c_S1_rmse 2.093, eps_L_rmse 8.168e-05, c_e_rmse 1.161, c_e_max 2.99, phi_e_rmse_mV 0.02846, dphi0_rmse_mV 2.015
+step   4100 loss 9.876e-02 | ode1 4.91e-04 ode2 3.33e-04 ode3 1.06e-04 charge_s 3.84e-04 charge_e 5.31e-04 salt_c 2.55e-05 salt_s 3.91e-05 bc_c0 3.72e-06 bc_an 1.28e-05 bc_if 1.75e-05 | 651s
+step   4200 loss 1.385e-01 | ode1 1.49e-04 ode2 3.60e-04 ode3 2.10e-04 charge_s 1.82e-03 charge_e 1.31e-03 salt_c 9.84e-06 salt_s 1.38e-04 bc_c0 4.55e-04 bc_an 2.20e-05 bc_if 3.05e-04 | 667s
+step   4300 loss 7.901e-02 | ode1 1.86e-04 ode2 6.34e-04 ode3 2.32e-04 charge_s 1.60e-03 charge_e 9.37e-04 salt_c 1.08e-05 salt_s 2.81e-05 bc_c0 3.85e-05 bc_an 6.20e-05 bc_if 2.11e-05 | 685s
+step   4400 loss 1.321e-01 | ode1 5.11e-04 ode2 4.37e-04 ode3 9.11e-05 charge_s 2.04e-03 charge_e 7.24e-04 salt_c 3.63e-05 salt_s 6.85e-04 bc_c0 1.15e-04 bc_an 3.73e-05 bc_if 7.52e-05 | 700s
+step   4500 loss 9.236e-02 | ode1 2.17e-04 ode2 5.55e-04 ode3 9.91e-05 charge_s 1.56e-03 charge_e 1.33e-03 salt_c 2.01e-05 salt_s 5.10e-04 bc_c0 1.67e-04 bc_an 4.25e-05 bc_if 9.92e-05 | 714s
+step   4600 loss 3.364e-02 | ode1 2.07e-04 ode2 4.78e-04 ode3 1.09e-04 charge_s 9.71e-04 charge_e 4.50e-04 salt_c 3.11e-05 salt_s 3.36e-05 bc_c0 1.81e-05 bc_an 1.14e-05 bc_if 1.81e-05 | 730s
+step   4700 loss 2.280e-02 | ode1 1.05e-04 ode2 3.33e-04 ode3 8.43e-05 charge_s 6.43e-04 charge_e 3.45e-04 salt_c 1.85e-05 salt_s 7.14e-05 bc_c0 1.95e-05 bc_an 2.57e-05 bc_if 3.43e-05 | 745s
+step   4800 loss 2.094e-02 | ode1 9.57e-05 ode2 2.44e-04 ode3 7.41e-05 charge_s 6.94e-04 charge_e 3.72e-04 salt_c 1.45e-05 salt_s 1.88e-04 bc_c0 4.59e-06 bc_an 1.33e-05 bc_if 1.34e-05 | 761s
+step   4900 loss 2.521e-02 | ode1 1.35e-04 ode2 4.15e-04 ode3 6.54e-05 charge_s 6.96e-04 charge_e 4.97e-04 salt_c 8.95e-06 salt_s 2.75e-04 bc_c0 6.78e-06 bc_an 2.16e-05 bc_if 1.18e-05 | 777s
+step   5000 loss 1.125e-02 | ode1 1.06e-04 ode2 2.86e-04 ode3 7.88e-05 charge_s 5.98e-04 charge_e 2.57e-04 salt_c 6.68e-06 salt_s 5.83e-05 bc_c0 4.13e-06 bc_an 1.33e-05 bc_if 1.51e-05 | 794s
+  eval: V_rmse_mV 2.057, V_max_mV 6.035, c_S4_rmse 0.2101, c_S3_rmse 1.126, c_S2_rmse 1.738, c_S1_rmse 2.079, eps_L_rmse 8.053e-05, c_e_rmse 1.15, c_e_max 2.771, phi_e_rmse_mV 0.02773, dphi0_rmse_mV 2.109
+step   5100 loss 1.162e-02 | ode1 9.66e-05 ode2 3.64e-04 ode3 7.76e-05 charge_s 6.55e-04 charge_e 3.67e-04 salt_c 7.86e-06 salt_s 5.41e-05 bc_c0 1.42e-05 bc_an 1.43e-05 bc_if 4.22e-05 | 807s
+step   5200 loss 9.335e-03 | ode1 2.31e-04 ode2 2.97e-04 ode3 9.89e-05 charge_s 6.06e-04 charge_e 3.64e-04 salt_c 1.20e-05 salt_s 2.21e-05 bc_c0 3.00e-06 bc_an 1.39e-05 bc_if 5.89e-06 | 824s
+step   5300 loss 6.557e-02 | ode1 2.23e-04 ode2 4.77e-04 ode3 7.52e-05 charge_s 5.98e-04 charge_e 3.19e-04 salt_c 1.63e-05 salt_s 1.79e-03 bc_c0 4.72e-06 bc_an 1.44e-05 bc_if 9.36e-06 | 839s
+step   5400 loss 7.250e-03 | ode1 1.68e-04 ode2 2.93e-04 ode3 1.16e-04 charge_s 6.34e-04 charge_e 2.39e-04 salt_c 1.32e-05 salt_s 1.65e-05 bc_c0 5.63e-06 bc_an 9.98e-06 bc_if 2.03e-05 | 856s
+step   5500 loss 5.455e-03 | ode1 1.09e-04 ode2 3.02e-04 ode3 7.01e-05 charge_s 4.79e-04 charge_e 2.23e-04 salt_c 9.97e-06 salt_s 2.46e-05 bc_c0 5.43e-06 bc_an 1.55e-05 bc_if 4.54e-06 | 870s
+step   5600 loss 6.633e-03 | ode1 1.15e-04 ode2 4.88e-04 ode3 6.34e-05 charge_s 3.90e-04 charge_e 8.40e-04 salt_c 1.58e-05 salt_s 1.73e-05 bc_c0 2.87e-06 bc_an 8.57e-06 bc_if 8.69e-06 | 887s
+step   5700 loss 7.108e-03 | ode1 2.00e-04 ode2 4.37e-04 ode3 1.63e-04 charge_s 4.89e-04 charge_e 3.15e-04 salt_c 5.61e-06 salt_s 2.46e-05 bc_c0 4.55e-06 bc_an 1.51e-05 bc_if 1.01e-05 | 903s
+step   5800 loss 1.116e-01 | ode1 3.35e-04 ode2 4.56e-04 ode3 1.16e-04 charge_s 1.07e-03 charge_e 5.72e-04 salt_c 3.35e-05 salt_s 1.52e-04 bc_c0 7.33e-06 bc_an 6.06e-06 bc_if 8.56e-06 | 919s
+step   5900 loss 4.642e-02 | ode1 1.68e-04 ode2 2.67e-04 ode3 7.66e-05 charge_s 1.22e-03 charge_e 2.18e-04 salt_c 9.85e-06 salt_s 2.38e-05 bc_c0 8.63e-06 bc_an 8.10e-06 bc_if 9.17e-06 | 935s
+step   6000 loss 7.339e-02 | ode1 2.23e-04 ode2 4.02e-04 ode3 7.99e-05 charge_s 1.03e-03 charge_e 6.00e-04 salt_c 3.84e-05 salt_s 1.94e-04 bc_c0 1.75e-05 bc_an 2.57e-05 bc_if 1.28e-05 | 950s
+  eval: V_rmse_mV 1.891, V_max_mV 5.831, c_S4_rmse 0.4908, c_S3_rmse 1.194, c_S2_rmse 1.605, c_S1_rmse 1.953, eps_L_rmse 7.945e-05, c_e_rmse 1.126, c_e_max 2.726, phi_e_rmse_mV 0.02471, dphi0_rmse_mV 1.941
+step   6100 loss 3.171e-02 | ode1 1.14e-04 ode2 2.91e-04 ode3 5.82e-05 charge_s 9.73e-04 charge_e 1.86e-04 salt_c 1.60e-05 salt_s 2.04e-05 bc_c0 1.93e-05 bc_an 3.97e-05 bc_if 8.55e-06 | 966s
+step   6200 loss 7.777e-02 | ode1 7.70e-05 ode2 2.49e-04 ode3 6.32e-05 charge_s 1.35e-03 charge_e 4.37e-04 salt_c 8.56e-06 salt_s 7.85e-05 bc_c0 3.43e-05 bc_an 8.48e-06 bc_if 3.92e-05 | 981s
+step   6300 loss 8.284e-02 | ode1 9.11e-05 ode2 2.38e-04 ode3 6.25e-05 charge_s 1.49e-03 charge_e 3.23e-04 salt_c 4.74e-06 salt_s 2.50e-04 bc_c0 5.21e-06 bc_an 6.52e-06 bc_if 9.23e-06 | 997s
+step   6400 loss 6.052e-02 | ode1 1.16e-04 ode2 2.85e-04 ode3 6.49e-05 charge_s 1.40e-03 charge_e 3.37e-04 salt_c 8.82e-06 salt_s 7.93e-05 bc_c0 3.71e-05 bc_an 1.29e-05 bc_if 3.20e-05 | 1011s
+step   6500 loss 4.584e-02 | ode1 1.92e-04 ode2 3.01e-04 ode3 7.74e-05 charge_s 1.21e-03 charge_e 7.17e-04 salt_c 1.33e-05 salt_s 1.25e-05 bc_c0 2.39e-06 bc_an 8.73e-06 bc_if 6.91e-06 | 1026s
+step   6600 loss 6.932e-02 | ode1 1.47e-04 ode2 3.31e-04 ode3 6.09e-05 charge_s 1.04e-03 charge_e 3.64e-04 salt_c 1.58e-05 salt_s 3.99e-04 bc_c0 8.03e-06 bc_an 6.33e-06 bc_if 8.29e-06 | 1043s
+step   6700 loss 2.792e-02 | ode1 8.50e-05 ode2 3.22e-04 ode3 6.49e-05 charge_s 9.00e-04 charge_e 1.99e-04 salt_c 6.30e-06 salt_s 3.98e-05 bc_c0 5.94e-06 bc_an 9.21e-06 bc_if 1.09e-05 | 1058s
+step   6800 loss 3.426e-02 | ode1 2.15e-04 ode2 3.28e-04 ode3 7.04e-05 charge_s 9.79e-04 charge_e 2.73e-04 salt_c 1.80e-05 salt_s 9.93e-05 bc_c0 5.38e-06 bc_an 3.19e-05 bc_if 8.17e-06 | 1074s
+step   6900 loss 1.641e-02 | ode1 7.47e-05 ode2 2.04e-04 ode3 5.89e-05 charge_s 7.58e-04 charge_e 2.83e-04 salt_c 1.95e-05 salt_s 3.91e-05 bc_c0 1.26e-05 bc_an 3.01e-05 bc_if 5.78e-06 | 1092s
+step   7000 loss 1.320e-02 | ode1 2.13e-04 ode2 1.20e-04 ode3 6.56e-05 charge_s 7.27e-04 charge_e 2.04e-04 salt_c 6.89e-06 salt_s 2.13e-05 bc_c0 2.38e-06 bc_an 6.98e-06 bc_if 1.01e-05 | 1107s
+  eval: V_rmse_mV 1.685, V_max_mV 4.924, c_S4_rmse 0.1451, c_S3_rmse 0.7524, c_S2_rmse 1.426, c_S1_rmse 1.712, eps_L_rmse 6.265e-05, c_e_rmse 1.171, c_e_max 2.671, phi_e_rmse_mV 0.02454, dphi0_rmse_mV 1.733
+step   7100 loss 3.440e-02 | ode1 1.33e-04 ode2 2.45e-04 ode3 5.64e-05 charge_s 6.65e-04 charge_e 2.53e-04 salt_c 8.13e-06 salt_s 5.15e-04 bc_c0 7.70e-06 bc_an 3.52e-05 bc_if 1.53e-05 | 1124s
+step   7200 loss 8.442e-03 | ode1 1.04e-04 ode2 1.84e-04 ode3 6.14e-05 charge_s 5.55e-04 charge_e 2.11e-04 salt_c 6.08e-06 salt_s 2.20e-05 bc_c0 1.89e-06 bc_an 6.80e-06 bc_if 9.12e-06 | 1140s
+step   7300 loss 8.759e-03 | ode1 1.51e-04 ode2 2.22e-04 ode3 5.96e-05 charge_s 7.07e-04 charge_e 1.71e-04 salt_c 7.88e-06 salt_s 2.07e-05 bc_c0 3.59e-06 bc_an 6.56e-06 bc_if 5.42e-06 | 1156s
+step   7400 loss 1.444e-02 | ode1 2.10e-04 ode2 4.86e-04 ode3 6.25e-05 charge_s 5.29e-04 charge_e 2.47e-04 salt_c 3.19e-05 salt_s 3.11e-05 bc_c0 1.43e-05 bc_an 2.96e-05 bc_if 9.08e-06 | 1173s
+step   7500 loss 1.024e-02 | ode1 1.59e-04 ode2 3.29e-04 ode3 5.45e-05 charge_s 5.42e-04 charge_e 3.72e-04 salt_c 8.97e-06 salt_s 6.82e-05 bc_c0 4.01e-06 bc_an 1.57e-05 bc_if 9.27e-06 | 1190s
+step   7600 loss 6.725e-03 | ode1 1.59e-04 ode2 1.72e-04 ode3 5.45e-05 charge_s 4.66e-04 charge_e 1.64e-04 salt_c 2.43e-05 salt_s 2.78e-05 bc_c0 8.33e-06 bc_an 3.04e-05 bc_if 1.07e-05 | 1206s
+step   7700 loss 6.239e-03 | ode1 1.86e-04 ode2 2.82e-04 ode3 6.35e-05 charge_s 3.70e-04 charge_e 5.71e-04 salt_c 1.72e-05 salt_s 1.65e-05 bc_c0 2.13e-06 bc_an 6.50e-06 bc_if 9.43e-06 | 1223s
+step   7800 loss 8.378e-02 | ode1 3.63e-04 ode2 2.78e-04 ode3 7.20e-05 charge_s 4.75e-04 charge_e 1.93e-04 salt_c 2.31e-05 salt_s 2.15e-05 bc_c0 2.76e-06 bc_an 5.92e-06 bc_if 4.72e-06 | 1240s
+step   7900 loss 5.140e-02 | ode1 2.27e-04 ode2 1.91e-04 ode3 4.78e-05 charge_s 9.79e-04 charge_e 1.88e-04 salt_c 1.12e-05 salt_s 5.30e-05 bc_c0 7.60e-06 bc_an 2.05e-05 bc_if 5.93e-06 | 1255s
+step   8000 loss 6.268e-02 | ode1 6.41e-05 ode2 1.95e-04 ode3 5.87e-05 charge_s 1.25e-03 charge_e 2.49e-04 salt_c 5.59e-06 salt_s 4.67e-05 bc_c0 1.91e-06 bc_an 4.20e-06 bc_if 4.48e-06 | 1273s
+  eval: V_rmse_mV 1.635, V_max_mV 4.967, c_S4_rmse 0.1597, c_S3_rmse 0.7626, c_S2_rmse 1.383, c_S1_rmse 1.679, eps_L_rmse 6.202e-05, c_e_rmse 1.193, c_e_max 2.651, phi_e_rmse_mV 0.02456, dphi0_rmse_mV 1.683
+step   8100 loss 6.633e-02 | ode1 7.65e-05 ode2 3.20e-04 ode3 6.12e-05 charge_s 1.39e-03 charge_e 1.70e-04 salt_c 5.36e-06 salt_s 2.10e-05 bc_c0 2.61e-06 bc_an 4.44e-06 bc_if 5.48e-06 | 1290s
+step   8200 loss 5.926e-02 | ode1 1.72e-04 ode2 2.54e-04 ode3 5.17e-05 charge_s 1.28e-03 charge_e 2.67e-04 salt_c 5.80e-06 salt_s 1.69e-05 bc_c0 9.74e-06 bc_an 1.12e-05 bc_if 2.18e-05 | 1307s
+step   8300 loss 3.323e-02 | ode1 8.04e-05 ode2 1.66e-04 ode3 4.98e-05 charge_s 1.17e-03 charge_e 1.74e-04 salt_c 7.93e-06 salt_s 2.24e-05 bc_c0 7.55e-06 bc_an 1.59e-05 bc_if 1.42e-05 | 1324s
+step   8400 loss 3.830e-02 | ode1 1.89e-04 ode2 2.41e-04 ode3 5.49e-05 charge_s 1.00e-03 charge_e 2.66e-04 salt_c 8.88e-06 salt_s 1.69e-05 bc_c0 3.08e-06 bc_an 3.69e-06 bc_if 4.79e-06 | 1342s
+step   8500 loss 2.959e-02 | ode1 9.75e-05 ode2 2.70e-04 ode3 5.26e-05 charge_s 9.62e-04 charge_e 1.67e-04 salt_c 1.50e-05 salt_s 3.00e-05 bc_c0 2.17e-06 bc_an 4.34e-06 bc_if 4.35e-06 | 1359s
+step   8600 loss 2.292e-02 | ode1 1.07e-04 ode2 1.70e-04 ode3 5.34e-05 charge_s 9.77e-04 charge_e 1.80e-04 salt_c 1.63e-05 salt_s 5.67e-05 bc_c0 2.47e-06 bc_an 4.99e-06 bc_if 1.19e-05 | 1373s
+step   8700 loss 2.342e-02 | ode1 1.16e-04 ode2 3.22e-04 ode3 4.48e-05 charge_s 1.03e-03 charge_e 1.76e-04 salt_c 6.86e-06 salt_s 1.99e-05 bc_c0 6.50e-06 bc_an 1.74e-05 bc_if 9.23e-06 | 1389s
+step   8800 loss 1.737e-02 | ode1 1.81e-04 ode2 1.23e-04 ode3 4.66e-05 charge_s 6.80e-04 charge_e 7.17e-04 salt_c 8.07e-06 salt_s 7.77e-05 bc_c0 3.23e-06 bc_an 2.47e-06 bc_if 8.21e-06 | 1404s
+step   8900 loss 1.036e-01 | ode1 3.87e-04 ode2 2.07e-04 ode3 5.37e-05 charge_s 8.01e-04 charge_e 3.18e-04 salt_c 1.34e-05 salt_s 1.16e-04 bc_c0 2.36e-06 bc_an 5.24e-06 bc_if 7.76e-06 | 1421s
+step   9000 loss 6.598e-02 | ode1 1.31e-04 ode2 1.40e-04 ode3 5.68e-05 charge_s 9.09e-04 charge_e 5.04e-04 salt_c 7.34e-06 salt_s 2.50e-04 bc_c0 1.12e-06 bc_an 1.17e-06 bc_if 3.36e-06 | 1439s
+  eval: V_rmse_mV 1.364, V_max_mV 4.488, c_S4_rmse 0.08229, c_S3_rmse 0.5502, c_S2_rmse 1.201, c_S1_rmse 1.456, eps_L_rmse 5.148e-05, c_e_rmse 1.164, c_e_max 2.657, phi_e_rmse_mV 0.02406, dphi0_rmse_mV 1.411
+step   9100 loss 6.376e-02 | ode1 2.07e-04 ode2 2.33e-04 ode3 5.45e-05 charge_s 1.08e-03 charge_e 2.88e-04 salt_c 1.85e-05 salt_s 1.48e-04 bc_c0 8.73e-06 bc_an 6.32e-06 bc_if 1.79e-05 | 1458s
+step   9200 loss 3.972e-02 | ode1 1.06e-04 ode2 2.05e-04 ode3 5.09e-05 charge_s 9.33e-04 charge_e 1.88e-04 salt_c 8.77e-06 salt_s 1.10e-04 bc_c0 1.26e-05 bc_an 1.90e-05 bc_if 8.19e-06 | 1476s
+step   9300 loss 2.147e-02 | ode1 5.11e-05 ode2 2.05e-04 ode3 5.86e-05 charge_s 9.58e-04 charge_e 1.91e-04 salt_c 9.74e-06 salt_s 2.06e-05 bc_c0 2.09e-06 bc_an 3.04e-06 bc_if 4.14e-06 | 1494s
+step   9400 loss 3.215e-02 | ode1 8.32e-05 ode2 2.20e-04 ode3 6.29e-05 charge_s 9.19e-04 charge_e 2.24e-04 salt_c 1.19e-05 salt_s 1.98e-04 bc_c0 2.14e-06 bc_an 6.18e-06 bc_if 8.33e-06 | 1510s
+step   9500 loss 2.094e-02 | ode1 1.68e-04 ode2 2.23e-04 ode3 4.88e-05 charge_s 7.91e-04 charge_e 1.66e-04 salt_c 6.43e-06 salt_s 2.09e-05 bc_c0 1.39e-05 bc_an 1.52e-05 bc_if 1.44e-05 | 1527s
+step   9600 loss 2.627e-02 | ode1 2.26e-04 ode2 2.16e-04 ode3 5.51e-05 charge_s 8.42e-04 charge_e 1.63e-04 salt_c 2.38e-05 salt_s 1.59e-04 bc_c0 1.26e-05 bc_an 1.38e-05 bc_if 6.77e-06 | 1542s
+step   9700 loss 1.472e-02 | ode1 1.97e-04 ode2 2.04e-04 ode3 5.25e-05 charge_s 6.23e-04 charge_e 1.62e-04 salt_c 1.36e-05 salt_s 2.05e-05 bc_c0 9.77e-06 bc_an 1.46e-05 bc_if 4.24e-06 | 1556s
+step   9800 loss 1.445e-02 | ode1 3.74e-04 ode2 1.48e-04 ode3 5.05e-05 charge_s 6.66e-04 charge_e 1.36e-04 salt_c 2.66e-05 salt_s 1.47e-05 bc_c0 1.77e-06 bc_an 2.88e-06 bc_if 6.47e-06 | 1572s
+step   9900 loss 6.987e-03 | ode1 6.92e-05 ode2 1.60e-04 ode3 5.25e-05 charge_s 6.19e-04 charge_e 1.36e-04 salt_c 7.46e-06 salt_s 1.87e-05 bc_c0 4.68e-06 bc_an 5.08e-06 bc_if 1.73e-05 | 1588s
+step  10000 loss 4.676e-02 | ode1 6.90e-05 ode2 1.33e-04 ode3 4.28e-05 charge_s 8.75e-04 charge_e 2.26e-04 salt_c 5.66e-06 salt_s 1.51e-04 bc_c0 2.87e-06 bc_an 8.11e-06 bc_if 7.80e-06 | 1604s
+  eval: V_rmse_mV 1.178, V_max_mV 3.905, c_S4_rmse 0.08529, c_S3_rmse 0.6085, c_S2_rmse 1.029, c_S1_rmse 1.307, eps_L_rmse 4.918e-05, c_e_rmse 1.169, c_e_max 2.683, phi_e_rmse_mV 0.0248, dphi0_rmse_mV 1.227
+done

@@ -25,6 +25,12 @@ class CellParams:
     R_p: float = 5.22e-6
     D_n: float = 3.3e-14
     D_p: float = 4e-15
+    # stress-enhanced ("stress-induced") diffusion, PyBaMM / Ai et al. 2019 eq. 12: D_k(c) = D_k (1 + theta_M_k c),
+    # theta_M = Omega/(RT) 2 Omega E/(9(1-nu)). 0 = plain Fickian (Chen2020). OKane2022 mechanical parameters give
+    # 1.846e-5 (graphite, factor 1.2-1.5) and 6.566e-3 m3/mol (NMC, factor 110-370); PyBaMM switches it on by
+    # default whenever a particle-mechanics submodel is used (V2_RESULTS.md section 8).
+    theta_M_n: float = 0.0
+    theta_M_p: float = 0.0
     cmax_n: float = 33133.0
     cmax_p: float = 63104.0
     sigma_n: float = 215.0       # effective solid conductivity (Bruggeman 0 in Chen2020)

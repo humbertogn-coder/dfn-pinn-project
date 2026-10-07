@@ -1,0 +1,49 @@
+{
+  "name": "v2_inverse_aging",
+  "description": "Inverse problem on one aged-cell 1C discharge (step C, commercial-cell data): estimate the aging parameters theta_n0, theta_p0 (loss of lithium inventory, as multipliers of the fresh initial stoichiometries), eps_am_n, eps_am_p (loss of active material, multipliers of the active-material volume fractions) and R0 (lumped series resistance, Ohm) from the CC part of the discharge voltage, t >= 100 s. Protocol and data file are set per cycle by scripts/v2_inverse_aging.py; warm start from a fresh forward model with --init (architecture must match).",
+  "reference": null,
+  "protocol": {
+    "current_A": 5.0,
+    "ramp_s": 30.0,
+    "t_end_s": 3500.0
+  },
+  "cell": {},
+  "train": {
+    "seed": 1,
+    "dtype": "float32",
+    "width": 64,
+    "depth": 4,
+    "kinetics": "inverse",
+    "projection": true,
+    "adam_steps": 8000,
+    "lr": 0.0005,
+    "lr_final": 1e-05,
+    "adaptive": true,
+    "log_every": 250,
+    "eval_every": 100000,
+    "checkpoint_every": 2500,
+    "inverse_params": [
+      "theta_n0",
+      "theta_p0",
+      "eps_am_n",
+      "eps_am_p",
+      "R0"
+    ],
+    "inverse_init": {
+      "theta_n0": 1.0,
+      "theta_p0": 1.0,
+      "eps_am_n": 1.0,
+      "eps_am_p": 1.0,
+      "R0": 0.0
+    },
+    "data_path": "",
+    "data_noise_mV": 0.0,
+    "data_scale_mV": 1.0,
+    "param_lr": 0.005,
+    "param_warmup_steps": 1000,
+    "param_log_bound": 0.3,
+    "fourier_t": 4,
+    "inventory": "soft",
+    "collector_bc": "hard"
+  }
+}

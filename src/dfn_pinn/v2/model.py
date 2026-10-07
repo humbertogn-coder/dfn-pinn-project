@@ -111,7 +111,11 @@ class DFNPINN(nn.Module):
         self.net_jp = MLP(1 + n_t, width, depth, act=act)
         # --- output scales ---------------------------------------------------
         self.theta_scale = {"n": max(scales.theta_rate("n"), 0.05), "p": max(scales.theta_rate("p"), 0.05)}
-        self.w_scale = {"n": 0.5 * scales.surface_gradient("n"), "p": 0.5 * scales.surface_gradient("p")}
+        # surface-gradient scale of the particle correction; with stress-enhanced diffusion the gradients are
+        # 1/D(theta0) smaller (NMC with OKane2022 mechanics: 1/113), so the scale follows D at the initial state
+        self.w_scale = {k: 0.5 * scales.surface_gradient(k) / (1 + (c.theta_M_n * c.cmax_n * c.theta_n0 if k == "n"
+                                                                    else c.theta_M_p * c.cmax_p * c.theta_p0))
+                        for k in ("n", "p")}
         self.parabola = {}  # R / (2 F D cmax) [1/(A/m2)], see theta()
         for k in ("n", "p"):
             R, D, cm = ((c.R_n, c.D_n, c.cmax_n) if k == "n" else (c.R_p, c.D_p, c.cmax_p))
@@ -125,9 +129,8 @@ class DFNPINN(nn.Module):
         self.phisp_scale = scales.i_ref * c.L_p / c.sigma_p
         self.V_scale = 0.5                        # V
         self.j_scale = {"n": scales.j_ref_n, "p": scales.j_ref_p}
-        U0 = float(ocp_p(torch.tensor(c.theta_p0)) - ocp_n(torch.tensor(c.theta_n0)))
-        self.V0 = U0
-        self.phie0 = -float(ocp_n(torch.tensor(c.theta_n0)))
+        # V0 / phie0 (output offsets) are evaluated at the CURRENT initial stoichiometries, which are
+        # learnable in the inverse problem (theta_n0, theta_p0 multipliers: loss of lithium inventory).
         q, w = gauss_legendre(quad_order)
         self.register_buffer("q_nodes", q)
         self.register_buffer("q_weights", w)
@@ -136,22 +139,47 @@ class DFNPINN(nn.Module):
         self.log_mult = nn.ParameterDict({name: nn.Parameter(torch.zeros(()), requires_grad=False)
                                           for name in self.PARAMETERS})
 
-    PARAMETERS = ("D_n", "D_p", "k_n", "k_p", "sigma_p", "D_e", "kappa_e")   # D_e, kappa_e: scale factors of the Nyman fits
+    # D_e, kappa_e: scale factors of the Nyman fits. Aging parameters (2026-10-05): eps_am_n/p = active-material
+    # volume fractions (loss of active material, enter through a = 3 eps_am / R), theta_n0/p0 = initial
+    # stoichiometries (loss of lithium inventory), R0 = lumped series resistance [Ohm] applied to the measured
+    # terminal voltage only (V_terminal = V_electrochemical - R0 * I). R0 is LINEAR: R0 = R0_SCALE * log_mult["R0"].
+    PARAMETERS = ("D_n", "D_p", "k_n", "k_p", "sigma_p", "D_e", "kappa_e", "eps_am_n", "eps_am_p", "theta_n0", "theta_p0", "R0")
+    R0_SCALE = 5e-3   # Ohm per unit of the "R0" parameter (param_log_bound 0.7 -> +/- 3.5 mOhm, ln 10 -> +/- 11.5 mOhm)
 
     def set_trainable_parameters(self, names, initial_multipliers=None):
         for name in self.PARAMETERS:
             self.log_mult[name].requires_grad_(name in names)
         for name, value in (initial_multipliers or {}).items():
             with torch.no_grad():
-                self.log_mult[name].fill_(math.log(value))
+                self.log_mult[name].fill_(value / self.R0_SCALE if name == "R0" else math.log(value))
 
     def mult(self, name):
+        """Multiplier of a physical parameter (exp of the log-multiplier); for "R0" the resistance in Ohm."""
+        if name == "R0":
+            return self.R0_SCALE * self.log_mult["R0"]
         return torch.exp(self.log_mult[name])
+
+    def theta0(self, k):
+        c = self.sc.cell
+        return (c.theta_n0 if k == "n" else c.theta_p0) * self.mult("theta_n0" if k == "n" else "theta_p0")
+
+    @property
+    def V0(self):
+        return ocp_p(self.theta0("p")) - ocp_n(self.theta0("n"))
+
+    @property
+    def phie0(self):
+        return -ocp_n(self.theta0("n"))
+
+    def terminal_voltage(self, t):
+        """Measured voltage: electrochemical voltage minus the lumped ohmic drop R0 * I(t) (I > 0 discharge)."""
+        return self.voltage(t) - self.mult("R0") * self.sc.protocol.current_A * self.g(t)
 
     def parameter_values(self):
         c = self.sc.cell
-        base = {"D_n": c.D_n, "D_p": c.D_p, "k_n": c.k_n, "k_p": c.k_p, "sigma_p": c.sigma_p, "D_e": 1.0, "kappa_e": 1.0}
-        return {k: base[k] * float(self.mult(k)) for k in self.PARAMETERS}
+        base = {"D_n": c.D_n, "D_p": c.D_p, "k_n": c.k_n, "k_p": c.k_p, "sigma_p": c.sigma_p, "D_e": 1.0, "kappa_e": 1.0,
+                "eps_am_n": c.eps_am_n, "eps_am_p": c.eps_am_p, "theta_n0": c.theta_n0, "theta_p0": c.theta_p0, "R0": 1.0}
+        return {k: base[k] * float(self.mult(k).detach()) for k in self.PARAMETERS}
 
     # ------------------------------------------------------------- helpers
     def g(self, t):
@@ -185,7 +213,7 @@ class DFNPINN(nn.Module):
         stoichiometry imposed by the applied current and the spatial part has zero
         electrode mean (fixed Gauss-Legendre quadrature in x).
         """
-        theta0 = self.sc.cell.theta_n0 if k == "n" else self.sc.cell.theta_p0
+        theta0 = self.theta0(k)
         if self.inventory == "derived":
             sign = 1.0 if k == "n" else -1.0      # sign of j in discharge
             G = theta0 - sign * self.inv_coef[k] * self.j_scale[k] * self.ramp_hat * _logcosh(t / self.ramp_hat)
@@ -219,6 +247,14 @@ class DFNPINN(nn.Module):
             return -dtb / self.inv_coef[k], tb
         return self.j(k, xk, t), self.theta_bar(k, xk, t)
 
+    def D_factor(self, k, theta):
+        """Stress-enhanced diffusivity factor D(theta)/D = 1 + theta_M cmax theta (1 when theta_M = 0)."""
+        c = self.sc.cell
+        thM, cmax = (c.theta_M_n, c.cmax_n) if k == "n" else (c.theta_M_p, c.cmax_p)
+        if thM == 0.0:
+            return torch.ones_like(theta)
+        return 1 + thM * cmax * theta
+
     def theta(self, k, s, xk, t, j=None, tb=None):
         """Particle stoichiometry at s = rho^2.
 
@@ -231,7 +267,9 @@ class DFNPINN(nn.Module):
         """
         if j is None or tb is None:
             j, tb = self.current_and_mean(k, xk, t)
-        parab = -self.parabola[k] / self.mult("D_" + k) * j * (s - 0.6)
+        # flux condition with the diffusivity at the particle mean (D(theta_surf) differs by < 1 % for graphite,
+        # and NMC with theta_M_p > 0 is nearly uniform)
+        parab = -self.parabola[k] / (self.mult("D_" + k) * self.D_factor(k, tb)) * j * (s - 0.6)
         n, q = s.shape[0], self.r_nodes.shape[0]
         sq = (self.r_nodes.to(s.dtype) ** 2).view(1, q).expand(n, q).reshape(-1, 1)
         hq = self._h(k, sq, xk.expand(n, q).reshape(-1, 1), t.expand(n, q).reshape(-1, 1)).view(n, q)
@@ -300,7 +338,8 @@ class DFNPINN(nn.Module):
                     dtb = torch.autograd.grad(tb, t2, torch.ones_like(tb), create_graph=torch.is_grad_enabled())[0]
             return -dtb / self.inv_coef[k]
         sign = 1.0 if k == "n" else -1.0
-        mean_part = sign * self.j_scale[k]
+        # the electrode integral of a_eff * j must equal the applied current: a_eff = a * mult(eps_am)
+        mean_part = sign * self.j_scale[k] / self.mult("eps_am_" + k)
         raw = self.j_raw(k, xk, t)
         if self.projection:
             n, q = t.shape[0], self.q_nodes.shape[0]

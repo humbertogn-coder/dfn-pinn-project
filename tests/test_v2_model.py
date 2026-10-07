@@ -191,3 +191,66 @@ def test_hard_collector_bc_zero_slope():
     X = torch.full((5, 1), 0.3, dtype=torch.float64, requires_grad=True)
     y = m.ce(X, t, torch.zeros_like(X), torch.zeros_like(X))
     assert torch.autograd.grad(y.sum(), X)[0].abs().max() > 0
+
+
+def test_aging_parameters_enter_consistently():
+    """eps_am multipliers keep the projected current exact; theta0 multipliers move the hard IC; R0 only
+    shifts the terminal voltage by R0 * I."""
+    from dfn_pinn.v2.model import DFNPINN
+    from dfn_pinn.v2.params import CellParams, Protocol, Scales
+    from dfn_pinn.v2.residuals import Residuals
+    torch.manual_seed(5)
+    cell, prot = CellParams(), Protocol(5.0, 30.0, 3000.0)
+    m = DFNPINN(Scales(cell, prot), width=16, depth=2, fourier_t=2).to(torch.float64)
+    m.set_trainable_parameters(["eps_am_n", "eps_am_p", "theta_n0", "theta_p0", "R0"],
+                               {"eps_am_n": 0.8, "eps_am_p": 0.9, "theta_n0": 0.95, "theta_p0": 1.05, "R0": 2e-3})
+    res = Residuals(m, "inverse")
+    t = torch.tensor([[0.2], [0.7]], dtype=torch.float64, requires_grad=True)
+    # projected current with the reduced active area: integral of a_eff j equals the applied current
+    for k in ("n", "p"):
+        r = res.electrode_current(k, t)
+        assert torch.allclose(r, torch.zeros_like(r), atol=1e-10), (k, r)
+    # initial stoichiometry follows the multiplier (hard IC)
+    x = torch.tensor([[0.3]], dtype=torch.float64)
+    t0 = torch.zeros(1, 1, dtype=torch.float64, requires_grad=True)
+    assert abs(float(m.theta_bar("n", x, t0)) - 0.95 * cell.theta_n0) < 1e-12
+    assert abs(float(m.theta_bar("p", x, t0)) - 1.05 * cell.theta_p0) < 1e-12
+    # R0: terminal voltage = voltage - R0 * I(t)
+    tt = torch.tensor([[0.5]], dtype=torch.float64)
+    drop = float(m.voltage(tt) - m.terminal_voltage(tt))
+    assert abs(drop - 2e-3 * 5.0 * float(m.g(tt))) < 1e-12
+    vals = m.parameter_values()
+    assert abs(vals["R0"] - 2e-3) < 1e-12 and abs(vals["eps_am_n"] - 0.8 * cell.eps_am_n) < 1e-12
+
+
+def test_stress_enhanced_diffusion_enters_consistently():
+    """theta_M != 0 (PyBaMM stress-induced diffusion): the flux condition uses D(theta_bar), the grouped and
+    reference particle residuals agree, and the residual differs from the Fickian one."""
+    torch.manual_seed(1)
+    cell = CellParams(theta_M_n=1.846e-5, theta_M_p=6.566e-3)
+    m = DFNPINN(Scales(cell, Protocol())).to(DT)
+    with torch.no_grad():
+        for name, p in m.named_parameters():
+            if not name.startswith("log_mult"):
+                p.add_(0.2 * torch.randn_like(p))
+    res = Residuals(m)
+    P, nr = 4, 3
+    s, xk, t = torch.rand(P, nr, dtype=DT), torch.rand(P, 1, dtype=DT), torch.rand(P, 1, dtype=DT)
+    for k in ("n", "p"):
+        rg = res.particle_grouped(k, s, xk.clone(), t.clone().requires_grad_(True))
+        rr = res.particle(k, s.reshape(-1, 1).clone().requires_grad_(True),
+                          xk.expand(P, nr).reshape(-1, 1).clone().requires_grad_(True),
+                          t.expand(P, nr).reshape(-1, 1).clone().requires_grad_(True))
+        torch.testing.assert_close(rg, rr, rtol=1e-10, atol=1e-10)
+        # flux condition with D(theta_bar)
+        R, D, cm = (cell.R_n, cell.D_n, cell.cmax_n) if k == "n" else (cell.R_p, cell.D_p, cell.cmax_p)
+        s1 = torch.ones(P, 1, dtype=DT, requires_grad=True)
+        j, tb = m.current_and_mean(k, xk, t)
+        th = m.theta(k, s1, xk, t, j=j, tb=tb)
+        flux = -D * m.D_factor(k, tb) * cm / R * 2 * grad(th, s1)
+        torch.testing.assert_close(flux, j / FARADAY, rtol=1e-10, atol=1e-14)
+    m0 = DFNPINN(Scales(CellParams(), Protocol())).to(DT)
+    m0.load_state_dict(m.state_dict())
+    r0 = Residuals(m0).particle_grouped("p", s, xk.clone(), t.clone().requires_grad_(True))
+    r1 = res.particle_grouped("p", s, xk.clone(), t.clone().requires_grad_(True))
+    assert not torch.allclose(r0, r1)

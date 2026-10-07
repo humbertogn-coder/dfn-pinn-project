@@ -100,6 +100,8 @@ class LiSPANModel:
         aS4, aS3, aS2, aS1 = c_S4 / p.c_ref[0], c_S3 / p.c_ref[1], c_S2 / p.c_ref[2], c_S1 / p.c_ref[3]
         aLi = c_Li / p.c_Li0
         aS = c_S / p.c_S_ref                                   # S2- activity in the SPAN kinetics
+        if p.frozen_S2m:
+            aS = np.full_like(aS, p.c_S_sat / p.c_S_ref)
         aS_L = c_S * p.K_sp / p.c_S_sat                        # S2- activity in the Li2S equilibrium (a_Li aS_L = K_sp at saturation)
         zeta = [np.clip(1.0 - aS4, 0.0, 1.0), np.clip(1.0 - aS3, 0.0, 1.0), np.clip(1.0 - aS2, 0.0, 1.0)]
         Uref = [p.U0[m] - p.b[m] * zeta[m] for m in range(3)]

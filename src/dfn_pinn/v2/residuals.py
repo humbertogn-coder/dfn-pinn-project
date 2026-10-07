@@ -84,10 +84,10 @@ class Residuals:
     # ----------------------------------------------------------- electrodes
     def _constants(self, k):
         c = self.c
-        if k == "n":
-            return dict(a=c.a_n, Lk=c.L_n, sigma=c.sigma_n, R=c.R_n, D=c.D_n, cmax=c.cmax_n,
+        if k == "n":   # a (specific area) carries the loss-of-active-material multiplier
+            return dict(a=c.a_n * self.m.mult("eps_am_n"), Lk=c.L_n, sigma=c.sigma_n, R=c.R_n, D=c.D_n, cmax=c.cmax_n,
                         j_ref=self.sc.j_ref_n, X0=0.0, X1=c.X1)
-        return dict(a=c.a_p, Lk=c.L_p, sigma=c.sigma_p, R=c.R_p, D=c.D_p, cmax=c.cmax_p,
+        return dict(a=c.a_p * self.m.mult("eps_am_p"), Lk=c.L_p, sigma=c.sigma_p, R=c.R_p, D=c.D_p, cmax=c.cmax_p,
                     j_ref=self.sc.j_ref_p, X0=c.X2, X1=1.0)
 
     def electrode_fields(self, k, X, t):
@@ -165,7 +165,14 @@ class Residuals:
         th_ss = grad(th_s, s)
         th_t = grad(theta, t)
         lap = 6 * th_s + 4 * s * th_ss
-        return (th_t - sc.particle_number(k) * self.m.mult("D_" + k) * lap) / sc.theta_rate(k)
+        # div(D(theta) grad theta) = D lap + D'(theta) |grad theta|^2, with |d theta/d rho|^2 = 4 s theta_s^2
+        Dhat = self.m.D_factor(k, theta)
+        dDhat = self._dD_factor(k)
+        return (th_t - sc.particle_number(k) * self.m.mult("D_" + k) * (Dhat * lap + dDhat * 4 * s * th_s ** 2)) / sc.theta_rate(k)
+
+    def _dD_factor(self, k):
+        c = self.c
+        return (c.theta_M_n * c.cmax_n) if k == "n" else (c.theta_M_p * c.cmax_p)
 
     def particle_grouped(self, k, s, xk, t):
         """Same residual, with n_r radial points sharing each (x,t) pair.
@@ -184,7 +191,7 @@ class Residuals:
         s1 = torch.ones_like(t).requires_grad_(True)
         h1s = grad(m._h(k, s1, xk, t), s1)
         gW = m.g(t) * m.w_scale[k]
-        Pk = -m.parabola[k] / m.mult("D_" + k) * j  # coefficient of (s - 3/5)
+        Pk = -m.parabola[k] / (m.mult("D_" + k) * m.D_factor(k, tb)) * j  # coefficient of (s - 3/5)
         # time derivatives of per-pair quantities
         tb_t, P_t, hbar_t, h1s_t, gW_t = (grad(v, t) for v in (tb, Pk, hbar, h1s, gW))
         # per-point network evaluations
@@ -203,7 +210,10 @@ class Residuals:
         th_ss = gW * rs(h_ss)
         lap = 6 * th_s + 4 * s * th_ss
         Q = sc.particle_number(k) * m.mult("D_" + k)
-        return ((th_t - Q * lap) / sc.theta_rate(k)).reshape(-1, 1)
+        theta = tb + Pk * sm + gW * bracket
+        Dhat = m.D_factor(k, theta)
+        div = Dhat * lap + self._dD_factor(k) * 4 * s * th_s ** 2
+        return ((th_t - Q * div) / sc.theta_rate(k)).reshape(-1, 1)
 
     # ----------------------------------------------------------- boundaries
     def boundaries(self, t):
@@ -249,7 +259,7 @@ class Residuals:
         xq = m.q_nodes.to(t.dtype).view(1, q).expand(n, q).reshape(-1, 1)
         tq = t.expand(n, q).reshape(-1, 1)
         jq = m.j(k, xq, tq).view(n, q)
-        a, Lk, sign = (c.a_n, c.L_n, 1.0) if k == "n" else (c.a_p, c.L_p, -1.0)
+        a, Lk, sign = (c.a_n * m.mult("eps_am_n"), c.L_n, 1.0) if k == "n" else (c.a_p * m.mult("eps_am_p"), c.L_p, -1.0)
         integral = a * Lk * (jq * m.q_weights.to(t.dtype).view(1, q)).sum(1, keepdim=True)
         return integral / self.sc.i_ref - sign * m.g(t)
 

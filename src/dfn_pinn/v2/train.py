@@ -76,6 +76,7 @@ class TrainConfig:
     param_warmup_steps: int = 0      # keep the physical parameters frozen for the first N steps
     param_release_steps: dict = field(default_factory=dict)  # per-parameter release step, e.g. {"D_e": 5000}
     param_log_bound: float = 2.302585092994046   # |log multiplier| <= ln 10 (factor 0.1 - 10)
+    param_bounds: dict = field(default_factory=dict)   # per-parameter override, e.g. {"R0": 2.0} (R0 unit = R0_SCALE = 5 mOhm)
     soft_current: bool = True        # soft electrode-current term when projection is off (group "current")
     salt_conservation: bool = True   # soft global salt-inventory term (group "conservation")
     salt_scale_mol_m3: float = 1.0
@@ -368,7 +369,7 @@ def train(cfg: TrainConfig, cell: CellParams, protocol: Protocol, out_dir: Path,
         batch = sampler.draw()
         terms, times = residual_terms(res, batch, cell, return_times=True)
         if data is not None:
-            terms["data_V"] = (model.voltage(data[0]) - data[1]) / (cfg.data_scale_mV * 1e-3)
+            terms["data_V"] = (model.terminal_voltage(data[0]) - data[1]) / (cfg.data_scale_mV * 1e-3)
             times["data_V"] = data[0].detach()
         losses = term_losses(terms)
         if cfg.adaptive and ((step == 1 and not init_weights) or step % cfg.adaptive_every == 0):
@@ -387,8 +388,9 @@ def train(cfg: TrainConfig, cell: CellParams, protocol: Protocol, out_dir: Path,
         sched.step()
         if phys_params:
             with torch.no_grad():
-                for p in phys_params:
-                    p.clamp_(-cfg.param_log_bound, cfg.param_log_bound)
+                for n, p in zip(cfg.inverse_params, phys_params):
+                    b = cfg.param_bounds.get(n, cfg.param_log_bound)
+                    p.clamp_(0.0 if n == "R0" else -b, b)   # R0 >= 0; per-parameter bound overrides
         if step % cfg.log_every == 0 or step == 1:
             rec = {"step": step, "loss": float(loss.detach()), "time_s": time.perf_counter() - t0,
                    **{k: float(v.detach()) for k, v in losses.items()}, "w": dict(aw.w)}
@@ -430,7 +432,7 @@ def train(cfg: TrainConfig, cell: CellParams, protocol: Protocol, out_dir: Path,
             lbfgs.zero_grad(set_to_none=True)
             terms = residual_terms(res, batch[0], cell)
             if data is not None:
-                terms["data_V"] = (model.voltage(data[0]) - data[1]) / (cfg.data_scale_mV * 1e-3)
+                terms["data_V"] = (model.terminal_voltage(data[0]) - data[1]) / (cfg.data_scale_mV * 1e-3)
             L = total_loss(term_losses(terms), group_w, cfg.weights)
             L.backward()
             count[0] += 1
