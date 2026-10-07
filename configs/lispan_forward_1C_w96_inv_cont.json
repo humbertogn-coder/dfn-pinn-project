@@ -1,0 +1,47 @@
+{
+  "name": "lispan_f1C_w96_inv_cont",
+  "description": "Li-SPAN forward PINN, 1 C: continuation of lispan_f1C_w96_inv (final 1.97 mV rms, limited by an under-converged separator salt transient: c_e 8 mol/m3 rms, gradient ~10 % too small) with a new lr cycle and 2x separator points.",
+  "params": {
+    "Z_CC": 0.025,
+    "reversible": [
+      true,
+      false,
+      false
+    ]
+  },
+  "protocol": {
+    "current": 10.0,
+    "ramp_s": 30.0
+  },
+  "t_end": null,
+  "train": {
+    "seed": 0,
+    "dtype": "float32",
+    "width": 96,
+    "depth": 4,
+    "fourier_t": 8,
+    "short_t": [
+      60.0,
+      600.0
+    ],
+    "ic_tau_s": 60.0,
+    "quad_order": 12,
+    "adam_steps": 15000,
+    "lr": 0.0005,
+    "lr_final": 1e-05,
+    "n_cathode": 768,
+    "n_separator": 512,
+    "n_boundary": 96,
+    "adaptive": true,
+    "adaptive_every": 50,
+    "log_every": 100,
+    "eval_every": 1000,
+    "checkpoint_every": 2500,
+    "latest_every": 250,
+    "salt_total_scale": 1.0,
+    "charge_total_scale": 1.0,
+    "ema_decay": 0.0,
+    "ema_start": 0.3,
+    "threads": 1
+  }
+}

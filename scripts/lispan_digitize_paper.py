@@ -98,6 +98,71 @@ def split_solid_dotted(pts, gap=4):
     return np.array(upper), np.array(lower) if lower else np.empty((0, 2))
 
 
+def experiment_circles(pdf, out, dpi=600):
+    """Experimental points of Fig. 4b (open circles, one colour per rate) by colour classification + Hough circles.
+
+    Pixels are assigned to the nearest palette colour (MATLAB defaults, white, black); circles are detected per
+    colour, detections closer than 9 px are merged and given to the colour with the best ring support, points at
+    Q < 10 mAh/g (open-circuit rest before the discharge) are dropped.  Three detections that a visual check showed
+    to be overlaps of other colours are removed explicitly (MANUAL_FIX).  Accuracy ~5 mV / 5 mAh/g; where circles of
+    different rates overlap some points are missing."""
+    import cv2
+    im = render(pdf, 5, dpi=dpi); h, w, _ = im.shape
+    sub = np.ascontiguousarray(im[int(0.06 * h):int(0.31 * h), int(0.50 * w):int(0.82 * w)]).astype(float)
+    H, W, _ = sub.shape
+    top, bot, left, right = frame(sub, 0.6)
+    # the left axis is broken by the circles at Q = 0: take the column with most dark pixels in the left 20 %
+    dk = sub.mean(axis=2) < 100
+    left = int(np.argmax(dk[top:bot, : W // 5].sum(axis=0)))
+    pal = {"0.05C": COLORS["blue"], "0.1C": COLORS["red"], "0.2C": COLORS["yellow"], "1C": COLORS["purple"],
+           "white": (255, 255, 255), "black": (0, 0, 0)}
+    names = list(pal); P = np.array([pal[n] for n in names], float)
+    d = np.sqrt(((sub[:, :, None, :] - P[None, None]) ** 2).sum(-1)); cls = d.argmin(-1); dmin = d.min(-1)
+    masks = {}
+    for k, lab in enumerate(names[:4]):
+        m = ((cls == k) & (dmin < 90)).astype(np.uint8) * 255
+        m[:top + 3, :] = 0; m[bot - 2:, :] = 0; m[:, :max(left - 20, 0)] = 0
+        m[top + 10:top + 290, right - 470:right - 130] = 0          # legend
+        masks[lab] = m
+    ang = np.linspace(0, 2 * np.pi, 72, endpoint=False)
+
+    def ring(mask, x, y, r):
+        xs = np.clip((x + r * np.cos(ang)).astype(int), 0, W - 1); ys = np.clip((y + r * np.sin(ang)).astype(int), 0, H - 1)
+        return np.mean([mask[max(0, yy - 2):yy + 3, max(0, xx - 2):xx + 3].any() for xx, yy in zip(xs, ys)])
+    rmin, rmax = int(round(12 * dpi / 600)), int(round(19 * dpi / 600))
+    cands = []
+    for lab, m in masks.items():
+        circ = cv2.HoughCircles(cv2.GaussianBlur(m, (5, 5), 1.5), cv2.HOUGH_GRADIENT, dp=1, minDist=14 * dpi / 600,
+                                param1=100, param2=13, minRadius=rmin, maxRadius=rmax)
+        for x, y, r in ([] if circ is None else circ[0]):
+            if ring(m, x, y, r) > 0.7:
+                cands.append([x, y, r])
+    cands = np.array(cands); used = np.zeros(len(cands), bool); pts = {lab: [] for lab in masks}
+    for i in range(len(cands)):
+        if used[i]:
+            continue
+        close = np.where(np.hypot(cands[:, 0] - cands[i, 0], cands[:, 1] - cands[i, 1]) < 9 * dpi / 600)[0]
+        used[close] = True
+        x, y, r = cands[close].mean(0)
+        sup = {lab: ring(m, x, y, r) for lab, m in masks.items()}
+        best = max(sup, key=sup.get)
+        if sup[best] > 0.6:
+            pts[best].append(((x - left) / (right - left) * 1400.0, 3.0 - (y - top) / (bot - top) * 2.0))
+    # visual check (zoomed crops): an orange circle given to yellow, two yellow detections that are overlaps
+    MANUAL_FIX = {"0.2C": [(145, 2.092, "0.1C"), (243, 1.979, None), (520, 1.801, None)]}
+    for lab, fixes in MANUAL_FIX.items():
+        for q, v, target in fixes:
+            j = [k for k, (qq, vv) in enumerate(pts[lab]) if abs(qq - q) < 8 and abs(vv - v) < 0.01]
+            for k in sorted(j, reverse=True):
+                pt = pts[lab].pop(k)
+                if target:
+                    pts[target].append(pt)
+    for lab, a in pts.items():
+        a = np.array(sorted(p for p in a if p[0] > 10.0))
+        np.savetxt(out / f"fig4b_exp_{lab}.csv", a, delimiter=",", header="Q_mAh_gS,V", comments="")
+        print(f"fig4b experiment {lab}: {len(a)} points")
+
+
 def main():
     ap = argparse.ArgumentParser()
     default_pdf = next((p for p in (ROOT / "references" / "Simanjuntak2024_LiSPAN_main.pdf",
@@ -105,8 +170,12 @@ def main():
                        ROOT / "references" / "Simanjuntak2024_LiSPAN_main.pdf")
     ap.add_argument("--pdf", default=str(default_pdf), help="open-access PDF (owner folder: PINN-DFN-Project/references/)")
     ap.add_argument("--out", default=str(ROOT / "results" / "lispan" / "paper_digitized"))
+    ap.add_argument("--experiment", action="store_true", help="only the experimental circles of Fig. 4b")
     args = ap.parse_args()
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
+    if args.experiment:
+        experiment_circles(args.pdf, out)
+        return
 
     # --- Fig. 5a (page 7): 0.1 C cell voltage (black) and SPAN species (colours, right axis 0-1200)
     im = render(args.pdf, 7); h, w, _ = im.shape

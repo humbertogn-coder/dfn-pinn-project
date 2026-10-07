@@ -1,0 +1,130 @@
+ 0.05 C  k0_1       rms dV/dp     7.648 mV per unit  (    16 s)
+ 0.05 C  k0_2       rms dV/dp    25.494 mV per unit  (    26 s)
+ 0.05 C  k0_3       rms dV/dp    26.273 mV per unit  (    36 s)
+ 0.05 C  b_1        rms dV/dp    97.374 mV per unit  (    46 s)
+ 0.05 C  b_2        rms dV/dp    88.089 mV per unit  (    56 s)
+ 0.05 C  b_3        rms dV/dp   166.063 mV per unit  (    66 s)
+ 0.05 C  U0_1       rms dV/dp   580.761 mV per unit  (    76 s)
+ 0.05 C  U0_2       rms dV/dp   495.857 mV per unit  (    86 s)
+ 0.05 C  U0_3       rms dV/dp   512.329 mV per unit  (    97 s)
+ 0.05 C  D_salt     rms dV/dp     0.249 mV per unit  (   107 s)
+ 0.05 C  kappa0     rms dV/dp     1.407 mV per unit  (   117 s)
+ 0.05 C  Z_CC       rms dV/dp    12.505 mV per unit  (   130 s)
+ 0.05 C  K_sp       rms dV/dp     0.006 mV per unit  (   142 s)
+ 0.05 C  k0_L       rms dV/dp     0.053 mV per unit  (   154 s)
+ 0.05 C  kappa_SPAN rms dV/dp     0.568 mV per unit  (   164 s)
+ 0.05 C  D_S        rms dV/dp     0.012 mV per unit  (   174 s)
+ 0.05 C  t_plus     rms dV/dp     1.434 mV per unit  (   183 s)
+ 0.10 C  k0_1       rms dV/dp    12.149 mV per unit  (   201 s)
+ 0.10 C  k0_2       rms dV/dp    26.970 mV per unit  (   215 s)
+ 0.10 C  k0_3       rms dV/dp    26.119 mV per unit  (   225 s)
+ 0.10 C  b_1        rms dV/dp    95.591 mV per unit  (   236 s)
+ 0.10 C  b_2        rms dV/dp    89.161 mV per unit  (   245 s)
+ 0.10 C  b_3        rms dV/dp   158.129 mV per unit  (   255 s)
+ 0.10 C  U0_1       rms dV/dp   578.017 mV per unit  (   266 s)
+ 0.10 C  U0_2       rms dV/dp   524.808 mV per unit  (   276 s)
+ 0.10 C  U0_3       rms dV/dp   508.471 mV per unit  (   286 s)
+ 0.10 C  D_salt     rms dV/dp     0.482 mV per unit  (   297 s)
+ 0.10 C  kappa0     rms dV/dp     2.846 mV per unit  (   307 s)
+ 0.10 C  Z_CC       rms dV/dp    25.010 mV per unit  (   318 s)
+ 0.10 C  K_sp       rms dV/dp     0.018 mV per unit  (   329 s)
+ 0.10 C  k0_L       rms dV/dp     0.012 mV per unit  (   339 s)
+ 0.10 C  kappa_SPAN rms dV/dp     1.176 mV per unit  (   349 s)
+ 0.10 C  D_S        rms dV/dp     0.081 mV per unit  (   360 s)
+ 0.10 C  t_plus     rms dV/dp     2.899 mV per unit  (   371 s)
+ 0.20 C  k0_1       rms dV/dp    18.613 mV per unit  (   386 s)
+ 0.20 C  k0_2       rms dV/dp    28.557 mV per unit  (   397 s)
+ 0.20 C  k0_3       rms dV/dp    25.637 mV per unit  (   408 s)
+ 0.20 C  b_1        rms dV/dp    93.656 mV per unit  (   419 s)
+ 0.20 C  b_2        rms dV/dp    90.377 mV per unit  (   430 s)
+ 0.20 C  b_3        rms dV/dp   141.917 mV per unit  (   440 s)
+ 0.20 C  U0_1       rms dV/dp   576.536 mV per unit  (   451 s)
+ 0.20 C  U0_2       rms dV/dp   555.352 mV per unit  (   461 s)
+ 0.20 C  U0_3       rms dV/dp   497.297 mV per unit  (   472 s)
+ 0.20 C  D_salt     rms dV/dp     0.995 mV per unit  (   482 s)
+ 0.20 C  kappa0     rms dV/dp     5.623 mV per unit  (   493 s)
+ 0.20 C  Z_CC       rms dV/dp    50.020 mV per unit  (   503 s)
+ 0.20 C  K_sp       rms dV/dp     0.028 mV per unit  (   514 s)
+ 0.20 C  k0_L       rms dV/dp     0.003 mV per unit  (   525 s)
+ 0.20 C  kappa_SPAN rms dV/dp     2.284 mV per unit  (   536 s)
+ 0.20 C  D_S        rms dV/dp     0.019 mV per unit  (   547 s)
+ 0.20 C  t_plus     rms dV/dp     5.811 mV per unit  (   559 s)
+ 1.00 C  k0_1       rms dV/dp    29.894 mV per unit  (   580 s)
+ 1.00 C  k0_2       rms dV/dp    32.448 mV per unit  (   594 s)
+ 1.00 C  k0_3       rms dV/dp    17.001 mV per unit  (   609 s)
+ 1.00 C  b_1        rms dV/dp    97.466 mV per unit  (   623 s)
+ 1.00 C  b_2        rms dV/dp    99.101 mV per unit  (   636 s)
+ 1.00 C  b_3        rms dV/dp    46.042 mV per unit  (   650 s)
+ 1.00 C  U0_1       rms dV/dp   602.123 mV per unit  (   664 s)
+ 1.00 C  U0_2       rms dV/dp   631.608 mV per unit  (   678 s)
+ 1.00 C  U0_3       rms dV/dp   328.038 mV per unit  (   692 s)
+ 1.00 C  D_salt     rms dV/dp     4.006 mV per unit  (   707 s)
+ 1.00 C  kappa0     rms dV/dp    27.399 mV per unit  (   722 s)
+ 1.00 C  Z_CC       rms dV/dp   250.096 mV per unit  (   736 s)
+ 1.00 C  K_sp       rms dV/dp     0.004 mV per unit  (   750 s)
+ 1.00 C  k0_L       rms dV/dp     0.026 mV per unit  (   764 s)
+ 1.00 C  kappa_SPAN rms dV/dp    11.558 mV per unit  (   777 s)
+ 1.00 C  D_S        rms dV/dp     0.022 mV per unit  (   792 s)
+ 1.00 C  t_plus     rms dV/dp    27.982 mV per unit  (   806 s)
+Li-SPAN local identifiability: noise 1.0 mV, 100 samples per curve, window t in [100 s, 0.95 t_end]; reversible TFF, Z_CC 0.025
+rms sensitivity [mV per unit: per e-fold for log-parameters, per V for U0]:
+param            0.05C       0.1C       0.2C         1C
+k0_1              7.65      12.15      18.61      29.89
+k0_2             25.49      26.97      28.56      32.45
+k0_3             26.27      26.12      25.64      17.00
+b_1              97.37      95.59      93.66      97.47
+b_2              88.09      89.16      90.38      99.10
+b_3             166.06     158.13     141.92      46.04
+U0_1            580.76     578.02     576.54     602.12
+U0_2            495.86     524.81     555.35     631.61
+U0_3            512.33     508.47     497.30     328.04
+D_salt            0.25       0.48       0.99       4.01
+kappa0            1.41       2.85       5.62      27.40
+Z_CC             12.50      25.01      50.02     250.10
+K_sp              0.01       0.02       0.03       0.00
+k0_L              0.05       0.01       0.00       0.03
+kappa_SPAN        0.57       1.18       2.28      11.56
+D_S               0.01       0.08       0.02       0.02
+t_plus            1.43       2.90       5.81      27.98
+
+CRLB, all parameters (% for log-parameters, mV for U0):
+param                 0.05C            0.1C            0.2C              1C        0.05C+1C0.05C+0.1C+0.2C+1C
+k0_1                  12.41           12.49           18.16           67.83           3.489            1.31
+k0_2                  117.3           150.5           169.9           67.81           35.15           32.51
+k0_3                  252.4           339.4           206.2             186           59.05           46.99
+b_1                  0.7232          0.9924          0.9651           1.697          0.3149          0.1663
+b_2                   0.923          0.4843          0.5732          0.4062          0.2657          0.1517
+b_3                  0.3547          0.2858          0.4491           2.149          0.2151         0.09113
+U0_1                   4088            5578            1655           652.4          0.7433          0.4216
+U0_2                   4086            5564            1645           658.8           17.98            16.7
+U0_3                   4124            5531            1653             663           30.05           24.05
+D_salt                 1796           686.1           147.4           32.06           10.55           9.628
+kappa0                 8609            7085        1.01e+04            3187           190.8           72.04
+Z_CC              3.284e+04       2.229e+04            3284           294.8            8.06           2.929
+K_sp              1.045e+04            8060            8669       1.447e+04            5312            1681
+k0_L                   4242       1.112e+04            9978       1.445e+04            1474           340.5
+kappa_SPAN             7676            2938             717           122.7           20.87           16.84
+D_S               1.118e+04            6186       1.145e+04       2.065e+04            1912           747.5
+t_plus                 6154            5020            6415            2005           121.3           48.24
+condition number: 0.05C 2.04e+06, 0.1C 1.4e+06, 0.2C 9.54e+05, 1C 1.73e+06, 0.05C+1C 4.86e+05, 0.05C+0.1C+0.2C+1C 2.29e+05
+strongest correlations (0.05C+0.1C+0.2C+1C): k0_2-U0_2 -1.000; k0_3-U0_3 -1.000; kappa0-t_plus -0.987; K_sp-D_S +0.980; kappa0-Z_CC +0.937; Z_CC-t_plus -0.888; k0_1-U0_1 -0.882; b_1-U0_1 +0.868
+
+CRLB, reduced (U0 of irreversible reactions fixed) (% for log-parameters, mV for U0):
+param                 0.05C            0.1C            0.2C              1C        0.05C+1C0.05C+0.1C+0.2C+1C
+k0_1                  12.03           11.85           17.34           61.52           3.465           1.309
+k0_2                  117.3           148.4           166.7           58.32            1.53          0.5362
+k0_3                  117.7             148           167.1           56.14           2.906           1.242
+b_1                  0.7182          0.9912          0.9622           1.568          0.3116          0.1661
+b_2                  0.7768          0.4693          0.5553          0.3866          0.2643          0.1516
+b_3                  0.3397          0.2717          0.4338           1.004          0.2151         0.08897
+U0_1                  60.68            76.9           87.32           22.79          0.7367           0.421
+D_salt                 1733           302.7           87.01           25.42           10.51           9.603
+kappa0                 7702            6482            9361            1610           190.3           72.01
+Z_CC                  581.4           405.5           407.5           70.52           8.034           2.921
+K_sp              1.039e+04            7218            8434       1.322e+04            5307            1578
+k0_L                   3736       1.084e+04            9857       1.399e+04            1474           337.4
+kappa_SPAN             6778            1787             697           81.38           18.08            15.2
+D_S               1.105e+04            5489       1.131e+04       2.004e+04            1636           707.9
+t_plus                 4832            4093            5913            1014           120.9           48.23
+condition number: 0.05C 9.22e+05, 0.1C 6.62e+05, 0.2C 8.82e+05, 1C 1.54e+06, 0.05C+1C 4.61e+05, 0.05C+0.1C+0.2C+1C 2.06e+05
+strongest correlations (0.05C+0.1C+0.2C+1C): kappa0-t_plus -0.987; K_sp-D_S +0.978; kappa0-Z_CC +0.941; k0_2-b_2 +0.891; k0_3-K_sp +0.891; Z_CC-t_plus -0.891; k0_3-D_S +0.889; k0_1-U0_1 -0.881

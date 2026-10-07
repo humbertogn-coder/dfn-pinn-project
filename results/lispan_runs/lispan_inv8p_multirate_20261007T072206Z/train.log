@@ -1,0 +1,12 @@
+Output: /home/claude/v2/repo/results/lispan_runs/lispan_inv8p_multirate_20261007T072206Z; rates [0.1, 1.0], t_end [33416, 2781] s
+Multi-rate inverse: rates ['0.1C', '1C'], learning ['k0_1', 'k0_2', 'k0_3', 'b_1', 'b_2', 'b_3', 'U0_1', 'Z_CC'], initial {'k0_1': 2.0, 'k0_2': 0.5, 'k0_3': 1.5, 'b_1': 1.1, 'b_2': 0.9, 'b_3': 1.1, 'Z_CC': 1.5, 'U0_1': 0.02}
+step      1 loss 1.421e+04 | 0.1C data 6.14e+02 ode 7.6e-05 salt 4.0e-03 1C data 1.50e+04 ode 1.9e-04 salt 6.3e-03 | 3s | k0_1 2.01, k0_2 0.5025, k0_3 1.508, b_1 1.095, b_2 0.8955, b_3 1.095, U0_1 0.0205, Z_CC 1.493
+step    100 loss 3.142e+02 | 0.1C data 1.21e+02 ode 4.3e-02 salt 7.0e-03 1C data 3.15e+01 ode 4.5e-02 salt 1.3e+00 | 99s | k0_1 2.051, k0_2 0.5984, k0_3 1.609, b_1 1.051, b_2 0.7826, b_3 1.044, U0_1 0.01539, Z_CC 1.285
+step    200 loss 1.952e+02 | 0.1C data 8.19e+01 ode 4.4e-02 salt 3.9e-03 1C data 1.74e+01 ode 2.7e-02 salt 1.4e+00 | 181s | k0_1 1.999, k0_2 0.6137, k0_3 1.543, b_1 1.039, b_2 0.8014, b_3 1.043, U0_1 0.00797, Z_CC 1.235
+step    300 loss 1.229e+02 | 0.1C data 5.93e+01 ode 3.8e-02 salt 3.0e-03 1C data 1.19e+01 ode 1.2e-02 salt 1.3e+00 | 265s | k0_1 1.956, k0_2 0.6314, k0_3 1.472, b_1 1.024, b_2 0.8195, b_3 1.039, U0_1 0.002727, Z_CC 1.196
+step    400 loss 8.226e+01 | 0.1C data 4.32e+01 ode 2.9e-02 salt 2.7e-03 1C data 8.42e+00 ode 6.1e-03 salt 1.1e+00 | 347s | k0_1 1.921, k0_2 0.6509, k0_3 1.409, b_1 1.01, b_2 0.8347, b_3 1.035, U0_1 -0.0009785, Z_CC 1.165
+step    500 loss 5.360e+01 | 0.1C data 3.60e+01 ode 1.9e-02 salt 1.8e-03 1C data 6.98e+00 ode 2.3e-03 salt 8.5e-01 | 428s | k0_1 1.891, k0_2 0.6696, k0_3 1.355, b_1 0.9981, b_2 0.8478, b_3 1.032, U0_1 -0.003874, Z_CC 1.139
+  eval: 0.1C V 7.493 mV rms / 20.65 max, c_e 0.19; 1C V 2.354 mV rms / 7.55 max, c_e 62.89
+step 519: non-finite loss, batch skipped
+step    600 loss 3.987e+01 | 0.1C data 2.90e+01 ode 1.5e-02 salt 2.0e-03 1C data 6.04e+00 ode 1.7e-03 salt 8.4e-01 | 508s | k0_1 1.861, k0_2 0.6867, k0_3 1.312, b_1 0.9891, b_2 0.859, b_3 1.029, U0_1 -0.006121, Z_CC 1.119
+step    700 loss 3.167e+01 | 0.1C data 2.45e+01 ode 1.1e-02 salt 2.9e-03 1C data 5.89e+00 ode 1.0e-03 salt 8.7e-01 | 584s | k0_1 1.83, k0_2 0.7033, k0_3 1.274, b_1 0.9817, b_2 0.8683, b_3 1.026, U0_1 -0.007926, Z_CC 1.103

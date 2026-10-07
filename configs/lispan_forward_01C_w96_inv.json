@@ -1,0 +1,47 @@
+{
+  "name": "lispan_f01C_w96_inv",
+  "description": "Li-SPAN forward PINN, 0.1 C, run C: run B (lispan_f01C_w96) plus the global charge-inventory residual (2 F c_S4,0 L_cat int (xi1+xi2+xi3) dY = Q(t), own weight group) and an EMA of the weights. Warm start from run B's final weights (--init), 10 000 steps at lr 2e-4 -> 1e-5. Run B's late-time voltage error (1 mV rms, 2.3 mV at the end) is the integrated extent-inventory drift (+1.6 mol/m3) appearing as a c_S2 deficit in phase 3.",
+  "params": {
+    "Z_CC": 0.025,
+    "reversible": [
+      true,
+      false,
+      false
+    ]
+  },
+  "protocol": {
+    "current": 1.0,
+    "ramp_s": 30.0
+  },
+  "t_end": null,
+  "train": {
+    "seed": 0,
+    "dtype": "float32",
+    "width": 96,
+    "depth": 4,
+    "fourier_t": 8,
+    "short_t": [
+      60.0,
+      600.0
+    ],
+    "ic_tau_s": 60.0,
+    "quad_order": 12,
+    "adam_steps": 10000,
+    "lr": 0.0002,
+    "lr_final": 1e-05,
+    "n_cathode": 768,
+    "n_separator": 256,
+    "n_boundary": 96,
+    "adaptive": true,
+    "adaptive_every": 50,
+    "log_every": 100,
+    "eval_every": 1000,
+    "checkpoint_every": 2500,
+    "latest_every": 250,
+    "salt_total_scale": 1.0,
+    "charge_total_scale": 1.0,
+    "ema_decay": 0.999,
+    "ema_start": 0.3,
+    "threads": 1
+  }
+}

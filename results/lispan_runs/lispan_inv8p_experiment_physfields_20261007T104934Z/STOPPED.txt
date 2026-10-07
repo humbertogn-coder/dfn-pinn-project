@@ -1,0 +1,1 @@
+STOPPED by hand at step ~1800: with data_to_fields=false the parameters still received the PHYSICS-residual gradient and drifted to make the current fields consistent (k0 x6-7, b_1 1.42, U0_1 +45 mV; misfit before each LM step 19.4 -> 22.4 mV). Fixed: in this mode the parameters now get the data gradient only.

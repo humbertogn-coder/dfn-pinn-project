@@ -81,6 +81,19 @@ def main():
     model, history, evals = train(cfg, params, protocol, t_end, run_dir, reference=ref, log=log,
                                   init_state=init_state, resume=resume)
     (run_dir / "final_metrics.json").write_text(json.dumps(evals[-1] if evals else {}, indent=1))
+    if cfg.inverse_params:
+        est = model.parameter_values()
+        raw = np.load(cfg.data_path, allow_pickle=False)
+        truth = json.loads(str(raw["truth_json"])) if "truth_json" in raw.files else {}
+        res = {"estimates": {n: est[n] for n in cfg.inverse_params}, "truth": {n: truth.get(n) for n in cfg.inverse_params},
+               "initial": cfg.inverse_init, "data": cfg.data_path, "noise_mV": cfg.data_noise_mV,
+               "final_eval": evals[-1] if evals else {}}
+        err = {n: (1e3 * (est[n] - truth[n]) if n.startswith("U0") else 100.0 * (est[n] / truth[n] - 1.0))
+               for n in cfg.inverse_params if truth.get(n) is not None}
+        res["errors_pct_or_mV"] = err
+        (run_dir / "inverse_result.json").write_text(json.dumps(res, indent=1))
+        log("Estimates: " + ", ".join(f"{n} {est[n]:.4g}" for n in cfg.inverse_params))
+        log("Errors vs truth [% (mV for U0)]: " + ", ".join(f"{n} {v:+.2f}" for n, v in err.items()))
     log("done")
 
 

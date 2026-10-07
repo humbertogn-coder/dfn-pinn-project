@@ -1,0 +1,17 @@
+Output: /home/claude/v2/repo/results/lispan_runs/lispan_inv8p_experiment_split_20261007T111229Z; rates [0.1, 1.0], t_end [33416, 2781] s
+Multi-rate inverse: rates ['0.1C', '1C'], learning ['k0_1', 'k0_2', 'k0_3', 'b_1', 'b_2', 'b_3', 'U0_1', 'Z_CC'], initial {'k0_1': 1.0, 'k0_2': 1.0, 'k0_3': 1.0, 'b_1': 1.0, 'b_2': 1.0, 'b_3': 1.0, 'Z_CC': 1.0, 'U0_1': 0.0}
+  LM step 1: data misfit 48.624 -> 22.146 mV rms | k0_1 1.781, k0_2 1.356, k0_3 3.32, b_1 1.076, b_2 0.7093, b_3 1.061, Z_CC 1.377, U0_1 0.02467
+step      1 loss 3.489e+01 | 0.1C data 2.71e+01 ode 8.1e-01 salt 4.2e-03 1C data 8.36e+00 ode 3.5e-02 salt 5.4e-03 | 5s | k0_1 1.778, k0_2 1.359, k0_3 3.327, b_1 1.078, b_2 0.7079, b_3 1.059, U0_1 0.02447, Z_CC 1.374
+step    100 loss 2.332e+01 | 0.1C data 1.82e+01 ode 7.2e-01 salt 2.7e-03 1C data 5.88e+00 ode 1.0e-02 salt 1.1e-02 | 82s | k0_1 1.883, k0_2 1.33, k0_3 3.56, b_1 1.118, b_2 0.66, b_3 1.01, U0_1 0.0265, Z_CC 1.376
+step    200 loss 2.254e+01 | 0.1C data 1.95e+01 ode 4.5e-01 salt 2.3e-03 1C data 5.45e+00 ode 7.5e-03 salt 1.1e-02 | 157s | k0_1 2.112, k0_2 1.316, k0_3 3.656, b_1 1.155, b_2 0.6502, b_3 1.014, U0_1 0.02677, Z_CC 1.377
+  LM step 250: data misfit 18.968 -> 18.502 mV rms | k0_1 2.728, k0_2 2.035, k0_3 4.896, b_1 1.193, b_2 0.7647, b_3 1.043, Z_CC 1.406, U0_1 0.02916
+step    300 loss 2.804e+01 | 0.1C data 2.19e+01 ode 8.4e-01 salt 3.2e-03 1C data 6.66e+00 ode 4.3e-02 salt 1.2e-02 | 242s | k0_1 2.905, k0_2 2.082, k0_3 4.565, b_1 1.252, b_2 0.7242, b_3 1.041, U0_1 0.03122, Z_CC 1.408
+step    400 loss 2.855e+01 | 0.1C data 2.74e+01 ode 4.7e-01 salt 2.2e-03 1C data 7.27e+00 ode 5.1e-02 salt 2.3e-02 | 317s | k0_1 3.232, k0_2 2.156, k0_3 4.211, b_1 1.37, b_2 0.722, b_3 1.032, U0_1 0.0398, Z_CC 1.402
+  LM step 500: data misfit 23.709 -> 23.055 mV rms | k0_1 2.641, k0_2 5.248, k0_3 4.979, b_1 1.501, b_2 0.9707, b_3 1.046, Z_CC 1.408, U0_1 0.06221
+step    500 loss 4.095e+01 | 0.1C data 2.61e+01 ode 1.9e-01 salt 1.8e-03 1C data 1.41e+01 ode 1.5e-01 salt 2.6e-02 | 395s | k0_1 2.647, k0_2 5.258, k0_3 4.969, b_1 1.498, b_2 0.9687, b_3 1.048, U0_1 0.06241, Z_CC 1.411
+  eval: 0.1C V 54.551 mV rms / 92.40 max, c_e 0.19; 1C V 48.185 mV rms / 88.74 max, c_e 5.10
+step 519: non-finite loss, batch skipped
+step    600 loss 2.790e+01 | 0.1C data 3.14e+01 ode 1.0e-01 salt 2.5e-03 1C data 1.24e+01 ode 1.1e-02 salt 1.6e-02 | 473s | k0_1 3.136, k0_2 5.328, k0_3 4.579, b_1 1.552, b_2 0.9097, b_3 1.044, U0_1 0.06106, Z_CC 1.413
+step    700 loss 2.632e+01 | 0.1C data 3.17e+01 ode 3.5e-02 salt 4.1e-03 1C data 1.23e+01 ode 4.9e-03 salt 1.3e-02 | 550s | k0_1 3.441, k0_2 5.986, k0_3 4.564, b_1 1.573, b_2 0.9248, b_3 1.041, U0_1 0.06113, Z_CC 1.414
+  LM step 750: data misfit 24.288 -> 23.995 mV rms | k0_1 3.303, k0_2 7.389, k0_3 5.085, b_1 1.613, b_2 1.02, b_3 1.053, Z_CC 1.409, U0_1 0.06605
+step    800 loss 2.574e+01 | 0.1C data 3.08e+01 ode 2.0e-02 salt 2.0e-03 1C data 1.30e+01 ode 3.3e-03 salt 1.2e-02 | 633s | k0_1 3.387, k0_2 7.389, k0_3 4.76, b_1 1.598, b_2 0.9648, b_3 1.045, U0_1 0.06429, Z_CC 1.42

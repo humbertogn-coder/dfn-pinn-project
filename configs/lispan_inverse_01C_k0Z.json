@@ -1,0 +1,65 @@
+{
+  "name": "lispan_inv01C_k0Z",
+  "description": "Li-SPAN inverse, stage 2: k0_1, k0_2, k0_3 and Z_CC from the 0.1 C synthetic discharge (1 mV noise), initial guess k0 x (2, 0.5, 1.5), Z_CC x 1.5, truth 1. Start: --init <stage 1>/final.pt (Z_CC does not enter the fields).",
+  "params": {
+    "Z_CC": 0.025,
+    "reversible": [
+      true,
+      false,
+      false
+    ]
+  },
+  "protocol": {
+    "current": 1.0,
+    "ramp_s": 30.0
+  },
+  "t_end": null,
+  "train": {
+    "seed": 0,
+    "dtype": "float32",
+    "width": 96,
+    "depth": 4,
+    "fourier_t": 8,
+    "short_t": [
+      60.0,
+      600.0
+    ],
+    "ic_tau_s": 60.0,
+    "quad_order": 12,
+    "adam_steps": 6000,
+    "lr": 0.0002,
+    "lr_final": 1e-05,
+    "n_cathode": 768,
+    "n_separator": 256,
+    "n_boundary": 96,
+    "adaptive": true,
+    "adaptive_every": 50,
+    "log_every": 100,
+    "eval_every": 500,
+    "checkpoint_every": 2500,
+    "latest_every": 250,
+    "salt_total_scale": 1.0,
+    "charge_total_scale": 1.0,
+    "ema_decay": 0.0,
+    "ema_start": 0.3,
+    "threads": 1,
+    "inverse_params": [
+      "k0_1",
+      "k0_2",
+      "k0_3",
+      "Z_CC"
+    ],
+    "inverse_init": {
+      "k0_1": 2.0,
+      "k0_2": 0.5,
+      "k0_3": 1.5,
+      "Z_CC": 1.5
+    },
+    "data_path": "results/lispan/inverse_data/V_0.1C_nominal.npz",
+    "data_noise_mV": 1.0,
+    "data_scale_mV": 1.0,
+    "param_lr": 0.005,
+    "param_warmup_steps": 0,
+    "param_log_bound": 2.0
+  }
+}

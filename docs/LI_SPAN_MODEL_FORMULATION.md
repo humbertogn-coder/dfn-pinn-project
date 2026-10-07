@@ -426,14 +426,319 @@ importance for the voltage), parameter averaging over the last checkpoints
 (EMA), and the v2 L-BFGS polish. Figures:
 `results/lispan_runs/<run>/plot_final.png`.
 
-### 6.5 Inverse problem (planned)
+**Root cause and fix (run C, 2026-10-07).** The drift is the *extent
+inventory*: every reaction transfers 2 e- per chain, so the charge passed
+fixes the extent sum exactly,
 
-Identify a small, identifiable subset of {U0_m, b_m, k0_m, Z_CC, D_salt,
-kappa0} (all exposed as log-multipliers / offsets in `LiSPANPINN.PARAMETERS`)
-from discharge curves at several C-rates; sensitivities first (as in
-V2_RESULTS.md 3.0). The paper itself reports low sensitivity to k0 in the
-Tafel regime for the voltage *shape* but 0.118 V per decade in level, and
-strong sensitivity to beta and eps_SPAN at 1 C (Figs S3-S4).
+    2 F c_S4,0 L_cat int_0^1 (xi_1 + xi_2 + xi_3) dY = Q(t) = int_0^t I dt,
+
+but in the PINN this holds only as well as the three extent ODEs, whose
+small mean residual integrates over the 9.3 h discharge. Evaluated on run
+B's final weights, the inventory exceeds Q(t)/(2 F L_cat) by 0.6 mol/m3 at
+6000 s, 1.8 at 17 000 s and 1.6-2.0 in phase 3, and in phase 3 (xi_1 = xi_2 =
+1) the excess sits entirely in xi_3, i.e. it *is* the c_S2 deficit (-1.6 to
+-1.7 mol/m3) and the voltage error (-1.9 to -2.3 mV); the step-5000
+checkpoint that scored 0.39 mV simply had a smaller excess (0.5 mol/m3). New
+residual `charge_total` = (c_S4,0 int sum xi dY - Q/(2 F L_cat)) / 1 mol/m3 on
+Gauss-Legendre nodes at the boundary-batch times, in its own adaptive weight
+group (`charge_total_scale`, analogue of the salt inventory term; test
+`tests/test_lispan_pinn.py`). Run C
+(`lispan_f01C_w96_inv_20261007T032802Z`, `configs/lispan_forward_01C_w96_inv.json`):
+run B's final weights + 10 000 steps at lr 2e-4 -> 1e-5 with the new term
+and an EMA of the weights (decay 0.999 from step 3000), one thread, 55 min:
+**V 0.21 mV rms / 0.95 mV max** (every checkpoint from step 1000 on between
+0.21 and 0.29 mV), species 0.15 / 0.43 / 0.70 / 0.38 mol/m3, c_e 0.12 mol/m3,
+phi_e 0.02 mV, Delta phi(0) 0.19 mV. Control (`lispan_f01C_w96_ctrl_*`: the
+same continuation without the term) keeps wandering between 0.71 and 1.47
+mV rms and ends at 1.22 mV (EMA 0.93-1.37 mV): the improvement is the residual, not the extra
+training, and the EMA brings nothing measurable here. Error model for the
+inverse problem (0.1 C data every 300 s, k0 sensitivities of section 6.5):
+the forward error of run B would bias k0_3 by +3.8 %, that of run C by
+-0.4 / -0.6 / -0.1 % (k0_1 / k0_2 / k0_3), at or below the 1 mV-noise CRLB
+(0.8 / 0.4 / 0.4 %) (bias = -(S S^T)^-1 S e for the forward error e).
+
+**1 C forward PINN (2026-10-07).** Same architecture and residuals as run C,
+protocol 10 A/m2 (t_end 2781 s). (i) `lispan_f1C_w96_inv_20261007T043305Z`
+(`configs/lispan_forward_1C_w96_inv.json`): warm start from run C's 0.1 C
+weights, 15 000 steps at lr 5e-4 -> 1e-5, 82 min: 1.97 mV rms / 2.9 mV max,
+limited by the electrolyte (c_e 8.3 mol/m3 rms, phi_e 1.5 mV): the
+separator salt gradient was ~10 % too small (+10-15 mol/m3 at the
+collector, -13-15 at the anode against a 255 mol/m3 swing) although the
+anode flux condition held to 1e-7. Cause: the separator salt residual was
+normalized by the *cathode* source scale (1-t+) I/(F L_cat); the separator has
+no source and its transient balances D d2c/dy2 ~ (1-t+) I/(F L_sep), 6x
+smaller, so a residual that looked converged (5e-3) was a 25 % error of the
+separator dynamics. At 0.1 C this did not matter (quasi-steady separator); at
+1 C the separator diffusion time (~1700 s) is comparable to the discharge.
+A continuation with a high-lr restart made it worse (stopped,
+`lispan_f1C_w96_inv_cont_*`, STOPPED.txt). (ii) Fix
+`salt_sep_natural_scale` (separator residual on (1-t+) I/(F L_sep)),
+`lispan_f1C_w96_sepscale_20261007T061233Z`
+(`configs/lispan_forward_1C_w96_sepscale.json`): continuation of (i), 512
+separator points, 15 000 steps at lr 2e-4 -> 1e-5, 92 min: **V 0.12 mV rms /
+0.66 mV max**, c_e 0.70 mol/m3 rms (2.5 max), phi_e 0.10 mV, Delta phi(0)
+0.35 mV, species 0.2-0.4 mol/m3 (0.80 mV after 1000 steps, 0.31 after 6000).
+
+### 6.5 Local identifiability from discharge curves (finite-volume sensitivities)
+
+`scripts/lispan_identifiability.py` (results `results/lispan/identifiability/`,
+log `results/lispan_identifiability.log`, 14 min on one core): same method as
+the DFN study (V2_RESULTS.md 3.0). Central finite differences of the
+finite-volume model (PINN-benchmark physics: reaction 1 reversible, 2 and 3
+irreversible, Z_CC 0.025, no double layer, 30 s ramp; +-5 % in log, +-5 mV
+for U0), voltage observed at 100 equally spaced times from 100 s to 95 % of
+the discharge, Gaussian noise 1 mV, Fisher information and Cramer-Rao bounds
+(CRLB, relative for log-parameters, mV for U0), 17 parameters, rates 0.05,
+0.1, 0.2, 1 C.
+
+RMS sensitivity of the voltage (mV per e-fold of the parameter; per V for U0):
+
+| parameter | 0.05 C | 0.1 C | 0.2 C | 1 C |
+| --- | ---: | ---: | ---: | ---: |
+| k0_1 / k0_2 / k0_3 | 8 / 25 / 26 | 12 / 27 / 26 | 19 / 29 / 26 | 30 / 32 / 17 |
+| b_1 / b_2 / b_3 | 97 / 88 / 166 | 96 / 89 / 158 | 94 / 90 / 142 | 97 / 99 / 46 |
+| U0_1 / U0_2 / U0_3 (per V) | 581 / 496 / 512 | 578 / 525 / 508 | 577 / 555 / 497 | 602 / 632 / 328 |
+| Z_CC | 12.5 | 25 | 50 | 250 |
+| kappa0 / t_plus / kappa_SPAN | 1.4 / 1.4 / 0.6 | 2.9 / 2.9 / 1.2 | 5.6 / 5.8 / 2.3 | 27 / 28 / 12 |
+| D_salt | 0.25 | 0.5 | 1.0 | 4.0 |
+| K_sp / k0_L / D_S | < 0.05 | < 0.1 | < 0.05 | < 0.05 |
+
+Findings.
+
+1. **U0_m and k0_m of an irreversible (Tafel) reaction are exactly
+   confounded**: the rate depends on k0_m exp(F U0_m / 2RT) only (the
+   sensitivity ratio is 2RT/F = 51.4 mV per e-fold to four digits, correlation
+   -1.000). Only that product is identifiable; U0_2, U0_3 must come from OCV
+   measurements (GITT, as in the paper) or be fixed. Reaction 1 (reversible)
+   keeps a weak OCV signature (corr(k0_1, U0_1) = -0.88).
+2. **One rate cannot separate kinetics from resistance**: at a single C-rate
+   a uniform voltage offset is produced by every k0_m (51 mV per e-fold
+   each), U0_1 and Z_CC I, so with the OCV parameters free the kinetic CRLBs
+   are 40-300 % and the correlations +-1.00. Two rates break it because the
+   ohmic drop scales with I and the Tafel shift with ln I: with 0.1 C + 1 C
+   the 8-parameter set {k0_1, k0_2, k0_3, b_1, b_2, b_3, U0_1, Z_CC} has CRLBs
+   1.0 / 0.7 / 0.8 / 0.16 / 0.20 / 0.14 % / 0.44 mV / 0.09 % (condition
+   number 98), and all four rates halve these. With the OCV parameters known,
+   the 4 kinetic parameters {k0_m, Z_CC} are identifiable from the 0.1 C curve
+   alone (2.1 / 1.0 / 0.9 / 1.8 %, cond 11), and the three k0 alone to 0.4-0.8
+   % at any single rate.
+3. **Electrolyte transport, solid conductivity and the Li2S kinetics are
+   practically invisible in the discharge voltage**: kappa0, t_plus and
+   kappa_SPAN act only through an ohmic-like drop collinear with Z_CC
+   (corr(kappa0, Z_CC) = +0.94, (kappa0, t_plus) = -0.99; CRLB 70-190 % with
+   all rates), D_salt is worth 4 mV per e-fold at 1 C (CRLB 10 %), and K_sp,
+   k0_L and D_S move the voltage by less than 0.1 mV per e-fold (the Li2S
+   nucleation is not rate-limiting in this cell): they must be fixed from
+   independent measurements or from other observables (impedance, the
+   charge curve, the Li2S amount).
+
+Consequences for the inverse PINN: identify {k0_1, k0_2, k0_3} (stage 1),
+then {k0_m, Z_CC} from 0.1 C, then the 8-parameter set with 0.1 C + 1 C data
+(needs a 1 C forward PINN of the same quality); report U0_2, U0_3 only as the
+products k0_m exp(F U0_m / 2RT); keep the transport parameters at the
+literature values. The paper's statement that k0 shifts the voltage level by
+0.118 V per decade (Fig. 6a) is the same 51 mV per e-fold.
+
+### 6.6 Inverse problem (synthetic data)
+
+Data: `scripts/lispan_make_inverse_data.py` samples the finite-volume
+discharge (PINN physics, true parameters = nominal unless `--truth` is given)
+every 300 s (`results/lispan/inverse_data/V_0.1C_nominal.npz`, 114 points);
+the trainer adds the noise (`data_noise_mV`). Two stages, as for the DFN:
+stage 1 re-adapts the forward fields at the initial guess
+(`fixed_multipliers` in the train config, no data), stage 2 releases
+`inverse_params` with the data (`inverse_init` = the same guess, `--init`
+stage-1 weights).
+
+### 6.7 Inverse results
+
+**k0_1, k0_2, k0_3 from one 0.1 C discharge** (truth = nominal, initial
+guess x 2 / x 0.5 / x 1.5, i.e. plateau offsets of 36, -36 and 21 mV; 1 mV
+noise, 112 samples, t <= 0.98 t_end). Stage 1
+(`lispan_inv01C_k0_stage1_20261007T042319Z`, `configs/lispan_inverse_01C_k0_stage1.json`):
+3000 forward steps from run C at the guessed k0, 17 min; forward error at the
+guessed parameters (finite-volume solve with the same k0) 0.27 mV rms / 1.2
+mV max, i.e. stage 1 is converged. Stage 2 (`lispan_inv01C_k0_20261007T044408Z`,
+`configs/lispan_inverse_01C_k0.json`): 6000 steps, parameter lr 5e-3, no
+warm-up, 37 min on one thread.
+
+| parameter | truth | initial | after 300 steps | final | error | ideal estimator (same noise) |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| k0_1 | 1 | 2 | 1.003 | 0.9835 | -1.65 % | -1.61 % |
+| k0_2 | 1 | 0.5 | 0.916 | 0.9949 | -0.51 % | +0.06 % |
+| k0_3 | 1 | 1.5 | 0.996 | 0.9994 | -0.06 % | -0.09 % |
+
+The last column is the linearized least-squares estimate that the
+*finite-volume model itself* would return for the same noise realization
+(the trainer's `default_rng(seed + 7)` draw), from the sensitivities of
+section 6.5: the -1.6 % of k0_1 is the noise (2 sigma of its 0.8 % CRLB), not
+the PINN. PINN minus ideal estimator: -0.04 / -0.57 / +0.03 %, which is the
+size and, for k0_2, the value of the error-model prediction from run C's
+forward error (-0.4 / -0.6 / -0.1 %). The data residual (0.85 mV rms) equals
+the residual of the ideal fit (0.86 mV): no overfitting of the noise. The
+fields stay at forward quality (V 0.31 mV rms against the true solution,
+species 0.06-0.65 mol/m3). The parameters are within 1 % after 500 steps
+(the hard current projection makes the voltage respond to k0 through the
+root solve directly, so the fields hardly have to move) and stationary
+after 1000. Figure: `<run>/inverse_summary.png` (`scripts/lispan_plot_inverse.py`).
+
+**k0_1, k0_2, k0_3 and Z_CC from the same 0.1 C discharge**
+(`lispan_inv01C_k0Z_20261007T052302Z`, `configs/lispan_inverse_01C_k0Z.json`;
+same stage-1 weights, Z_CC does not enter the fields; initial Z_CC x 1.5,
+i.e. +12.5 mV; 6000 steps, 37 min):
+
+| parameter | final | error | ideal estimator (same noise) | CRLB (1 mV) |
+| --- | ---: | ---: | ---: | ---: |
+| k0_1 | 1.0125 | +1.25 % | +1.20 % | 2.0 % |
+| k0_2 | 1.0101 | +1.01 % | +1.43 % | 1.0 % |
+| k0_3 | 1.0127 | +1.27 % | +1.16 % | 0.9 % |
+| Z_CC | 1.0273 | +2.73 % | +2.59 % | 1.7 % |
+
+With Z_CC free the noise moves all four together (the common-offset
+direction of section 6.5), and the PINN follows the ideal estimator to
+0.05-0.4 %. Fields at forward quality (V 0.25 mV rms against the true
+solution).
+
+**8 parameters from 0.1 C + 1 C** (`src/dfn_pinn/lispan/multirate.py`,
+`scripts/lispan_inverse_multirate.py`, config
+`configs/lispan_inverse_multirate_8p.json`): one PINN per rate, a single
+shared parameter set {k0_1, k0_2, k0_3, b_1, b_2, b_3, U0_1, Z_CC}, initial
+guess k0 x (2, 0.5, 1.5), b x (1.1, 0.9, 1.1), U0_1 +20 mV, Z_CC x 1.5 (the
+latter alone is 125 mV at 1 C: initial misfit 84 mV rms), 1 mV noise
+(independent draws per rate), 112 + 90 samples. Stage 1 per rate with
+`lispan_train.py` and `fixed_multipliers` = guess (0.1 C from run C, 1 C from
+step 7500 of the sepscale run; forward errors at the guess 0.20 and 0.31 mV).
+Three stage-2 variants:
+
+1. Adam on fields and parameters together (`lispan_inv8p_multirate_*`,
+   STOPPED at step ~750): the 125 mV initial 1 C misfit is absorbed by the
+   1 C electrolyte fields before Z_CC moves (c_e error 63 mol/m3).
+2. `net_freeze_steps` = 1000 (parameters first, fields frozen), then Adam
+   (`lispan_inv8p_multirate_freeze_20261007T073258Z`, 7000 steps, 92 min;
+   resumed once after a NaN in the adaptive weights, now guarded in
+   `AdaptiveWeights`): the fields survive, but the parameters crawl along
+   the correlated directions (k0_1 - U0_1, corr -0.88; the k0 - b pairs) and
+   end at k0 +9.8 / -2.1 / +0.6 %, b -1.0 / -0.6 / +0.1 %, U0_1 -3.7 mV, Z_CC
+   +0.4 %, still moving.
+3. **Levenberg-Marquardt on the parameters every 250 steps with the fields
+   frozen** (`gn_every`, `gn_iters` 4, finite-difference Jacobian of the
+   data residuals, 2 x 8 voltage evaluations, about 10 s), Adam on fields and
+   parameters in between (param lr 2e-3 constant), no LM after step 5000
+   (`lispan_inv8p_multirate_lm_20261007T083347Z`, 6000 steps, 77 min): the
+   first LM call with the stage-1 fields takes the misfit from 84 to 2.6 mV
+   rms and all parameters to within 11 %; within 750 steps everything is
+   within 1-2 %.
+
+| parameter | variant 2 (Adam) | variant 3 (LM + Adam) | ideal estimator (same noise) | CRLB (1 mV) |
+| --- | ---: | ---: | ---: | ---: |
+| k0_1 | +9.79 % | +1.96 % | +1.56 % | 1.04 % |
+| k0_2 | -2.14 % | -0.31 % | +1.08 % | 0.71 % |
+| k0_3 | +0.60 % | +0.31 % | +0.12 % | 0.75 % |
+| b_1 | -1.04 % | -0.14 % | +0.05 % | 0.17 % |
+| b_2 | -0.57 % | +0.05 % | +0.30 % | 0.20 % |
+| b_3 | +0.06 % | +0.06 % | +0.02 % | 0.12 % |
+| U0_1 | -3.65 mV | -0.99 mV | -0.67 mV | 0.44 mV |
+| Z_CC | +0.39 % | +0.09 % | +0.04 % | 0.09 % |
+
+Variant 3 lands within 2.3 CRLB of the truth for every parameter (the
+largest, U0_1, at 2.3; k0_1 at 1.9) and within
+1.4 % (k0_2) / 0.3 mV (U0_1) of what the exact model would estimate from the
+same noisy data; the data misfit is 0.73 mV rms (noise 1 mV, 8 fitted
+parameters). Final fields: V against the true solution 0.28 / 0.63 mV rms
+(0.1 / 1 C), c_e 0.06 / 2.4 mol/m3 (the 1 C electrolyte has not fully
+recovered from the LM jumps; the forward 1 C model had 0.7). Figure
+`results/lispan/inverse_8p_multirate_adam_vs_lm.png`
+(`scripts/lispan_plot_multirate.py`). Lesson, the same as for the DFN aging
+inverse (V2_RESULTS.md 8): with correlated parameters a first-order
+optimizer shared with the network weights is the bottleneck, not the PINN's
+accuracy; a second-order step on the few physical parameters with the
+fields frozen removes it at negligible cost (the voltage is an explicit
+function of the parameters given the fields, through the Delta phi root
+solve). For the DFN aging inverse (V2_RESULTS.md 8) the same step needs
+one change first: there the cell voltage is a network output tied to the
+aging parameters only through the residuals, so with frozen fields it
+depends on theta_0 (through V0) and R0 only; a voltage evaluated from the
+fields through the electrode kinetics (as the Li-SPAN PINN does) would make
+the LM step applicable there.
+
+### 6.8 Measured data (digitized Fig. 4b of the paper)
+
+**Data.** `scripts/lispan_digitize_paper.py --experiment` extracts the
+experimental circles of Fig. 4b (600 dpi render of the open-access PDF;
+pixels classified to the nearest MATLAB palette colour, Hough circles per
+colour, overlapping detections given to the colour with the best ring
+support, three overlaps removed after a visual check): 21 / 18 / 22 / 12
+points at 0.05 / 0.1 / 0.2 / 1 C (`results/lispan/paper_digitized/fig4b_exp_*.csv`,
+accuracy ~5 mV). `scripts/lispan_make_inverse_data.py --experiment` converts
+specific capacity to time with the paper's convention (1 C = 10 A/m2,
+capacity per model sulfur m_S_model; the measured cell had 0.6 mg/cm2, the
+model 0.767, see section 5.2) -> `results/lispan/inverse_data/V_<rate>C_experiment.npz`.
+The nominal benchmark model (reaction 2 irreversible, Z_CC 0.025) misses
+these points by 31 / 50 / 61 / 46 mV rms (the paper-like model with
+reaction 2 reversible and Z_CC 0.035: 30 / 55 / 74 / 68 mV).
+
+**Reference answer: finite-volume least squares** (`scripts/lispan_fit_experiment.py`,
+8 parameters {k0_m, b_m, U0_1, Z_CC}, fit on 0.1 C + 1 C, 0.05 C and 0.2 C
+predicted; ~30 min each):
+
+| start | k0_1 / k0_2 / k0_3 | b_1 / b_2 / b_3 | U0_1 | Z_CC | rms fit (0.1 / 1 C) | prediction 0.05 / 0.2 C |
+| --- | --- | --- | ---: | ---: | --- | --- |
+| nominal | 1.04 / 0.68 / 3.14 | 1.00 / 0.57 / 1.00 | +24 mV | 1.32 | 18.43 (20.5 / 14.8) | 29.1 / 31.8 |
+| PINN-TR point | 1.13 / 0.77 / 3.76 | 1.02 / 0.61 / 1.02 | +27 mV | 1.33 | 18.39 (19.4 / 16.8) | 30.2 / 30.7 |
+
+The misfit falls from 48.7 to 18.4 mV and stays there for different
+parameter sets (linearized standard deviations from the residual scatter:
+0.33-0.69 in log k0, 0.04-0.17 in log b, 18-25 mV in U0_1, 0.04-0.05 in log
+Z_CC): with 30 sparse points and an 18 mV model-form error only the
+contact resistance is pinned (Z_CC = 0.033 Ohm m2, the paper's own best fit
+is 0.035), the slow kinetics of reaction 3 (k0_3 x 3-4) and the flatter
+second OCV branch (b_2 x 0.6) are suggested, everything else is loose. The
+predictions at the two rates not used in the fit improve from 31 / 61 to
+29-30 / 31-32 mV.
+
+**PINN inverse on the same data** (`configs/lispan_inverse_experiment_8p.json`,
+start = nominal parameters with the nominal forward models, LM steps every
+250-500 steps), four variants, each a lesson:
+
+1. Joint training as for synthetic data (`lispan_inv8p_experiment_2*`,
+   STOPPED): the PINN reports 14-15 mV, but the finite-volume model at its
+   parameters gives 19.7 / 21.7 mV: with model-form error the data gradient
+   bends the fields away from the physics, and the parameters drift along
+   flat directions (k0_2 1.6 -> 2.7).
+2. `data_to_fields = false` with the physics gradient still reaching the
+   parameters (`*_physfields_*`, STOPPED): the parameters chase the current
+   fields (k0 x 6-7, misfit 19 -> 22 mV).
+3. Fields by the physics only, parameters by the data only (`*_split_*`,
+   STOPPED): still drifts (k0_2 x 7, U0_1 +66 mV, 18.5 -> 24 mV): the
+   frozen-field gradient lacks the field response d u*/d theta, which no
+   longer vanishes in the optimum once the model cannot reproduce the data.
+4. Trust region (`gn_mode = "tr"`, `lispan_inv8p_experiment_tr_*`): LM proposal
+   with frozen fields, 500 physics-only steps, step kept only if the
+   re-equilibrated misfit decreased. Monotone and physics-consistent: 48.6
+   -> 38.3 -> 30.2 -> 25.4 -> 21.4 -> 20.2 mV in five accepted steps, and the
+   finite-volume model at the PINN's parameters gives 20.20 mV (PINN 20.24
+   mV: the PINN is a faithful forward model there). Then the proposals are
+   rejected (20.3-20.7 mV after re-equilibration; one small step accepted at
+   step 7000, 20.20 mV; 8000 steps, 1 h 50 min): the frozen-field
+   direction is no longer a descent direction, and the 0.3-0.5 mV
+   training-to-training fluctuation of the PINN voltage is of the size of
+   the remaining improvements. Final point k0 x 2.2 / 1.7 / 4.5, b x 1.24 /
+   0.75 / 1.04, U0_1 +36 mV, Z_CC x 1.38 (0.034 Ohm m2): 1.8 mV above the
+   finite-volume optimum, on the same flat valley (predictions 32 / 32 mV).
+
+Conclusions for real data (and for the Li-S work that will need them):
+keep the fields a physics-only solution (variant 4, or a data weight small
+enough that the physics residuals stay at forward-solution level), and
+give the parameter update the total sensitivity dV/dtheta including the
+field response - a parametric PINN (theta as an input), implicit
+differentiation of the converged residuals, or quasi-Newton (Broyden)
+updates from the accepted steps - instead of the frozen-field Jacobian;
+accept on a noise-aware criterion. For this 1-D cell the finite-volume
+model is cheap enough (6 s per discharge) that it remains the right tool for
+the final calibration, and the 18 mV model-form error (reaction-2
+reversibility, double layer, the sulfur-loading inconsistency of the paper,
+digitization) limits what any estimator can extract: Z_CC robustly, the
+rest only as trends.
 
 ## 7. Data for the Li-SPAN work
 

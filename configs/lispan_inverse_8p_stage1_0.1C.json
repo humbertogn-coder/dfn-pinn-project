@@ -1,0 +1,57 @@
+{
+  "name": "lispan_inv8p_stage1_0.1C",
+  "description": "Li-SPAN 8-parameter multi-rate inverse, stage 1 at 0.1 C: forward re-adaptation at the initial guess {'k0_1': 2.0, 'k0_2': 0.5, 'k0_3': 1.5, 'b_1': 1.1, 'b_2': 0.9, 'b_3': 1.1, 'U0_1': 0.02, 'Z_CC': 1.5} (no data).",
+  "params": {
+    "Z_CC": 0.025,
+    "reversible": [
+      true,
+      false,
+      false
+    ]
+  },
+  "protocol": {
+    "current": 1.0,
+    "ramp_s": 30.0
+  },
+  "t_end": null,
+  "train": {
+    "seed": 0,
+    "dtype": "float32",
+    "width": 96,
+    "depth": 4,
+    "fourier_t": 8,
+    "short_t": [
+      60.0,
+      600.0
+    ],
+    "ic_tau_s": 60.0,
+    "quad_order": 12,
+    "adam_steps": 3000,
+    "lr": 0.0002,
+    "lr_final": 2e-05,
+    "n_cathode": 768,
+    "n_separator": 256,
+    "n_boundary": 96,
+    "adaptive": true,
+    "adaptive_every": 50,
+    "log_every": 100,
+    "eval_every": 1000,
+    "checkpoint_every": 2500,
+    "latest_every": 250,
+    "salt_total_scale": 1.0,
+    "charge_total_scale": 1.0,
+    "ema_decay": 0.0,
+    "ema_start": 0.3,
+    "threads": 1,
+    "fixed_multipliers": {
+      "k0_1": 2.0,
+      "k0_2": 0.5,
+      "k0_3": 1.5,
+      "b_1": 1.1,
+      "b_2": 0.9,
+      "b_3": 1.1,
+      "U0_1": 0.02,
+      "Z_CC": 1.5
+    }
+  }
+}

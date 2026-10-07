@@ -1,0 +1,78 @@
+{
+  "name": "lispan_inv8p_experiment",
+  "description": "Li-SPAN 8-parameter inverse on the MEASURED discharge points of Simanjuntak 2024 Fig. 4b (digitized circles, 0.1 C: 18 points, 1 C: 12 points), PINN-benchmark model, start = nominal parameters with the nominal forward models (run C, 1C sepscale); LM parameter steps every 250. Reference answer: scripts/lispan_fit_experiment.py.",
+  "params": {
+    "Z_CC": 0.025,
+    "reversible": [
+      true,
+      false,
+      false
+    ]
+  },
+  "rates": [
+    {
+      "current": 1.0,
+      "ramp_s": 30.0,
+      "init": "results/lispan_runs/lispan_f01C_w96_inv_20261007T032802Z/final.pt",
+      "data_path": "results/lispan/inverse_data/V_0.1C_experiment.npz"
+    },
+    {
+      "current": 10.0,
+      "ramp_s": 30.0,
+      "init": "results/lispan_runs/lispan_f1C_w96_sepscale_20261007T061233Z/final.pt",
+      "data_path": "results/lispan/inverse_data/V_1C_experiment.npz"
+    }
+  ],
+  "train": {
+    "seed": 0,
+    "dtype": "float32",
+    "width": 96,
+    "depth": 4,
+    "fourier_t": 8,
+    "short_t": [
+      60.0,
+      600.0
+    ],
+    "ic_tau_s": 60.0,
+    "quad_order": 12,
+    "adam_steps": 6000,
+    "lr": 0.0002,
+    "lr_final": 1e-05,
+    "n_cathode": 768,
+    "n_separator": 512,
+    "n_boundary": 96,
+    "adaptive": true,
+    "adaptive_every": 50,
+    "log_every": 100,
+    "eval_every": 500,
+    "checkpoint_every": 2500,
+    "latest_every": 250,
+    "salt_total_scale": 1.0,
+    "charge_total_scale": 1.0,
+    "ema_decay": 0.0,
+    "ema_start": 0.3,
+    "threads": 1,
+    "salt_sep_natural_scale": true,
+    "inverse_params": [
+      "k0_1",
+      "k0_2",
+      "k0_3",
+      "b_1",
+      "b_2",
+      "b_3",
+      "U0_1",
+      "Z_CC"
+    ],
+    "inverse_init": {},
+    "data_noise_mV": 0.0,
+    "data_scale_mV": 5.0,
+    "param_lr": 0.002,
+    "param_warmup_steps": 0,
+    "param_log_bound": 2.0,
+    "gn_every": 250,
+    "gn_iters": 4,
+    "gn_until": 5000,
+    "param_lr_final": 0.002,
+    "net_freeze_steps": 0
+  }
+}

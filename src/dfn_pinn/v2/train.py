@@ -205,7 +205,11 @@ class AdaptiveWeights:
                 continue
             Lg = sum(present)
             grads = torch.autograd.grad(Lg, params, retain_graph=True, allow_unused=True)
-            norms[g] = math.sqrt(sum(float((gr ** 2).sum()) for gr in grads if gr is not None)) + 1e-12
+            nrm = math.sqrt(sum(float((gr ** 2).sum()) for gr in grads if gr is not None)) + 1e-12
+            if math.isfinite(nrm):          # a non-finite gradient would make every later loss NaN; keep the old weight
+                norms[g] = nrm
+        if not norms:
+            return norms
         mean_norm = sum(norms.values()) / len(norms)
         for g in norms:
             target = min(max(mean_norm / norms[g], 1e-2), 1e3)

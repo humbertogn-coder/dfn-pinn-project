@@ -1,0 +1,83 @@
+{
+  "name": "lispan_inv8p_multirate",
+  "description": "Li-SPAN 8-parameter inverse {k0_1..3, b_1..3, U0_1, Z_CC} from 0.1 C + 1 C synthetic discharges (1 mV noise), initial guess {\"k0_1\": 2.0, \"k0_2\": 0.5, \"k0_3\": 1.5, \"b_1\": 1.1, \"b_2\": 0.9, \"b_3\": 1.1, \"U0_1\": 0.02, \"Z_CC\": 1.5}, truth nominal; stage-1 weights per rate.",
+  "params": {
+    "Z_CC": 0.025,
+    "reversible": [
+      true,
+      false,
+      false
+    ]
+  },
+  "rates": [
+    {
+      "current": 1.0,
+      "ramp_s": 30.0,
+      "init": "results/lispan_runs/lispan_inv8p_stage1_0.1C_20261007T060146Z/final.pt",
+      "data_path": "results/lispan/inverse_data/V_0.1C_nominal.npz"
+    },
+    {
+      "current": 10.0,
+      "ramp_s": 30.0,
+      "init": "results/lispan_runs/lispan_inv8p_stage1_1C_20261007T070125Z/final.pt",
+      "data_path": "results/lispan/inverse_data/V_1C_nominal.npz"
+    }
+  ],
+  "train": {
+    "seed": 0,
+    "dtype": "float32",
+    "width": 96,
+    "depth": 4,
+    "fourier_t": 8,
+    "short_t": [
+      60.0,
+      600.0
+    ],
+    "ic_tau_s": 60.0,
+    "quad_order": 12,
+    "adam_steps": 7000,
+    "lr": 0.0002,
+    "lr_final": 1e-05,
+    "n_cathode": 768,
+    "n_separator": 512,
+    "n_boundary": 96,
+    "adaptive": true,
+    "adaptive_every": 50,
+    "log_every": 100,
+    "eval_every": 500,
+    "checkpoint_every": 2500,
+    "latest_every": 250,
+    "salt_total_scale": 1.0,
+    "charge_total_scale": 1.0,
+    "ema_decay": 0.0,
+    "ema_start": 0.3,
+    "threads": 1,
+    "salt_sep_natural_scale": true,
+    "inverse_params": [
+      "k0_1",
+      "k0_2",
+      "k0_3",
+      "b_1",
+      "b_2",
+      "b_3",
+      "U0_1",
+      "Z_CC"
+    ],
+    "inverse_init": {
+      "k0_1": 2.0,
+      "k0_2": 0.5,
+      "k0_3": 1.5,
+      "b_1": 1.1,
+      "b_2": 0.9,
+      "b_3": 1.1,
+      "U0_1": 0.02,
+      "Z_CC": 1.5
+    },
+    "data_noise_mV": 1.0,
+    "data_scale_mV": 1.0,
+    "param_lr": 0.005,
+    "param_warmup_steps": 0,
+    "param_log_bound": 2.0,
+    "net_freeze_steps": 1000
+  }
+}

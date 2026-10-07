@@ -42,7 +42,7 @@ from ..v2.model import MLP, gauss_legendre
 from ..v2.train import AdaptiveWeights
 from .params import F, R as RGAS, LiSPANParams, LiSPANProtocol
 
-GROUPS = {"ode": ["ode1", "ode2", "ode3"], "charge": ["charge_s", "charge_e"], "salt": ["salt_c", "salt_s", "salt_total"],
+GROUPS = {"ode": ["ode1", "ode2", "ode3"], "inventory": ["charge_total"], "charge": ["charge_s", "charge_e"], "salt": ["salt_c", "salt_s", "salt_total"],
           "bc": ["bc_c0", "bc_an", "bc_if"]}
 
 
@@ -69,6 +69,10 @@ class LiSPANTrainConfig:
     early_window: float = 0.05
     huber_delta: float = 3.0
     salt_total_scale: float = 1.0         # mol/m3 of mean salt inventory error per unit residual (0 = off)
+    charge_total_scale: float = 0.0       # mol/m3 of extent-inventory error per unit residual (0 = off; see residuals)
+    salt_sep_natural_scale: bool = False  # separator salt residual on its own scale (1-t+) I/(F L_sep) instead of the cathode's
+    ema_decay: float = 0.0                # exponential moving average of the network weights (0 = off)
+    ema_start: float = 0.5                # fraction of adam_steps after which the average starts
     adaptive: bool = True
     adaptive_alpha: float = 0.9
     adaptive_every: int = 50
@@ -83,7 +87,20 @@ class LiSPANTrainConfig:
     data_scale_mV: float = 1.0
     param_lr: float = 5e-3
     param_warmup_steps: int = 0
+    net_freeze_steps: int = 0             # inverse: first steps move only the physical parameters (fields frozen)
+    param_lr_final: float = 0.0           # final lr of the physical parameters (0 = same decay as the networks)
+    gn_every: int = 0                     # multi-rate inverse: Levenberg-Marquardt update of the parameters every n steps
+    gn_iters: int = 2                     #   (fields frozen, finite-difference Jacobian of the data residuals) - 0 = off
+    gn_max_step: float = 0.3              #   max change per iteration of a log-multiplier (U0: in units of U0_SCALE)
+    gn_until: int = 0                     #   last step with LM updates (0 = all)
+    gn_mode: str = "frozen"               # "frozen": LM steps accepted on the frozen-field misfit (exact model data);
+                                          # "tr": trust region - a step is kept only if the misfit after the fields have
+                                          # re-equilibrated (gn_every physics steps) decreased, else fields+parameters are
+                                          # restored and the damping raised (model-form error: real data)
+    data_to_fields: bool = True           # multi-rate inverse: False = fields trained by the physics only, parameters by
+                                          # the data only (fields stay the forward solution at the current parameters)
     param_log_bound: float = 2.0
+    fixed_multipliers: dict = field(default_factory=dict)   # forward run at non-nominal parameters (inverse stage 1)
 
     def to_dict(self):
         d = asdict(self)
@@ -128,17 +145,22 @@ class LiSPANPINN(nn.Module):
         self.salt_scale = (1.0 - p.t_plus) * I0 / (F * p.L_cat)            # mol/m3/s
         self.D_ion = {"Li": p.D_salt / (2 * (1 - p.t_plus)), "PF6": p.D_salt / (2 * p.t_plus)}
         self.salt_total_scale = 1.0
+        self.charge_total_scale = 0.0
+        self.salt_scale_sep = self.salt_scale                              # set by train(): natural separator scale optional
         self.log_mult = nn.ParameterDict({n: nn.Parameter(torch.zeros(()), requires_grad=False) for n in self.PARAMETERS})
 
     # ------------------------------------------------------------------ parameters
+    def set_parameter_values(self, values):
+        """Set multipliers (offsets in V for U0_m) without changing trainability."""
+        with torch.no_grad():
+            for n, v in values.items():
+                self.log_mult[n].fill_(float(v) / self.U0_SCALE if n.startswith("U0") else math.log(float(v)))
+
     def set_trainable_parameters(self, names, initial=None):
         initial = initial or {}
         for n in names:
             self.log_mult[n].requires_grad_(True)
-            if n in initial:
-                v = float(initial[n])
-                with torch.no_grad():
-                    self.log_mult[n].fill_(v / self.U0_SCALE if n.startswith("U0") else math.log(v))
+        self.set_parameter_values({n: v for n, v in initial.items() if n in names})
 
     def mult(self, name):
         return torch.exp(self.log_mult[name])
@@ -165,6 +187,11 @@ class LiSPANPINN(nn.Module):
 
     def I(self, T):
         return self.prot.current * self.g(T)
+
+    def charge_passed(self, T):
+        """Q(t) = int_0^t I dt = I0 tau ln cosh(t/tau) [C/m2], written overflow-free."""
+        tau = self.ramp_hat
+        return self.prot.current * self.t_end * (T + tau * (torch.log1p(torch.exp(-2.0 * T / tau)) - math.log(2.0)))
 
     def ic_factor(self, T):
         return 1 - torch.exp(-T / self.ic_tau_hat)
@@ -392,7 +419,7 @@ def residuals(model: LiSPANPINN, batch):
     out["charge_e"] = torch.cat([out["charge_e"], (_grad(phie_s, Ys) / p.L_sep + (-Is + Bs) / kap_s) / model.charge_e_scale])
     Ds = model.D_eff(eps_s, p.beta_sep)
     dflux_s = _grad(Ds * dcs_dy, Ys) / p.L_sep
-    out["salt_s"] = (p.eps_e_sep * _grad(cs, Ts) / t_end - dflux_s) / model.salt_scale
+    out["salt_s"] = (p.eps_e_sep * _grad(cs, Ts) / t_end - dflux_s) / model.salt_scale_sep
     # ---------------- boundary / interface conditions on the salt
     Tb = batch["b"].clone().requires_grad_(True)
     Y0 = torch.zeros_like(Tb).requires_grad_(True)
@@ -424,6 +451,18 @@ def residuals(model: LiSPANPINN, batch):
         inv0 = p.eps_e0 * p.c_Li0 * p.L_cat + p.eps_e_sep * p.c_Li0 * p.L_sep
         # the Li2S growth removes pore volume: the salt displaced is small (eps_L <= 0.03) and is in the balance already
         out["salt_total"] = (inv_c + inv_s - inv0) / (model.salt_total_scale * p.L_tot)
+    # global charge inventory: every reaction transfers 2 e- per chain, so the charge passed fixes the extent sum,
+    # 2 F c_S4,0 L_cat int_0^1 (xi_1 + xi_2 + xi_3) dY = Q(t) = int_0^t I dt.  The hard current projection makes
+    # this exact only if the extent ODEs are; their small mean residual otherwise integrates into an inventory
+    # drift that ends up in c_S2 = c_S4,0 (xi_2 - xi_3) during phase 3 (1 mV per mol/m3 through b_3, run B).
+    if model.charge_total_scale > 0:
+        q = model.q_nodes.shape[0]; nb = Tb.shape[0]
+        nodes = model.q_nodes.to(Tb.dtype).view(1, q); w = model.q_weights.to(Tb.dtype).view(1, q)
+        Tq = Tb.view(nb, 1).expand(nb, q).reshape(-1, 1)
+        Yc_q = nodes.expand(nb, q).reshape(-1, 1)
+        xi1, xi2, xi3 = model.extents(Yc_q, Tq)
+        inv = p.c_init[0] * ((xi1 + xi2 + xi3).view(nb, q) * w).sum(1, keepdim=True)
+        out["charge_total"] = (inv - model.charge_passed(Tb) / (2.0 * F * p.L_cat)) / model.charge_total_scale
     return out
 
 
@@ -495,8 +534,16 @@ def train(cfg: LiSPANTrainConfig, params: LiSPANParams, protocol: LiSPANProtocol
     model = LiSPANPINN(params, protocol, t_end, cfg.width, cfg.depth, cfg.act, cfg.fourier_t, cfg.fourier_period,
                        tuple(cfg.short_t), cfg.ic_tau_s, cfg.quad_order).to(dtype)
     model.salt_total_scale = cfg.salt_total_scale
+    model.charge_total_scale = cfg.charge_total_scale
+    if cfg.salt_sep_natural_scale:
+        # the separator has no source: its transient balances D d2c/dy2 ~ (1-t+) I/(F L_sep), 6x smaller than the cathode
+        # source scale, so on the cathode's scale its residual looked converged while the 1 C salt transient was 25 % off
+        model.salt_scale_sep = model.salt_scale * params.L_cat / params.L_sep
     if init_state is not None:
         model.load_state_dict(init_state, strict=False)
+    if cfg.fixed_multipliers:
+        model.set_parameter_values(cfg.fixed_multipliers)
+        log(f"Fixed parameter multipliers: {cfg.fixed_multipliers}")
     data = None
     if cfg.data_path:
         raw = np.load(cfg.data_path, allow_pickle=False)
@@ -533,6 +580,38 @@ def train(cfg: LiSPANTrainConfig, params: LiSPANParams, protocol: LiSPANProtocol
             saved = json.loads(prev.read_text()); history, evals = saved.get("history", []), saved.get("evals", [])
         log(f"Resumed from {resume} at step {start_step}")
     sched = torch.optim.lr_scheduler.ExponentialLR(opt, gamma)
+    # exponential moving average of the network weights (evaluated and saved next to the raw weights)
+    ema_names = [n for n, p_ in model.named_parameters() if not n.startswith("log_mult")]
+    ema = None
+    if resume is not None and cfg.ema_decay > 0:
+        ck_ema = torch.load(resume, weights_only=False).get("ema")
+        if ck_ema is not None:
+            ema = {n: v.clone() for n, v in ck_ema.items()}
+    ema_first = int(cfg.ema_start * cfg.adam_steps)
+
+    def ema_update():
+        nonlocal ema
+        with torch.no_grad():
+            cur = dict(model.named_parameters())
+            if ema is None:
+                ema = {n: cur[n].detach().clone() for n in ema_names}
+            else:
+                for n in ema_names:
+                    ema[n].lerp_(cur[n].detach(), 1.0 - cfg.ema_decay)
+
+    def with_ema(fn):
+        """Run fn() with the averaged weights loaded, then restore the raw weights."""
+        cur = dict(model.named_parameters())
+        raw = {n: cur[n].detach().clone() for n in ema_names}
+        with torch.no_grad():
+            for n in ema_names:
+                cur[n].copy_(ema[n])
+        try:
+            return fn()
+        finally:
+            with torch.no_grad():
+                for n in ema_names:
+                    cur[n].copy_(raw[n])
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "config.json").write_text(json.dumps({"train": cfg.to_dict(), "params": params.to_dict(),
                                                      "protocol": protocol.to_dict(), "t_end": t_end}, indent=2))
@@ -543,7 +622,8 @@ def train(cfg: LiSPANTrainConfig, params: LiSPANParams, protocol: LiSPANProtocol
     def save(name):
         torch.save({"model": model.state_dict(), "optimizer": opt.state_dict(), "train": cfg.to_dict(),
                     "params": params.to_dict(), "protocol": protocol.to_dict(), "t_end": t_end,
-                    "group_weights": aw.w, "parameters": model.parameter_values(), "step": step_holder[0]}, out_dir / name)
+                    "group_weights": aw.w, "parameters": model.parameter_values(), "step": step_holder[0],
+                    "ema": ema}, out_dir / name)
         (out_dir / "history.json").write_text(json.dumps({"history": history, "evals": evals}))
 
     for step in range(start_step, cfg.adam_steps + 1):
@@ -575,8 +655,13 @@ def train(cfg: LiSPANTrainConfig, params: LiSPANParams, protocol: LiSPANProtocol
         if data is not None and step <= cfg.param_warmup_steps:
             for p_ in phys_params:
                 p_.grad = None
+        if data is not None and step <= cfg.net_freeze_steps:
+            for p_ in net_params:
+                p_.grad = None
         torch.nn.utils.clip_grad_norm_(net_params, 10.0)
         opt.step(); sched.step()
+        if cfg.ema_decay > 0 and step >= ema_first:
+            ema_update()
         with torch.no_grad():
             for n in cfg.inverse_params:
                 model.log_mult[n].clamp_(-cfg.param_log_bound, cfg.param_log_bound)
@@ -591,11 +676,18 @@ def train(cfg: LiSPANTrainConfig, params: LiSPANParams, protocol: LiSPANProtocol
             log(msg)
         if reference is not None and (step % cfg.eval_every == 0 or step == cfg.adam_steps):
             ev = evaluate(model, reference, dtype); ev["step"] = step
+            if ema is not None:
+                ev_ema = with_ema(lambda: evaluate(model, reference, dtype))
+                ev.update({f"ema_{k}": v for k, v in ev_ema.items()})
             evals.append(ev)
-            log("  eval: " + ", ".join(f"{k} {v:.4g}" for k, v in ev.items() if k != "step"))
+            log("  eval: " + ", ".join(f"{k} {v:.4g}" for k, v in ev.items() if k != "step" and not k.startswith("ema_")))
+            if ema is not None:
+                log("  eval (EMA): " + ", ".join(f"{k[4:]} {v:.4g}" for k, v in ev.items() if k.startswith("ema_")))
         if cfg.latest_every and step % cfg.latest_every == 0:
             save("latest.pt")
         if cfg.checkpoint_every and step % cfg.checkpoint_every == 0:
             save(f"step_{step}.pt")
     save("final.pt")
+    if ema is not None:
+        with_ema(lambda: save("final_ema.pt"))
     return model, history, evals

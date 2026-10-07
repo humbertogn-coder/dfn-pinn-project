@@ -1,0 +1,1 @@
+STOPPED by hand at step ~1000: fields physics-only and parameters data-only still drift (k0_2 x7, b_1 1.6, U0_1 +66 mV; misfit 18.5 -> 24 mV): the frozen-field gradient ignores the field response d u*/d theta, which matters once the model cannot reproduce the data. Replaced by gn_mode = 'tr' (LM proposals accepted on the re-equilibrated misfit).

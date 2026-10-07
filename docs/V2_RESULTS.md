@@ -1112,6 +1112,23 @@ resolve the graphite-plateau current redistribution. This model is the
 recommended starting point for all inverse work (`--init
 results/v2_runs/f4_hardbc_w96_40k_20261005T194145Z/final.pt`, width 96).
 
+**Reproducibility (seed 1, `f4_hardbc_w96_40k_seed1_20261006T095948Z`,
+same configuration, finished 2026-10-07; run in the gaps of the Li-SPAN
+work, paused/resumed and once restarted with `--resume`, 17.5 h wall clock):
+
+| seed | V rmse / max [mV] | c_e rmse / max | phi_e max [mV] | j_n / j_p rmse/jref | th_s,n / th_s,p max | predicted bias D_p / k_n / D_n |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 0 | 0.25 / 1.15 | 0.6 / 6.6 | 0.75 | 0.004 / 0.008 | 0.0019 / 0.0020 | -0.01 / +0.47 / -0.93 % |
+| 1 | 0.23 / 1.18 | 1.1 / 11.2 | 1.01 | 0.007 / 0.010 | 0.0035 / 0.0027 | +0.07 / +0.27 / -1.76 % |
+
+The voltage accuracy reproduces (0.23-0.25 mV rms, 1.15-1.18 mV max); the
+internal fields of seed 1 are 1.3-1.8 times less accurate (c_e max 11
+mol/m3, still a factor 5 better than the soft-collector width-64
+baseline), and the predicted D_n bias doubles to -1.8 % (D_p, k_n
+unchanged). Seed-to-seed spread is therefore part of the error budget of
+D_n: about 1 % at this model size; checkpoint averaging over seeds or a
+longer run would be the way to tighten it.
+
 **Step B, hierarchical inverse from this model** (`B_hier_w96_20261006T043317Z`:
 1C data with 1 mV noise, fields warm-started from the model above, fresh
 optimizer with `lr` 2e-4 -> 1e-5, `param_lr` 0.01; D_p and k_n released

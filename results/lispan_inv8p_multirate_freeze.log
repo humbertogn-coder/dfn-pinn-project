@@ -1,0 +1,104 @@
+Output: /home/claude/v2/repo/results/lispan_runs/lispan_inv8p_multirate_freeze_20261007T073258Z; rates [0.1, 1.0], t_end [33416, 2781] s
+Multi-rate inverse: rates ['0.1C', '1C'], learning ['k0_1', 'k0_2', 'k0_3', 'b_1', 'b_2', 'b_3', 'U0_1', 'Z_CC'], initial {'k0_1': 2.0, 'k0_2': 0.5, 'k0_3': 1.5, 'b_1': 1.1, 'b_2': 0.9, 'b_3': 1.1, 'Z_CC': 1.5, 'U0_1': 0.02}
+step      1 loss 1.421e+04 | 0.1C data 6.14e+02 ode 7.6e-05 salt 4.0e-03 1C data 1.50e+04 ode 1.9e-04 salt 6.3e-03 | 1s | k0_1 2.01, k0_2 0.5025, k0_3 1.508, b_1 1.095, b_2 0.8955, b_3 1.095, U0_1 0.0205, Z_CC 1.493
+step    100 loss 7.065e+02 | 0.1C data 3.78e+02 ode 2.2e-01 salt 3.0e-03 1C data 4.54e+02 ode 7.0e-02 salt 1.1e-02 | 87s | k0_1 2.217, k0_2 0.6615, k0_3 1.719, b_1 1.038, b_2 0.7185, b_3 1.051, U0_1 0.01485, Z_CC 1.162
+step    200 loss 3.144e+02 | 0.1C data 1.87e+02 ode 1.2e-01 salt 2.8e-03 1C data 2.33e+02 ode 4.6e-02 salt 1.2e-02 | 171s | k0_1 1.947, k0_2 0.6746, k0_3 1.662, b_1 0.9952, b_2 0.7818, b_3 1.058, U0_1 0.001278, Z_CC 1.103
+step    300 loss 1.625e+02 | 0.1C data 9.45e+01 ode 6.3e-02 salt 3.7e-03 1C data 1.52e+02 ode 2.7e-02 salt 6.1e-03 | 255s | k0_1 1.726, k0_2 0.6917, k0_3 1.58, b_1 0.9613, b_2 0.8336, b_3 1.057, U0_1 -0.007248, Z_CC 1.069
+step    400 loss 1.009e+02 | 0.1C data 5.68e+01 ode 3.8e-02 salt 3.3e-03 1C data 1.13e+02 ode 1.9e-02 salt 1.3e-02 | 338s | k0_1 1.58, k0_2 0.7117, k0_3 1.499, b_1 0.9404, b_2 0.8683, b_3 1.052, U0_1 -0.01188, Z_CC 1.048
+step    500 loss 7.250e+01 | 0.1C data 3.95e+01 ode 2.4e-02 salt 2.4e-03 1C data 9.45e+01 ode 1.6e-02 salt 1.9e-02 | 430s | k0_1 1.486, k0_2 0.7299, k0_3 1.431, b_1 0.928, b_2 0.8928, b_3 1.047, U0_1 -0.01416, Z_CC 1.036
+  eval: 0.1C V 5.750 mV rms / 23.32 max, c_e 0.12; 1C V 9.058 mV rms / 28.47 max, c_e 0.90
+step 519: non-finite loss, batch skipped
+step    600 loss 6.192e+01 | 0.1C data 3.07e+01 ode 1.9e-02 salt 4.8e-03 1C data 8.57e+01 ode 1.7e-02 salt 1.1e-02 | 524s | k0_1 1.426, k0_2 0.7452, k0_3 1.377, b_1 0.9209, b_2 0.91, b_3 1.042, U0_1 -0.01516, Z_CC 1.028
+step    700 loss 5.370e+01 | 0.1C data 2.58e+01 ode 1.7e-02 salt 4.6e-03 1C data 8.23e+01 ode 1.5e-02 salt 1.1e-02 | 603s | k0_1 1.389, k0_2 0.7576, k0_3 1.337, b_1 0.9167, b_2 0.9228, b_3 1.038, U0_1 -0.01552, Z_CC 1.023
+step    800 loss 5.081e+01 | 0.1C data 2.30e+01 ode 1.6e-02 salt 4.5e-03 1C data 8.19e+01 ode 1.6e-02 salt 8.3e-03 | 685s | k0_1 1.366, k0_2 0.7672, k0_3 1.308, b_1 0.9144, b_2 0.9328, b_3 1.034, U0_1 -0.01559, Z_CC 1.02
+step    900 loss 4.729e+01 | 0.1C data 2.15e+01 ode 1.3e-02 salt 3.8e-03 1C data 8.44e+01 ode 1.4e-02 salt 1.1e-02 | 761s | k0_1 1.357, k0_2 0.7744, k0_3 1.289, b_1 0.9126, b_2 0.9405, b_3 1.032, U0_1 -0.0155, Z_CC 1.018
+step   1000 loss 4.736e+01 | 0.1C data 2.09e+01 ode 1.3e-02 salt 4.7e-03 1C data 8.74e+01 ode 1.3e-02 salt 8.0e-03 | 849s | k0_1 1.355, k0_2 0.7796, k0_3 1.278, b_1 0.9119, b_2 0.9464, b_3 1.03, U0_1 -0.01546, Z_CC 1.016
+  eval: 0.1C V 4.293 mV rms / 18.17 max, c_e 0.12; 1C V 8.825 mV rms / 23.01 max, c_e 0.90
+step   1100 loss 2.717e+01 | 0.1C data 1.68e+01 ode 3.0e-03 salt 1.0e-02 1C data 2.75e+01 ode 2.5e-03 salt 4.1e-02 | 946s | k0_1 1.336, k0_2 0.7916, k0_3 1.243, b_1 0.9234, b_2 0.944, b_3 1.03, U0_1 -0.01599, Z_CC 1.014
+step 1119: non-finite loss, batch skipped
+step   1200 loss 1.592e+01 | 0.1C data 1.17e+01 ode 2.1e-03 salt 5.2e-03 1C data 1.59e+01 ode 9.7e-04 salt 6.4e-02 | 1033s | k0_1 1.325, k0_2 0.8031, k0_3 1.202, b_1 0.9314, b_2 0.9444, b_3 1.026, U0_1 -0.01525, Z_CC 1.012
+step   1300 loss 1.077e+01 | 0.1C data 9.60e+00 ode 1.2e-03 salt 2.2e-03 1C data 1.05e+01 ode 4.9e-04 salt 6.9e-02 | 1120s | k0_1 1.316, k0_2 0.8136, k0_3 1.169, b_1 0.9391, b_2 0.947, b_3 1.022, U0_1 -0.01431, Z_CC 1.011
+step   1400 loss 8.556e+00 | 0.1C data 7.91e+00 ode 8.5e-04 salt 2.1e-03 1C data 7.21e+00 ode 3.4e-04 salt 9.5e-02 | 1203s | k0_1 1.308, k0_2 0.8241, k0_3 1.141, b_1 0.9454, b_2 0.9486, b_3 1.018, U0_1 -0.01336, Z_CC 1.01
+step   1500 loss 6.626e+00 | 0.1C data 6.30e+00 ode 3.9e-04 salt 2.6e-03 1C data 5.20e+00 ode 2.9e-04 salt 9.6e-02 | 1280s | k0_1 1.299, k0_2 0.8336, k0_3 1.117, b_1 0.9506, b_2 0.9506, b_3 1.015, U0_1 -0.0125, Z_CC 1.01
+  eval: 0.1C V 2.296 mV rms / 5.54 max, c_e 0.15; 1C V 1.919 mV rms / 8.69 max, c_e 10.91
+step   1600 loss 6.716e+00 | 0.1C data 4.55e+00 ode 6.1e-04 salt 2.7e-03 1C data 4.27e+00 ode 3.5e-04 salt 9.6e-02 | 1361s | k0_1 1.291, k0_2 0.8423, k0_3 1.098, b_1 0.9548, b_2 0.9524, b_3 1.013, U0_1 -0.01177, Z_CC 1.009
+step   1700 loss 4.887e+00 | 0.1C data 4.51e+00 ode 2.3e-04 salt 3.2e-03 1C data 3.24e+00 ode 2.1e-04 salt 1.1e-01 | 1443s | k0_1 1.284, k0_2 0.8499, k0_3 1.081, b_1 0.9582, b_2 0.954, b_3 1.011, U0_1 -0.01115, Z_CC 1.009
+step 1800: non-finite loss, batch skipped
+step 1801: non-finite loss, batch skipped
+step 1802: non-finite loss, batch skipped
+Output: results/lispan_runs/lispan_inv8p_multirate_freeze_20261007T073258Z; rates [0.1, 1.0], t_end [33416, 2781] s
+Multi-rate inverse: rates ['0.1C', '1C'], learning ['k0_1', 'k0_2', 'k0_3', 'b_1', 'b_2', 'b_3', 'U0_1', 'Z_CC'], initial {'k0_1': 2.0, 'k0_2': 0.5, 'k0_3': 1.5, 'b_1': 1.1, 'b_2': 0.9, 'b_3': 1.1, 'Z_CC': 1.5, 'U0_1': 0.02}
+Resumed from results/lispan_runs/lispan_inv8p_multirate_freeze_20261007T073258Z/latest.pt at step 1751
+step   1751 loss 3.703e+00 | 0.1C data 3.95e+00 ode 3.0e-04 salt 1.4e-03 1C data 2.73e+00 ode 1.9e-04 salt 9.4e-02 | 1492s | k0_1 1.28, k0_2 0.8535, k0_3 1.074, b_1 0.9598, b_2 0.9551, b_3 1.01, U0_1 -0.01086, Z_CC 1.009
+step   1800 loss 3.672e+00 | 0.1C data 3.96e+00 ode 1.9e-04 salt 1.6e-03 1C data 2.67e+00 ode 1.7e-04 salt 9.5e-02 | 1536s | k0_1 1.276, k0_2 0.8568, k0_3 1.069, b_1 0.9611, b_2 0.956, b_3 1.009, U0_1 -0.01062, Z_CC 1.008
+step   1900 loss 4.126e+00 | 0.1C data 3.52e+00 ode 2.7e-04 salt 2.7e-03 1C data 2.05e+00 ode 2.0e-04 salt 1.2e-01 | 1618s | k0_1 1.268, k0_2 0.8631, k0_3 1.058, b_1 0.9633, b_2 0.9577, b_3 1.008, U0_1 -0.01016, Z_CC 1.008
+step   2000 loss 3.089e+00 | 0.1C data 3.33e+00 ode 2.5e-04 salt 1.3e-03 1C data 1.76e+00 ode 1.5e-04 salt 1.1e-01 | 1695s | k0_1 1.261, k0_2 0.869, k0_3 1.048, b_1 0.9653, b_2 0.9588, b_3 1.007, U0_1 -0.009786, Z_CC 1.008
+  eval: 0.1C V 1.514 mV rms / 3.77 max, c_e 0.08; 1C V 0.888 mV rms / 5.29 max, c_e 12.69
+step   2100 loss 2.555e+00 | 0.1C data 2.92e+00 ode 1.5e-04 salt 1.3e-03 1C data 1.55e+00 ode 1.3e-04 salt 1.1e-01 | 1772s | k0_1 1.254, k0_2 0.8743, k0_3 1.041, b_1 0.9671, b_2 0.9605, b_3 1.005, U0_1 -0.009451, Z_CC 1.008
+step   2200 loss 2.443e+00 | 0.1C data 2.70e+00 ode 1.5e-04 salt 1.2e-03 1C data 1.45e+00 ode 1.7e-04 salt 1.1e-01 | 1851s | k0_1 1.247, k0_2 0.879, k0_3 1.036, b_1 0.9686, b_2 0.9624, b_3 1.005, U0_1 -0.009147, Z_CC 1.007
+step 2269: non-finite loss, batch skipped
+step   2300 loss 1.993e+00 | 0.1C data 2.53e+00 ode 9.6e-05 salt 1.1e-03 1C data 1.26e+00 ode 1.3e-04 salt 8.9e-02 | 1936s | k0_1 1.241, k0_2 0.8835, k0_3 1.032, b_1 0.9698, b_2 0.964, b_3 1.004, U0_1 -0.00887, Z_CC 1.007
+step   2400 loss 1.913e+00 | 0.1C data 2.26e+00 ode 1.0e-04 salt 1.3e-03 1C data 1.21e+00 ode 1.4e-04 salt 9.6e-02 | 2019s | k0_1 1.235, k0_2 0.8878, k0_3 1.028, b_1 0.9708, b_2 0.9655, b_3 1.003, U0_1 -0.008608, Z_CC 1.007
+step   2500 loss 2.111e+00 | 0.1C data 2.18e+00 ode 1.0e-04 salt 9.1e-04 1C data 1.01e+00 ode 9.5e-05 salt 1.1e-01 | 2099s | k0_1 1.23, k0_2 0.8919, k0_3 1.024, b_1 0.9718, b_2 0.9665, b_3 1.003, U0_1 -0.008369, Z_CC 1.007
+  eval: 0.1C V 1.150 mV rms / 3.06 max, c_e 0.09; 1C V 0.558 mV rms / 3.37 max, c_e 12.89
+step   2600 loss 2.505e+00 | 0.1C data 2.75e+00 ode 2.0e-04 salt 1.3e-03 1C data 1.02e+00 ode 1.1e-04 salt 8.1e-02 | 2178s | k0_1 1.224, k0_2 0.896, k0_3 1.021, b_1 0.9729, b_2 0.9677, b_3 1.003, U0_1 -0.008202, Z_CC 1.007
+step   2700 loss 1.729e+00 | 0.1C data 2.08e+00 ode 8.4e-05 salt 7.8e-04 1C data 9.25e-01 ode 1.1e-04 salt 8.2e-02 | 2260s | k0_1 1.217, k0_2 0.8999, k0_3 1.019, b_1 0.9738, b_2 0.9689, b_3 1.002, U0_1 -0.008026, Z_CC 1.006
+step   2800 loss 2.243e+00 | 0.1C data 2.04e+00 ode 2.2e-04 salt 1.3e-03 1C data 9.25e-01 ode 1.7e-04 salt 8.7e-02 | 2339s | k0_1 1.211, k0_2 0.9037, k0_3 1.017, b_1 0.9744, b_2 0.9699, b_3 1.002, U0_1 -0.007821, Z_CC 1.006
+step 2869: non-finite loss, batch skipped
+step   2900 loss 1.797e+00 | 0.1C data 1.81e+00 ode 7.4e-05 salt 1.4e-03 1C data 8.74e-01 ode 9.8e-05 salt 7.9e-02 | 2412s | k0_1 1.206, k0_2 0.907, k0_3 1.015, b_1 0.9752, b_2 0.9715, b_3 1.002, U0_1 -0.007623, Z_CC 1.006
+step   3000 loss 1.747e+00 | 0.1C data 1.84e+00 ode 9.8e-05 salt 7.7e-04 1C data 8.25e-01 ode 1.1e-04 salt 9.1e-02 | 2486s | k0_1 1.202, k0_2 0.9104, k0_3 1.014, b_1 0.9758, b_2 0.9725, b_3 1.002, U0_1 -0.007422, Z_CC 1.006
+  eval: 0.1C V 1.062 mV rms / 2.56 max, c_e 0.08; 1C V 0.470 mV rms / 2.30 max, c_e 11.74
+step   3100 loss 1.594e+00 | 0.1C data 1.73e+00 ode 6.7e-05 salt 5.5e-04 1C data 7.93e-01 ode 1.2e-04 salt 6.1e-02 | 2564s | k0_1 1.196, k0_2 0.9137, k0_3 1.013, b_1 0.9765, b_2 0.9738, b_3 1.001, U0_1 -0.00728, Z_CC 1.006
+step   3200 loss 1.558e+00 | 0.1C data 1.61e+00 ode 1.1e-04 salt 6.2e-04 1C data 7.51e-01 ode 1.3e-04 salt 8.4e-02 | 2638s | k0_1 1.191, k0_2 0.9169, k0_3 1.012, b_1 0.9771, b_2 0.9749, b_3 1.001, U0_1 -0.007112, Z_CC 1.006
+step   3300 loss 1.962e+00 | 0.1C data 1.51e+00 ode 1.1e-04 salt 1.6e-03 1C data 8.47e-01 ode 1.1e-04 salt 7.3e-02 | 2713s | k0_1 1.187, k0_2 0.9199, k0_3 1.011, b_1 0.9778, b_2 0.9762, b_3 1.001, U0_1 -0.006951, Z_CC 1.005
+step   3400 loss 1.624e+00 | 0.1C data 1.45e+00 ode 6.3e-05 salt 1.2e-03 1C data 7.37e-01 ode 9.5e-05 salt 5.7e-02 | 2788s | k0_1 1.182, k0_2 0.923, k0_3 1.01, b_1 0.9783, b_2 0.9769, b_3 1.001, U0_1 -0.006775, Z_CC 1.005
+step   3500 loss 1.459e+00 | 0.1C data 1.40e+00 ode 7.1e-05 salt 9.5e-04 1C data 7.48e-01 ode 1.1e-04 salt 5.6e-02 | 2863s | k0_1 1.177, k0_2 0.9261, k0_3 1.01, b_1 0.979, b_2 0.9779, b_3 1.001, U0_1 -0.006626, Z_CC 1.005
+  eval: 0.1C V 0.833 mV rms / 1.99 max, c_e 0.07; 1C V 0.457 mV rms / 1.95 max, c_e 10.14
+step 3550: non-finite loss, batch skipped
+step   3600 loss 1.412e+00 | 0.1C data 1.34e+00 ode 6.7e-05 salt 6.5e-04 1C data 7.00e-01 ode 9.2e-05 salt 5.9e-02 | 2938s | k0_1 1.173, k0_2 0.929, k0_3 1.01, b_1 0.9795, b_2 0.979, b_3 1.001, U0_1 -0.006466, Z_CC 1.005
+step   3700 loss 1.550e+00 | 0.1C data 1.29e+00 ode 6.4e-05 salt 7.7e-04 1C data 6.82e-01 ode 9.8e-05 salt 7.1e-02 | 3015s | k0_1 1.169, k0_2 0.9318, k0_3 1.009, b_1 0.98, b_2 0.9798, b_3 1.001, U0_1 -0.00631, Z_CC 1.005
+step   3800 loss 1.483e+00 | 0.1C data 1.34e+00 ode 6.5e-05 salt 7.7e-04 1C data 6.59e-01 ode 7.6e-05 salt 5.5e-02 | 3095s | k0_1 1.165, k0_2 0.9344, k0_3 1.009, b_1 0.9805, b_2 0.9807, b_3 1.001, U0_1 -0.006158, Z_CC 1.005
+step   3900 loss 1.464e+00 | 0.1C data 1.27e+00 ode 6.9e-05 salt 7.5e-04 1C data 6.35e-01 ode 8.9e-05 salt 6.4e-02 | 3171s | k0_1 1.161, k0_2 0.9369, k0_3 1.008, b_1 0.9811, b_2 0.9815, b_3 1.001, U0_1 -0.006047, Z_CC 1.005
+step   4000 loss 1.432e+00 | 0.1C data 1.21e+00 ode 6.9e-05 salt 4.7e-04 1C data 6.05e-01 ode 7.7e-05 salt 6.4e-02 | 3251s | k0_1 1.157, k0_2 0.9393, k0_3 1.008, b_1 0.9815, b_2 0.982, b_3 1.001, U0_1 -0.005917, Z_CC 1.005
+  eval: 0.1C V 0.743 mV rms / 1.70 max, c_e 0.09; 1C V 0.481 mV rms / 1.43 max, c_e 9.37
+step   4100 loss 1.437e+00 | 0.1C data 1.18e+00 ode 5.0e-05 salt 7.0e-04 1C data 5.91e-01 ode 9.4e-05 salt 5.6e-02 | 3336s | k0_1 1.154, k0_2 0.9415, k0_3 1.008, b_1 0.982, b_2 0.9828, b_3 1.001, U0_1 -0.005805, Z_CC 1.005
+step   4200 loss 1.485e+00 | 0.1C data 1.15e+00 ode 5.4e-05 salt 1.2e-03 1C data 5.77e-01 ode 1.0e-04 salt 5.6e-02 | 3422s | k0_1 1.151, k0_2 0.9437, k0_3 1.007, b_1 0.9824, b_2 0.9835, b_3 1.001, U0_1 -0.00569, Z_CC 1.005
+step   4300 loss 1.338e+00 | 0.1C data 1.16e+00 ode 6.0e-05 salt 5.8e-04 1C data 5.67e-01 ode 7.1e-05 salt 4.5e-02 | 3499s | k0_1 1.147, k0_2 0.9459, k0_3 1.007, b_1 0.9828, b_2 0.9841, b_3 1.001, U0_1 -0.005577, Z_CC 1.005
+step   4400 loss 1.470e+00 | 0.1C data 1.12e+00 ode 5.3e-05 salt 8.4e-04 1C data 5.52e-01 ode 9.8e-05 salt 6.4e-02 | 3575s | k0_1 1.144, k0_2 0.948, k0_3 1.007, b_1 0.9832, b_2 0.9847, b_3 1.001, U0_1 -0.005468, Z_CC 1.005
+step   4500 loss 1.349e+00 | 0.1C data 1.08e+00 ode 5.3e-05 salt 6.4e-04 1C data 5.36e-01 ode 7.6e-05 salt 5.3e-02 | 3653s | k0_1 1.141, k0_2 0.9499, k0_3 1.007, b_1 0.9836, b_2 0.9853, b_3 1.001, U0_1 -0.005361, Z_CC 1.005
+  eval: 0.1C V 0.646 mV rms / 1.55 max, c_e 0.07; 1C V 0.509 mV rms / 1.58 max, c_e 8.34
+step 4568: non-finite loss, batch skipped
+step   4600 loss 1.257e+00 | 0.1C data 1.07e+00 ode 4.2e-05 salt 4.2e-04 1C data 5.29e-01 ode 8.8e-05 salt 5.4e-02 | 3730s | k0_1 1.138, k0_2 0.9516, k0_3 1.007, b_1 0.9839, b_2 0.9859, b_3 1.001, U0_1 -0.00525, Z_CC 1.005
+step   4700 loss 1.272e+00 | 0.1C data 1.03e+00 ode 4.6e-05 salt 5.0e-04 1C data 5.19e-01 ode 9.6e-05 salt 5.9e-02 | 3804s | k0_1 1.136, k0_2 0.9533, k0_3 1.007, b_1 0.9844, b_2 0.9868, b_3 1.001, U0_1 -0.005148, Z_CC 1.004
+step   4800 loss 1.312e+00 | 0.1C data 1.01e+00 ode 5.6e-05 salt 1.7e-03 1C data 5.16e-01 ode 9.0e-05 salt 4.4e-02 | 3879s | k0_1 1.133, k0_2 0.9551, k0_3 1.007, b_1 0.9846, b_2 0.9872, b_3 1.001, U0_1 -0.005037, Z_CC 1.004
+step   4900 loss 1.171e+00 | 0.1C data 9.83e-01 ode 4.9e-05 salt 3.6e-04 1C data 5.04e-01 ode 6.8e-05 salt 5.1e-02 | 3956s | k0_1 1.131, k0_2 0.9566, k0_3 1.007, b_1 0.9849, b_2 0.9877, b_3 1.001, U0_1 -0.004937, Z_CC 1.004
+step   5000 loss 1.143e+00 | 0.1C data 9.72e-01 ode 4.7e-05 salt 5.7e-04 1C data 4.97e-01 ode 7.8e-05 salt 4.6e-02 | 4031s | k0_1 1.129, k0_2 0.9581, k0_3 1.006, b_1 0.9852, b_2 0.9881, b_3 1.001, U0_1 -0.00484, Z_CC 1.004
+  eval: 0.1C V 0.521 mV rms / 1.32 max, c_e 0.07; 1C V 0.529 mV rms / 1.61 max, c_e 7.83
+step   5100 loss 1.299e+00 | 0.1C data 9.49e-01 ode 7.4e-05 salt 1.2e-03 1C data 4.87e-01 ode 1.2e-04 salt 5.1e-02 | 4109s | k0_1 1.127, k0_2 0.9595, k0_3 1.006, b_1 0.9856, b_2 0.9887, b_3 1.001, U0_1 -0.00475, Z_CC 1.004
+step   5200 loss 1.190e+00 | 0.1C data 9.18e-01 ode 7.3e-05 salt 4.9e-04 1C data 4.80e-01 ode 6.8e-05 salt 4.3e-02 | 4184s | k0_1 1.125, k0_2 0.9608, k0_3 1.006, b_1 0.9859, b_2 0.9892, b_3 1.001, U0_1 -0.004664, Z_CC 1.004
+step   5300 loss 1.154e+00 | 0.1C data 9.17e-01 ode 4.8e-05 salt 5.8e-04 1C data 4.67e-01 ode 6.3e-05 salt 4.7e-02 | 4259s | k0_1 1.123, k0_2 0.9622, k0_3 1.006, b_1 0.9862, b_2 0.9896, b_3 1.001, U0_1 -0.004586, Z_CC 1.004
+step   5400 loss 1.165e+00 | 0.1C data 9.20e-01 ode 4.5e-05 salt 4.5e-04 1C data 4.57e-01 ode 7.1e-05 salt 4.8e-02 | 4332s | k0_1 1.121, k0_2 0.9635, k0_3 1.006, b_1 0.9864, b_2 0.9901, b_3 1.001, U0_1 -0.004506, Z_CC 1.004
+step   5500 loss 1.129e+00 | 0.1C data 8.96e-01 ode 4.4e-05 salt 4.3e-04 1C data 4.57e-01 ode 7.6e-05 salt 4.5e-02 | 4406s | k0_1 1.119, k0_2 0.9648, k0_3 1.006, b_1 0.9867, b_2 0.9903, b_3 1.001, U0_1 -0.00444, Z_CC 1.004
+  eval: 0.1C V 0.443 mV rms / 1.15 max, c_e 0.07; 1C V 0.548 mV rms / 1.72 max, c_e 7.35
+step   5600 loss 1.158e+00 | 0.1C data 8.87e-01 ode 5.1e-05 salt 1.6e-03 1C data 4.54e-01 ode 8.4e-05 salt 5.1e-02 | 4481s | k0_1 1.118, k0_2 0.9659, k0_3 1.007, b_1 0.987, b_2 0.9909, b_3 1.001, U0_1 -0.004378, Z_CC 1.004
+step   5700 loss 1.170e+00 | 0.1C data 8.86e-01 ode 4.2e-05 salt 1.2e-03 1C data 4.54e-01 ode 9.3e-05 salt 5.1e-02 | 4558s | k0_1 1.116, k0_2 0.9671, k0_3 1.007, b_1 0.9872, b_2 0.9911, b_3 1.001, U0_1 -0.004314, Z_CC 1.004
+step   5800 loss 1.048e+00 | 0.1C data 8.79e-01 ode 4.4e-05 salt 4.8e-04 1C data 4.45e-01 ode 8.5e-05 salt 4.3e-02 | 4636s | k0_1 1.114, k0_2 0.9683, k0_3 1.006, b_1 0.9875, b_2 0.9913, b_3 1.001, U0_1 -0.004266, Z_CC 1.004
+step   5900 loss 1.018e+00 | 0.1C data 8.67e-01 ode 4.3e-05 salt 3.6e-04 1C data 4.46e-01 ode 7.1e-05 salt 4.6e-02 | 4712s | k0_1 1.113, k0_2 0.9693, k0_3 1.006, b_1 0.9876, b_2 0.9916, b_3 1.001, U0_1 -0.004204, Z_CC 1.004
+step   6000 loss 1.100e+00 | 0.1C data 8.59e-01 ode 4.4e-05 salt 7.9e-04 1C data 4.39e-01 ode 8.2e-05 salt 5.3e-02 | 4790s | k0_1 1.111, k0_2 0.9703, k0_3 1.006, b_1 0.9878, b_2 0.9919, b_3 1.001, U0_1 -0.004146, Z_CC 1.004
+  eval: 0.1C V 0.414 mV rms / 1.09 max, c_e 0.06; 1C V 0.556 mV rms / 1.83 max, c_e 6.83
+step   6100 loss 1.165e+00 | 0.1C data 8.58e-01 ode 5.7e-05 salt 2.6e-03 1C data 4.33e-01 ode 7.0e-05 salt 4.4e-02 | 4870s | k0_1 1.11, k0_2 0.9713, k0_3 1.006, b_1 0.988, b_2 0.9921, b_3 1.001, U0_1 -0.004096, Z_CC 1.004
+step   6200 loss 1.032e+00 | 0.1C data 8.66e-01 ode 4.7e-05 salt 5.1e-04 1C data 4.30e-01 ode 7.1e-05 salt 4.1e-02 | 4943s | k0_1 1.108, k0_2 0.9721, k0_3 1.006, b_1 0.9883, b_2 0.9925, b_3 1.001, U0_1 -0.004052, Z_CC 1.004
+step   6300 loss 1.036e+00 | 0.1C data 8.45e-01 ode 5.9e-05 salt 4.9e-04 1C data 4.26e-01 ode 7.1e-05 salt 4.4e-02 | 5018s | k0_1 1.107, k0_2 0.973, k0_3 1.006, b_1 0.9884, b_2 0.9927, b_3 1.001, U0_1 -0.003997, Z_CC 1.004
+step   6400 loss 1.270e+00 | 0.1C data 8.35e-01 ode 3.8e-05 salt 3.1e-03 1C data 4.24e-01 ode 7.7e-05 salt 4.0e-02 | 5094s | k0_1 1.105, k0_2 0.9739, k0_3 1.006, b_1 0.9886, b_2 0.993, b_3 1.001, U0_1 -0.003944, Z_CC 1.004
+step   6500 loss 1.089e+00 | 0.1C data 8.35e-01 ode 4.7e-05 salt 9.6e-04 1C data 4.19e-01 ode 6.4e-05 salt 4.6e-02 | 5168s | k0_1 1.104, k0_2 0.9746, k0_3 1.006, b_1 0.9888, b_2 0.9933, b_3 1.001, U0_1 -0.003889, Z_CC 1.004
+  eval: 0.1C V 0.390 mV rms / 1.04 max, c_e 0.07; 1C V 0.563 mV rms / 1.86 max, c_e 6.46
+step 6527: non-finite loss, batch skipped
+step   6600 loss 9.966e-01 | 0.1C data 8.28e-01 ode 4.2e-05 salt 5.2e-04 1C data 4.18e-01 ode 7.0e-05 salt 3.3e-02 | 5242s | k0_1 1.103, k0_2 0.9755, k0_3 1.006, b_1 0.9889, b_2 0.9936, b_3 1.001, U0_1 -0.003843, Z_CC 1.004
+step   6700 loss 1.012e+00 | 0.1C data 8.20e-01 ode 4.5e-05 salt 5.4e-04 1C data 4.18e-01 ode 7.2e-05 salt 3.6e-02 | 5316s | k0_1 1.102, k0_2 0.9763, k0_3 1.006, b_1 0.9891, b_2 0.9937, b_3 1.001, U0_1 -0.0038, Z_CC 1.004
+step   6800 loss 9.413e-01 | 0.1C data 8.17e-01 ode 4.7e-05 salt 4.0e-04 1C data 4.21e-01 ode 5.8e-05 salt 3.8e-02 | 5391s | k0_1 1.1, k0_2 0.9771, k0_3 1.006, b_1 0.9893, b_2 0.9939, b_3 1.001, U0_1 -0.003751, Z_CC 1.004
+step   6900 loss 9.482e-01 | 0.1C data 8.14e-01 ode 6.5e-05 salt 3.0e-04 1C data 4.25e-01 ode 6.4e-05 salt 3.7e-02 | 5467s | k0_1 1.099, k0_2 0.9778, k0_3 1.006, b_1 0.9895, b_2 0.9941, b_3 1.001, U0_1 -0.003707, Z_CC 1.004
+step   7000 loss 8.982e-01 | 0.1C data 8.08e-01 ode 4.1e-05 salt 5.5e-04 1C data 4.22e-01 ode 6.0e-05 salt 3.1e-02 | 5541s | k0_1 1.098, k0_2 0.9786, k0_3 1.006, b_1 0.9896, b_2 0.9943, b_3 1.001, U0_1 -0.003654, Z_CC 1.004
+  eval: 0.1C V 0.371 mV rms / 0.99 max, c_e 0.06; 1C V 0.552 mV rms / 1.80 max, c_e 6.01
+Estimates: k0_1 1.098, k0_2 0.9786, k0_3 1.006, b_1 0.9896, b_2 0.9943, b_3 1.001, U0_1 -0.003654, Z_CC 1.004
+Errors vs truth [% (mV for U0)]: k0_1 +9.79, k0_2 -2.14, k0_3 +0.60, b_1 -1.04, b_2 -0.57, b_3 +0.06, U0_1 -3.65, Z_CC +0.39
+done

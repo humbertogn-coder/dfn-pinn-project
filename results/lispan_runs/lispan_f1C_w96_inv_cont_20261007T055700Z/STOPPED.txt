@@ -1,0 +1,1 @@
+STOPPED at step ~2300 by hand (2026-10-07 06:15 UTC): lr restart at 5e-4 undid the salt profile (c_e 20 mol/m3, V 4.2 mV); replaced by lispan_f1C_w96_sepscale (separator salt residual on its natural scale).
