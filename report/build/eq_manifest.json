@@ -1,0 +1,218 @@
+{
+ "crate": {
+  "file": "/home/claude/v2/repo/report/build/eq/crate.png",
+  "w": 617,
+  "h": 113,
+  "dpi": 220
+ },
+ "voltage_parts": {
+  "file": "/home/claude/v2/repo/report/build/eq/voltage_parts.png",
+  "w": 943,
+  "h": 74,
+  "dpi": 220
+ },
+ "fick": {
+  "file": "/home/claude/v2/repo/report/build/eq/fick.png",
+  "w": 1056,
+  "h": 119,
+  "dpi": 220
+ },
+ "salt": {
+  "file": "/home/claude/v2/repo/report/build/eq/salt.png",
+  "w": 717,
+  "h": 111,
+  "dpi": 220
+ },
+ "ohm_s": {
+  "file": "/home/claude/v2/repo/report/build/eq/ohm_s.png",
+  "w": 381,
+  "h": 112,
+  "dpi": 220
+ },
+ "ohm_e": {
+  "file": "/home/claude/v2/repo/report/build/eq/ohm_e.png",
+  "w": 939,
+  "h": 112,
+  "dpi": 220
+ },
+ "bv": {
+  "file": "/home/claude/v2/repo/report/build/eq/bv.png",
+  "w": 1248,
+  "h": 125,
+  "dpi": 220
+ },
+ "j0": {
+  "file": "/home/claude/v2/repo/report/build/eq/j0.png",
+  "w": 658,
+  "h": 76,
+  "dpi": 220
+ },
+ "cellV": {
+  "file": "/home/claude/v2/repo/report/build/eq/cellV.png",
+  "w": 579,
+  "h": 74,
+  "dpi": 220
+ },
+ "bruggeman": {
+  "file": "/home/claude/v2/repo/report/build/eq/bruggeman.png",
+  "w": 921,
+  "h": 124,
+  "dpi": 220
+ },
+ "layer": {
+  "file": "/home/claude/v2/repo/report/build/eq/layer.png",
+  "w": 853,
+  "h": 74,
+  "dpi": 220
+ },
+ "gd": {
+  "file": "/home/claude/v2/repo/report/build/eq/gd.png",
+  "w": 443,
+  "h": 74,
+  "dpi": 220
+ },
+ "residual_example": {
+  "file": "/home/claude/v2/repo/report/build/eq/residual_example.png",
+  "w": 1162,
+  "h": 129,
+  "dpi": 220
+ },
+ "loss": {
+  "file": "/home/claude/v2/repo/report/build/eq/loss.png",
+  "w": 1442,
+  "h": 153,
+  "dpi": 220
+ },
+ "hard_ic": {
+  "file": "/home/claude/v2/repo/report/build/eq/hard_ic.png",
+  "w": 1291,
+  "h": 74,
+  "dpi": 220
+ },
+ "scaling": {
+  "file": "/home/claude/v2/repo/report/build/eq/scaling.png",
+  "w": 1050,
+  "h": 118,
+  "dpi": 220
+ },
+ "fourier": {
+  "file": "/home/claude/v2/repo/report/build/eq/fourier.png",
+  "w": 1587,
+  "h": 73,
+  "dpi": 220
+ },
+ "sens": {
+  "file": "/home/claude/v2/repo/report/build/eq/sens.png",
+  "w": 839,
+  "h": 133,
+  "dpi": 220
+ },
+ "fisher": {
+  "file": "/home/claude/v2/repo/report/build/eq/fisher.png",
+  "w": 1313,
+  "h": 119,
+  "dpi": 220
+ },
+ "bias": {
+  "file": "/home/claude/v2/repo/report/build/eq/bias.png",
+  "w": 1034,
+  "h": 74,
+  "dpi": 220
+ },
+ "stress": {
+  "file": "/home/claude/v2/repo/report/build/eq/stress.png",
+  "w": 419,
+  "h": 74,
+  "dpi": 220
+ },
+ "lli_lam": {
+  "file": "/home/claude/v2/repo/report/build/eq/lli_lam.png",
+  "w": 1131,
+  "h": 76,
+  "dpi": 220
+ },
+ "span_rate": {
+  "file": "/home/claude/v2/repo/report/build/eq/span_rate.png",
+  "w": 1383,
+  "h": 113,
+  "dpi": 220
+ },
+ "span_U": {
+  "file": "/home/claude/v2/repo/report/build/eq/span_U.png",
+  "w": 756,
+  "h": 108,
+  "dpi": 220
+ },
+ "span_tafel": {
+  "file": "/home/claude/v2/repo/report/build/eq/span_tafel.png",
+  "w": 805,
+  "h": 113,
+  "dpi": 220
+ },
+ "span_extents": {
+  "file": "/home/claude/v2/repo/report/build/eq/span_extents.png",
+  "w": 2039,
+  "h": 121,
+  "dpi": 220
+ },
+ "span_current": {
+  "file": "/home/claude/v2/repo/report/build/eq/span_current.png",
+  "w": 630,
+  "h": 142,
+  "dpi": 220
+ },
+ "span_li2s": {
+  "file": "/home/claude/v2/repo/report/build/eq/span_li2s.png",
+  "w": 1184,
+  "h": 141,
+  "dpi": 220
+ },
+ "span_V": {
+  "file": "/home/claude/v2/repo/report/build/eq/span_V.png",
+  "w": 890,
+  "h": 74,
+  "dpi": 220
+ },
+ "span_hard_extents": {
+  "file": "/home/claude/v2/repo/report/build/eq/span_hard_extents.png",
+  "w": 1504,
+  "h": 74,
+  "dpi": 220
+ },
+ "span_projection": {
+  "file": "/home/claude/v2/repo/report/build/eq/span_projection.png",
+  "w": 1351,
+  "h": 226,
+  "dpi": 220
+ },
+ "span_root": {
+  "file": "/home/claude/v2/repo/report/build/eq/span_root.png",
+  "w": 1141,
+  "h": 74,
+  "dpi": 220
+ },
+ "span_inventory": {
+  "file": "/home/claude/v2/repo/report/build/eq/span_inventory.png",
+  "w": 1003,
+  "h": 142,
+  "dpi": 220
+ },
+ "span_degenerate": {
+  "file": "/home/claude/v2/repo/report/build/eq/span_degenerate.png",
+  "w": 1253,
+  "h": 124,
+  "dpi": 220
+ },
+ "lm": {
+  "file": "/home/claude/v2/repo/report/build/eq/lm.png",
+  "w": 987,
+  "h": 120,
+  "dpi": 220
+ },
+ "tafel_shift": {
+  "file": "/home/claude/v2/repo/report/build/eq/tafel_shift.png",
+  "w": 1277,
+  "h": 119,
+  "dpi": 220
+ }
+}

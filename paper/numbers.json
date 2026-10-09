@@ -1,0 +1,952 @@
+{
+ "assumption[S2- kinetic reference c_S_ref = 0.1 mol/m3 (10x)]_0.1C_max_mV": {
+  "value": 0.008362194460875827,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[S2- kinetic reference c_S_ref = 0.1 mol/m3 (10x)]_0.1C_rms_mV": {
+  "value": 0.0028412354730361455,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[S2- kinetic reference c_S_ref = 0.1 mol/m3 (10x)]_1C_max_mV": {
+  "value": 0.014503619089722974,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[S2- kinetic reference c_S_ref = 0.1 mol/m3 (10x)]_1C_rms_mV": {
+  "value": 0.0040360099507271655,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[S2- saturation c_sat = 1e-4 mol/m3 (10x)]_0.1C_max_mV": {
+  "value": 0.0021030903198937523,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[S2- saturation c_sat = 1e-4 mol/m3 (10x)]_0.1C_rms_mV": {
+  "value": 0.000736546129955798,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[S2- saturation c_sat = 1e-4 mol/m3 (10x)]_1C_max_mV": {
+  "value": 0.0032242094265555465,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[S2- saturation c_sat = 1e-4 mol/m3 (10x)]_1C_rms_mV": {
+  "value": 0.000909583947208732,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[Z_CC = 0.035 Ohm m2 (best fit quoted in the text)]_0.1C_max_mV": {
+  "value": 10.000000000000231,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[Z_CC = 0.035 Ohm m2 (best fit quoted in the text)]_0.1C_rms_mV": {
+  "value": 9.999955818094518,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[Z_CC = 0.035 Ohm m2 (best fit quoted in the text)]_1C_max_mV": {
+  "value": 100.00000000000009,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[Z_CC = 0.035 Ohm m2 (best fit quoted in the text)]_1C_rms_mV": {
+  "value": 99.99825818744904,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[all three reactions reversible (literal mass action, TTT)]_0.1C_max_mV": {
+  "value": 189.57113652680292,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[all three reactions reversible (literal mass action, TTT)]_0.1C_rms_mV": {
+  "value": 52.67426584679732,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[coarser grid N_c = 20, N_s = 10]_0.1C_max_mV": {
+  "value": 0.010693185895416235,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[coarser grid N_c = 20, N_s = 10]_0.1C_rms_mV": {
+  "value": 0.008819470189174207,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[coarser grid N_c = 20, N_s = 10]_1C_max_mV": {
+  "value": 0.09021806162090584,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[coarser grid N_c = 20, N_s = 10]_1C_rms_mV": {
+  "value": 0.0773837976570102,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[current ramp 1 s instead of 30 s]_0.1C_max_mV": {
+  "value": 0.19584710293374386,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[current ramp 1 s instead of 30 s]_0.1C_rms_mV": {
+  "value": 0.009795592325315605,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[current ramp 1 s instead of 30 s]_1C_max_mV": {
+  "value": 0.9450941033337656,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[current ramp 1 s instead of 30 s]_1C_rms_mV": {
+  "value": 0.0630257932686202,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[double layer c_DL = 0.1 F/m2 (paper value)]_0.1C_max_mV": {
+  "value": 11.729383689623951,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[double layer c_DL = 0.1 F/m2 (paper value)]_0.1C_rms_mV": {
+  "value": 4.578640190605387,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[double layer c_DL = 0.1 F/m2 (paper value)]_1C_max_mV": {
+  "value": 9.912153965404569,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[double layer c_DL = 0.1 F/m2 (paper value)]_1C_rms_mV": {
+  "value": 3.36945406789884,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[electrolyte conductivity -10 %]_0.1C_max_mV": {
+  "value": 0.32712286506964006,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[electrolyte conductivity -10 %]_0.1C_rms_mV": {
+  "value": 0.31583291703225713,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[electrolyte conductivity -10 %]_1C_max_mV": {
+  "value": 3.185668052318791,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[electrolyte conductivity -10 %]_1C_rms_mV": {
+  "value": 3.044652690968555,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[reaction 2 reversible (finite-volume reference, TTF)]_0.1C_max_mV": {
+  "value": 5.632354595145106,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[reaction 2 reversible (finite-volume reference, TTF)]_0.1C_rms_mV": {
+  "value": 2.6587580588443824,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[reaction 2 reversible (finite-volume reference, TTF)]_1C_max_mV": {
+  "value": 0.30275428002890514,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[reaction 2 reversible (finite-volume reference, TTF)]_1C_rms_mV": {
+  "value": 0.1166401059953626,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[salt diffusivity -20 %]_0.1C_max_mV": {
+  "value": 0.1924595292517317,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[salt diffusivity -20 %]_0.1C_rms_mV": {
+  "value": 0.12451438396297748,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[salt diffusivity -20 %]_1C_max_mV": {
+  "value": 1.6633893682722611,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[salt diffusivity -20 %]_1C_rms_mV": {
+  "value": 0.9571454167755654,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[temperature 308.15 K (RT/F terms only, no Arrhenius)]_0.1C_max_mV": {
+  "value": 2.913217685503122,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[temperature 308.15 K (RT/F terms only, no Arrhenius)]_0.1C_rms_mV": {
+  "value": 0.7782668778932648,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[temperature 308.15 K (RT/F terms only, no Arrhenius)]_1C_max_mV": {
+  "value": 3.4874154357926734,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "assumption[temperature 308.15 K (RT/F terms only, no Arrhenius)]_1C_rms_mV": {
+  "value": 2.9338008085223777,
+  "unit": "mV",
+  "source": "results/paper/assumption_checks.json"
+ },
+ "corr_4rates_kappa0_Z_CC": {
+  "value": 0.9411646671080214,
+  "unit": "-",
+  "source": "results/lispan/identifiability/identifiability.json"
+ },
+ "cost_fv_0.1C_20x10_cpu_s": {
+  "value": 4.378347391,
+  "unit": "s",
+  "source": "results/paper/cost_table.json"
+ },
+ "cost_fv_0.1C_40x20_cpu_s": {
+  "value": 5.391278103000001,
+  "unit": "s",
+  "source": "results/paper/cost_table.json"
+ },
+ "cost_fv_1C_20x10_cpu_s": {
+  "value": 5.327126457999995,
+  "unit": "s",
+  "source": "results/paper/cost_table.json"
+ },
+ "cost_fv_1C_40x20_cpu_s": {
+  "value": 7.150675911,
+  "unit": "s",
+  "source": "results/paper/cost_table.json"
+ },
+ "cost_inverse_fv_cpu_h": {
+  "value": 0.23690357582000002,
+  "unit": "h",
+  "source": "results/paper/cost_table.json"
+ },
+ "cost_inverse_pinn_pretraining_wall_h": {
+  "value": 4.988240701076111,
+  "unit": "h",
+  "source": "results/paper/cost_table.json"
+ },
+ "cost_inverse_pinn_wall_h": {
+  "value": 1.9413347661783338,
+  "unit": "h",
+  "source": "results/paper/cost_table.json"
+ },
+ "cost_pinn_eval_voltage_0.1C_ms": {
+  "value": 60.14451300001156,
+  "unit": "ms",
+  "source": "results/paper/cost_table.json"
+ },
+ "cost_pinn_eval_voltage_1C_ms": {
+  "value": 59.4029720000151,
+  "unit": "ms",
+  "source": "results/paper/cost_table.json"
+ },
+ "cost_pinn_training_0.1C_cpu_h": {
+  "value": 1.870117956055554,
+  "unit": "h",
+  "source": "results/paper/cost_table.json"
+ },
+ "cost_pinn_training_1C_cpu_h": {
+  "value": 1.9285498578888882,
+  "unit": "h",
+  "source": "results/paper/cost_table.json"
+ },
+ "crlb_0.1C+1C_U0_1": {
+  "value": 0.4376317014623758,
+  "unit": "mV",
+  "source": "results/lispan/identifiability/sensitivities_*.npz (100 points per curve, 1 mV noise)"
+ },
+ "crlb_0.1C+1C_Z_CC": {
+  "value": 0.08981797284279212,
+  "unit": "%",
+  "source": "results/lispan/identifiability/sensitivities_*.npz (100 points per curve, 1 mV noise)"
+ },
+ "crlb_0.1C+1C_b_1": {
+  "value": 0.1633674228951128,
+  "unit": "%",
+  "source": "results/lispan/identifiability/sensitivities_*.npz (100 points per curve, 1 mV noise)"
+ },
+ "crlb_0.1C+1C_b_2": {
+  "value": 0.19533084007064572,
+  "unit": "%",
+  "source": "results/lispan/identifiability/sensitivities_*.npz (100 points per curve, 1 mV noise)"
+ },
+ "crlb_0.1C+1C_b_3": {
+  "value": 0.13873686122178272,
+  "unit": "%",
+  "source": "results/lispan/identifiability/sensitivities_*.npz (100 points per curve, 1 mV noise)"
+ },
+ "crlb_0.1C+1C_k0_1": {
+  "value": 1.0362606517133606,
+  "unit": "%",
+  "source": "results/lispan/identifiability/sensitivities_*.npz (100 points per curve, 1 mV noise)"
+ },
+ "crlb_0.1C+1C_k0_2": {
+  "value": 0.698248093317019,
+  "unit": "%",
+  "source": "results/lispan/identifiability/sensitivities_*.npz (100 points per curve, 1 mV noise)"
+ },
+ "crlb_0.1C+1C_k0_3": {
+  "value": 0.7979282335554274,
+  "unit": "%",
+  "source": "results/lispan/identifiability/sensitivities_*.npz (100 points per curve, 1 mV noise)"
+ },
+ "crlb_0.1C_U0_1": {
+  "value": 74.2669059566838,
+  "unit": "mV",
+  "source": "results/lispan/identifiability/sensitivities_*.npz (100 points per curve, 1 mV noise)"
+ },
+ "crlb_0.1C_Z_CC": {
+  "value": 295.9956238584527,
+  "unit": "%",
+  "source": "results/lispan/identifiability/sensitivities_*.npz (100 points per curve, 1 mV noise)"
+ },
+ "crlb_0.1C_b_1": {
+  "value": 0.4560248438865003,
+  "unit": "%",
+  "source": "results/lispan/identifiability/sensitivities_*.npz (100 points per curve, 1 mV noise)"
+ },
+ "crlb_0.1C_b_2": {
+  "value": 0.3397382066192514,
+  "unit": "%",
+  "source": "results/lispan/identifiability/sensitivities_*.npz (100 points per curve, 1 mV noise)"
+ },
+ "crlb_0.1C_b_3": {
+  "value": 0.15994163441994286,
+  "unit": "%",
+  "source": "results/lispan/identifiability/sensitivities_*.npz (100 points per curve, 1 mV noise)"
+ },
+ "crlb_0.1C_k0_1": {
+  "value": 4.515590923699224,
+  "unit": "%",
+  "source": "results/lispan/identifiability/sensitivities_*.npz (100 points per curve, 1 mV noise)"
+ },
+ "crlb_0.1C_k0_2": {
+  "value": 143.82004977746428,
+  "unit": "%",
+  "source": "results/lispan/identifiability/sensitivities_*.npz (100 points per curve, 1 mV noise)"
+ },
+ "crlb_0.1C_k0_3": {
+  "value": 143.80256239680355,
+  "unit": "%",
+  "source": "results/lispan/identifiability/sensitivities_*.npz (100 points per curve, 1 mV noise)"
+ },
+ "crlb_1C_U0_1": {
+  "value": 18.84186305748093,
+  "unit": "mV",
+  "source": "results/lispan/identifiability/sensitivities_*.npz (100 points per curve, 1 mV noise)"
+ },
+ "crlb_1C_Z_CC": {
+  "value": 10.438755732433593,
+  "unit": "%",
+  "source": "results/lispan/identifiability/sensitivities_*.npz (100 points per curve, 1 mV noise)"
+ },
+ "crlb_1C_b_1": {
+  "value": 0.4831924286036478,
+  "unit": "%",
+  "source": "results/lispan/identifiability/sensitivities_*.npz (100 points per curve, 1 mV noise)"
+ },
+ "crlb_1C_b_2": {
+  "value": 0.2588075051398804,
+  "unit": "%",
+  "source": "results/lispan/identifiability/sensitivities_*.npz (100 points per curve, 1 mV noise)"
+ },
+ "crlb_1C_b_3": {
+  "value": 0.9095467166691613,
+  "unit": "%",
+  "source": "results/lispan/identifiability/sensitivities_*.npz (100 points per curve, 1 mV noise)"
+ },
+ "crlb_1C_k0_1": {
+  "value": 39.2212361201385,
+  "unit": "%",
+  "source": "results/lispan/identifiability/sensitivities_*.npz (100 points per curve, 1 mV noise)"
+ },
+ "crlb_1C_k0_2": {
+  "value": 50.95438159388207,
+  "unit": "%",
+  "source": "results/lispan/identifiability/sensitivities_*.npz (100 points per curve, 1 mV noise)"
+ },
+ "crlb_1C_k0_3": {
+  "value": 50.89614517089367,
+  "unit": "%",
+  "source": "results/lispan/identifiability/sensitivities_*.npz (100 points per curve, 1 mV noise)"
+ },
+ "crlb_4rates_D_salt": {
+  "value": 9.602690304944579,
+  "unit": "%",
+  "source": "results/lispan/identifiability/identifiability.json (reduced, 0.05+0.1+0.2+1 C)"
+ },
+ "crlb_4rates_kappa0": {
+  "value": 72.00636730995421,
+  "unit": "%",
+  "source": "results/lispan/identifiability/identifiability.json (reduced, 0.05+0.1+0.2+1 C)"
+ },
+ "crlb_4rates_kappa_SPAN": {
+  "value": 15.199035753803097,
+  "unit": "%",
+  "source": "results/lispan/identifiability/identifiability.json (reduced, 0.05+0.1+0.2+1 C)"
+ },
+ "crlb_4rates_t_plus": {
+  "value": 48.2283572160955,
+  "unit": "%",
+  "source": "results/lispan/identifiability/identifiability.json (reduced, 0.05+0.1+0.2+1 C)"
+ },
+ "fig4b_capacity_model_mAh_gS_0.05C": {
+  "value": 1253.7386753001579,
+  "unit": "mAh/g_S",
+  "source": "results/lispan/ref_Zcc0.025/discharge_0.05C.npz"
+ },
+ "fig4b_capacity_model_mAh_gS_0.1C": {
+  "value": 1240.158677114175,
+  "unit": "mAh/g_S",
+  "source": "results/lispan/ref_Zcc0.025/discharge_0.1C.npz"
+ },
+ "fig4b_capacity_model_mAh_gS_0.2C": {
+  "value": 1211.8284736375317,
+  "unit": "mAh/g_S",
+  "source": "results/lispan/ref_Zcc0.025/discharge_0.2C.npz"
+ },
+ "fig4b_capacity_model_mAh_gS_1C": {
+  "value": 1025.398434533939,
+  "unit": "mAh/g_S",
+  "source": "results/lispan/ref_Zcc0.025/discharge_1C.npz"
+ },
+ "fig6a_max_mV_0.1C": {
+  "value": 31.80475469580046,
+  "unit": "mV",
+  "source": "results/lispan/ref_Zcc0/discharge_0.1C.npz"
+ },
+ "fig6a_max_mV_1C": {
+  "value": 44.510097742806124,
+  "unit": "mV",
+  "source": "results/lispan/ref_Zcc0/discharge_1C.npz"
+ },
+ "fig6a_rms_mV_0.1C": {
+  "value": 15.984244385342977,
+  "unit": "mV",
+  "source": "results/lispan/ref_Zcc0/discharge_0.1C.npz"
+ },
+ "fig6a_rms_mV_1C": {
+  "value": 18.365184310162896,
+  "unit": "mV",
+  "source": "results/lispan/ref_Zcc0/discharge_1C.npz"
+ },
+ "forward_V_max_mV_0.1C_seed0": {
+  "value": 0.7406557584397344,
+  "unit": "mV",
+  "source": "lispan_final_0.1C_seed0_20261008T005207Z/final.pt"
+ },
+ "forward_V_max_mV_0.1C_seed1": {
+  "value": 3.5367154447296656,
+  "unit": "mV",
+  "source": "lispan_final_0.1C_seed1_20261009T011304Z/final.pt"
+ },
+ "forward_V_max_mV_0.1C_seed2": {
+  "value": 0.806816914140418,
+  "unit": "mV",
+  "source": "lispan_final_0.1C_seed2_20261009T033357Z/final.pt"
+ },
+ "forward_V_max_mV_1C_seed0": {
+  "value": 0.7730725662191684,
+  "unit": "mV",
+  "source": "lispan_final_1C_seed0_20261008T215609Z/final.pt"
+ },
+ "forward_V_max_mV_1C_seed1": {
+  "value": 0.6295538510210363,
+  "unit": "mV",
+  "source": "lispan_final_1C_seed1_20261009T014339Z/final.pt"
+ },
+ "forward_V_max_mV_1C_seed2": {
+  "value": 0.6988459263621571,
+  "unit": "mV",
+  "source": "lispan_final_1C_seed2_20261009T033028Z/final.pt"
+ },
+ "forward_V_rmse_mV_0.1C_mean": {
+  "value": 0.258524413788106,
+  "unit": "mV",
+  "source": "3 seeds"
+ },
+ "forward_V_rmse_mV_0.1C_seed0": {
+  "value": 0.1640917003664347,
+  "unit": "mV",
+  "source": "lispan_final_0.1C_seed0_20261008T005207Z/final.pt"
+ },
+ "forward_V_rmse_mV_0.1C_seed1": {
+  "value": 0.4348406781404393,
+  "unit": "mV",
+  "source": "lispan_final_0.1C_seed1_20261009T011304Z/final.pt"
+ },
+ "forward_V_rmse_mV_0.1C_seed2": {
+  "value": 0.176640862857444,
+  "unit": "mV",
+  "source": "lispan_final_0.1C_seed2_20261009T033357Z/final.pt"
+ },
+ "forward_V_rmse_mV_0.1C_spread": {
+  "value": 0.27074897777400464,
+  "unit": "mV",
+  "source": "3 seeds"
+ },
+ "forward_V_rmse_mV_1C_mean": {
+  "value": 0.18015358680845595,
+  "unit": "mV",
+  "source": "3 seeds"
+ },
+ "forward_V_rmse_mV_1C_seed0": {
+  "value": 0.2251248620471033,
+  "unit": "mV",
+  "source": "lispan_final_1C_seed0_20261008T215609Z/final.pt"
+ },
+ "forward_V_rmse_mV_1C_seed1": {
+  "value": 0.13681274356897052,
+  "unit": "mV",
+  "source": "lispan_final_1C_seed1_20261009T014339Z/final.pt"
+ },
+ "forward_V_rmse_mV_1C_seed2": {
+  "value": 0.17852315480929404,
+  "unit": "mV",
+  "source": "lispan_final_1C_seed2_20261009T033028Z/final.pt"
+ },
+ "forward_V_rmse_mV_1C_spread": {
+  "value": 0.08831211847813278,
+  "unit": "mV",
+  "source": "3 seeds"
+ },
+ "inverse_adam_error_U0_1": {
+  "value": -3.6540061235427856,
+  "unit": "mV",
+  "source": "lispan_inv8p_multirate_freeze_20261007T073258Z/inverse_result.json"
+ },
+ "inverse_adam_error_Z_CC": {
+  "value": 0.3853901968867257,
+  "unit": "%",
+  "source": "lispan_inv8p_multirate_freeze_20261007T073258Z/inverse_result.json"
+ },
+ "inverse_adam_error_b_1": {
+  "value": -1.0364320308361763,
+  "unit": "%",
+  "source": "lispan_inv8p_multirate_freeze_20261007T073258Z/inverse_result.json"
+ },
+ "inverse_adam_error_b_2": {
+  "value": -0.5699534769933678,
+  "unit": "%",
+  "source": "lispan_inv8p_multirate_freeze_20261007T073258Z/inverse_result.json"
+ },
+ "inverse_adam_error_b_3": {
+  "value": 0.06129412734050543,
+  "unit": "%",
+  "source": "lispan_inv8p_multirate_freeze_20261007T073258Z/inverse_result.json"
+ },
+ "inverse_adam_error_k0_1": {
+  "value": 9.787614702772075,
+  "unit": "%",
+  "source": "lispan_inv8p_multirate_freeze_20261007T073258Z/inverse_result.json"
+ },
+ "inverse_adam_error_k0_2": {
+  "value": -2.1441006875333346,
+  "unit": "%",
+  "source": "lispan_inv8p_multirate_freeze_20261007T073258Z/inverse_result.json"
+ },
+ "inverse_adam_error_k0_3": {
+  "value": 0.5977652539357781,
+  "unit": "%",
+  "source": "lispan_inv8p_multirate_freeze_20261007T073258Z/inverse_result.json"
+ },
+ "inverse_crlb_U0_1": {
+  "value": 0.4271707750048534,
+  "unit": "mV",
+  "source": "results/lispan/fit_experiment/fit_0.1+1C_nominal.json"
+ },
+ "inverse_crlb_Z_CC": {
+  "value": 0.08776609730160431,
+  "unit": "%",
+  "source": "results/lispan/fit_experiment/fit_0.1+1C_nominal.json"
+ },
+ "inverse_crlb_b_1": {
+  "value": 0.16229848787352752,
+  "unit": "%",
+  "source": "results/lispan/fit_experiment/fit_0.1+1C_nominal.json"
+ },
+ "inverse_crlb_b_2": {
+  "value": 0.19777690170716664,
+  "unit": "%",
+  "source": "results/lispan/fit_experiment/fit_0.1+1C_nominal.json"
+ },
+ "inverse_crlb_b_3": {
+  "value": 0.11210747223469458,
+  "unit": "%",
+  "source": "results/lispan/fit_experiment/fit_0.1+1C_nominal.json"
+ },
+ "inverse_crlb_k0_1": {
+  "value": 1.0183426799741324,
+  "unit": "%",
+  "source": "results/lispan/fit_experiment/fit_0.1+1C_nominal.json"
+ },
+ "inverse_crlb_k0_2": {
+  "value": 0.7102721157585786,
+  "unit": "%",
+  "source": "results/lispan/fit_experiment/fit_0.1+1C_nominal.json"
+ },
+ "inverse_crlb_k0_3": {
+  "value": 0.7219745802727897,
+  "unit": "%",
+  "source": "results/lispan/fit_experiment/fit_0.1+1C_nominal.json"
+ },
+ "inverse_error_model_actual_U0_1": {
+  "value": -0.30741055685619767,
+  "unit": "mV",
+  "source": "results/paper/inverse_error_model.json"
+ },
+ "inverse_error_model_actual_Z_CC": {
+  "value": 0.055392495925562946,
+  "unit": "%",
+  "source": "results/paper/inverse_error_model.json"
+ },
+ "inverse_error_model_actual_b_1": {
+  "value": -0.1705094272745395,
+  "unit": "%",
+  "source": "results/paper/inverse_error_model.json"
+ },
+ "inverse_error_model_actual_b_2": {
+  "value": -0.24238209745304487,
+  "unit": "%",
+  "source": "results/paper/inverse_error_model.json"
+ },
+ "inverse_error_model_actual_b_3": {
+  "value": 0.04513854448366296,
+  "unit": "%",
+  "source": "results/paper/inverse_error_model.json"
+ },
+ "inverse_error_model_actual_k0_1": {
+  "value": 0.3699365343799315,
+  "unit": "%",
+  "source": "results/paper/inverse_error_model.json"
+ },
+ "inverse_error_model_actual_k0_2": {
+  "value": -1.407971820417202,
+  "unit": "%",
+  "source": "results/paper/inverse_error_model.json"
+ },
+ "inverse_error_model_actual_k0_3": {
+  "value": 0.23496122212072207,
+  "unit": "%",
+  "source": "results/paper/inverse_error_model.json"
+ },
+ "inverse_error_model_predicted_U0_1": {
+  "value": -0.27469103018903984,
+  "unit": "mV",
+  "source": "results/paper/inverse_error_model.json"
+ },
+ "inverse_error_model_predicted_Z_CC": {
+  "value": 0.09168258413851177,
+  "unit": "%",
+  "source": "results/paper/inverse_error_model.json"
+ },
+ "inverse_error_model_predicted_b_1": {
+  "value": -0.14705983540531034,
+  "unit": "%",
+  "source": "results/paper/inverse_error_model.json"
+ },
+ "inverse_error_model_predicted_b_2": {
+  "value": -0.21596551492341926,
+  "unit": "%",
+  "source": "results/paper/inverse_error_model.json"
+ },
+ "inverse_error_model_predicted_b_3": {
+  "value": 0.008310270181618397,
+  "unit": "%",
+  "source": "results/paper/inverse_error_model.json"
+ },
+ "inverse_error_model_predicted_k0_1": {
+  "value": 0.5987566810741481,
+  "unit": "%",
+  "source": "results/paper/inverse_error_model.json"
+ },
+ "inverse_error_model_predicted_k0_2": {
+  "value": -1.076335709021199,
+  "unit": "%",
+  "source": "results/paper/inverse_error_model.json"
+ },
+ "inverse_error_model_predicted_k0_3": {
+  "value": 0.18089796252600732,
+  "unit": "%",
+  "source": "results/paper/inverse_error_model.json"
+ },
+ "inverse_fv_solves_per_rate": {
+  "value": 68,
+  "unit": "-",
+  "source": "results/lispan/fit_experiment/fit_0.1+1C_nominal.json"
+ },
+ "inverse_ideal_error_U0_1": {
+  "value": -0.6850959062244467,
+  "unit": "mV",
+  "source": "results/lispan/fit_experiment/fit_0.1+1C_nominal.json"
+ },
+ "inverse_ideal_error_Z_CC": {
+  "value": 0.03798099639131802,
+  "unit": "%",
+  "source": "results/lispan/fit_experiment/fit_0.1+1C_nominal.json"
+ },
+ "inverse_ideal_error_b_1": {
+  "value": 0.03458102897644366,
+  "unit": "%",
+  "source": "results/lispan/fit_experiment/fit_0.1+1C_nominal.json"
+ },
+ "inverse_ideal_error_b_2": {
+  "value": 0.2965281932620467,
+  "unit": "%",
+  "source": "results/lispan/fit_experiment/fit_0.1+1C_nominal.json"
+ },
+ "inverse_ideal_error_b_3": {
+  "value": 0.015954252620709042,
+  "unit": "%",
+  "source": "results/lispan/fit_experiment/fit_0.1+1C_nominal.json"
+ },
+ "inverse_ideal_error_k0_1": {
+  "value": 1.5833425131647427,
+  "unit": "%",
+  "source": "results/lispan/fit_experiment/fit_0.1+1C_nominal.json"
+ },
+ "inverse_ideal_error_k0_2": {
+  "value": 1.1022096594796027,
+  "unit": "%",
+  "source": "results/lispan/fit_experiment/fit_0.1+1C_nominal.json"
+ },
+ "inverse_ideal_error_k0_3": {
+  "value": 0.07116756164637916,
+  "unit": "%",
+  "source": "results/lispan/fit_experiment/fit_0.1+1C_nominal.json"
+ },
+ "inverse_lm_error_U0_1": {
+  "value": -0.9925064630806446,
+  "unit": "mV",
+  "source": "lispan_inv8p_multirate_lm_20261007T083347Z/inverse_result.json"
+ },
+ "inverse_lm_error_Z_CC": {
+  "value": 0.09340988124286742,
+  "unit": "%",
+  "source": "lispan_inv8p_multirate_lm_20261007T083347Z/inverse_result.json"
+ },
+ "inverse_lm_error_b_1": {
+  "value": -0.135842027234101,
+  "unit": "%",
+  "source": "lispan_inv8p_multirate_lm_20261007T083347Z/inverse_result.json"
+ },
+ "inverse_lm_error_b_2": {
+  "value": 0.05372174311006894,
+  "unit": "%",
+  "source": "lispan_inv8p_multirate_lm_20261007T083347Z/inverse_result.json"
+ },
+ "inverse_lm_error_b_3": {
+  "value": 0.061110189221347255,
+  "unit": "%",
+  "source": "lispan_inv8p_multirate_lm_20261007T083347Z/inverse_result.json"
+ },
+ "inverse_lm_error_k0_1": {
+  "value": 1.9598323673599483,
+  "unit": "%",
+  "source": "lispan_inv8p_multirate_lm_20261007T083347Z/inverse_result.json"
+ },
+ "inverse_lm_error_k0_2": {
+  "value": -0.31130665561668325,
+  "unit": "%",
+  "source": "lispan_inv8p_multirate_lm_20261007T083347Z/inverse_result.json"
+ },
+ "inverse_lm_error_k0_3": {
+  "value": 0.3065724467376407,
+  "unit": "%",
+  "source": "lispan_inv8p_multirate_lm_20261007T083347Z/inverse_result.json"
+ },
+ "inverse_lm_vs_ideal_max_crlb": {
+  "value": 1.9901053184195956,
+  "unit": "CRLB units",
+  "source": "lispan_inv8p_multirate_lm_20261007T083347Z vs results/lispan/fit_experiment/fit_0.1+1C_nominal.json"
+ },
+ "inverse_lm_vs_ideal_median_crlb": {
+  "value": 0.6755977898149919,
+  "unit": "CRLB units",
+  "source": "lispan_inv8p_multirate_lm_20261007T083347Z vs results/lispan/fit_experiment/fit_0.1+1C_nominal.json"
+ },
+ "inverse_pinn_forward_error_rms_mV_0.1C": {
+  "value": 0.1487765568612179,
+  "unit": "mV",
+  "source": "results/paper/inverse_error_model.json"
+ },
+ "inverse_pinn_forward_error_rms_mV_1C": {
+  "value": 0.7116843157607371,
+  "unit": "mV",
+  "source": "results/paper/inverse_error_model.json"
+ },
+ "measured_fig4b_FV_rms_mV_0.05C": {
+  "value": 29.80122031504641,
+  "unit": "mV",
+  "source": "results/lispan/fit_experiment/fit_0.1+1C_fdabs.json"
+ },
+ "measured_fig4b_FV_rms_mV_0.1C": {
+  "value": 19.753913413957303,
+  "unit": "mV",
+  "source": "results/lispan/fit_experiment/fit_0.1+1C_fdabs.json"
+ },
+ "measured_fig4b_FV_rms_mV_0.2C": {
+  "value": 31.124461420157946,
+  "unit": "mV",
+  "source": "results/lispan/fit_experiment/fit_0.1+1C_fdabs.json"
+ },
+ "measured_fig4b_FV_rms_mV_1C": {
+  "value": 16.108705471323837,
+  "unit": "mV",
+  "source": "results/lispan/fit_experiment/fit_0.1+1C_fdabs.json"
+ },
+ "measured_fig4b_PINN_rms_mV_0.05C": {
+  "value": 32.29364619221954,
+  "unit": "mV",
+  "source": "lispan_inv8p_experiment_tr_20261007T112339Z"
+ },
+ "measured_fig4b_PINN_rms_mV_0.1C": {
+  "value": 22.716249845583604,
+  "unit": "mV",
+  "source": "lispan_inv8p_experiment_tr_20261007T112339Z"
+ },
+ "measured_fig4b_PINN_rms_mV_0.2C": {
+  "value": 32.32780505312465,
+  "unit": "mV",
+  "source": "lispan_inv8p_experiment_tr_20261007T112339Z"
+ },
+ "measured_fig4b_PINN_rms_mV_1C": {
+  "value": 15.793520045430995,
+  "unit": "mV",
+  "source": "lispan_inv8p_experiment_tr_20261007T112339Z"
+ },
+ "measured_fig4b_Z_CC_fit_Ohm_m2": {
+  "value": 0.033086893297204094,
+  "unit": "Ohm m2",
+  "source": "results/lispan/fit_experiment/fit_0.1+1C_fdabs.json"
+ },
+ "measured_fig4b_Z_CC_pinn_Ohm_m2": {
+  "value": 0.03444447173162184,
+  "unit": "Ohm m2",
+  "source": "lispan_inv8p_experiment_tr_20261007T112339Z"
+ },
+ "sens_max_Li2S_mV_per_efold": {
+  "value": 0.08051524640162291,
+  "unit": "mV per e-fold",
+  "source": "results/lispan/identifiability/identifiability.json"
+ },
+ "span500_1C_prediction_max_diff_mV": {
+  "value": 134.7862531081052,
+  "unit": "mV",
+  "source": "results/lispan/span500/fit_cycle3.json"
+ },
+ "span500_cycle_to_cycle_rms_mV": {
+  "value": 54.33725434261079,
+  "unit": "mV",
+  "source": "results/lispan/span500/fit_cycle3.json"
+ },
+ "span500_fast_Q_1C_mAh_gSPAN": {
+  "value": 393.7027129226695,
+  "unit": "mAh/g_SPAN",
+  "source": "results/lispan/span500/fit_cycle3.json"
+ },
+ "span500_fast_check_cycle_rms_mV": {
+  "value": 54.607516757024705,
+  "unit": "mV",
+  "source": "results/lispan/span500/fit_cycle3.json"
+ },
+ "span500_fast_rms_mV": {
+  "value": 11.281938382971168,
+  "unit": "mV",
+  "source": "results/lispan/span500/fit_cycle3.json"
+ },
+ "span500_fast_w_S": {
+  "value": 0.3955,
+  "unit": "-",
+  "source": "results/lispan/span500/fit_cycle3.json"
+ },
+ "span500_fv_rms_mV_pinn_window": {
+  "value": 9.121612830300156,
+  "unit": "mV",
+  "source": "results/lispan/span500/fit_cycle3.json on the PINN window"
+ },
+ "span500_fv_window_fit_rms_mV": {
+  "value": 8.237770303381039,
+  "unit": "mV",
+  "source": "results/lispan/span500/fit_cycle3_pinnwindow.json"
+ },
+ "span500_paper_Q_1C_mAh_gSPAN": {
+  "value": 393.49071627967396,
+  "unit": "mAh/g_SPAN",
+  "source": "results/lispan/span500/fit_cycle3.json"
+ },
+ "span500_paper_check_cycle_rms_mV": {
+  "value": 55.06718455181683,
+  "unit": "mV",
+  "source": "results/lispan/span500/fit_cycle3.json"
+ },
+ "span500_paper_rms_mV": {
+  "value": 10.016245247099707,
+  "unit": "mV",
+  "source": "results/lispan/span500/fit_cycle3.json"
+ },
+ "span500_paper_w_S": {
+  "value": 0.3762898641368516,
+  "unit": "-",
+  "source": "results/lispan/span500/fit_cycle3.json"
+ },
+ "span500_pinn_U0_1": {
+  "value": -0.10607039928436279,
+  "unit": "V",
+  "source": "lispan_inv_span500_c3_paper_wS_b5_20261009T044900Z"
+ },
+ "span500_pinn_U0_2": {
+  "value": -0.049191609025001526,
+  "unit": "V",
+  "source": "lispan_inv_span500_c3_paper_wS_b5_20261009T044900Z"
+ },
+ "span500_pinn_U0_3": {
+  "value": -0.21493308544158937,
+  "unit": "V",
+  "source": "lispan_inv_span500_c3_paper_wS_b5_20261009T044900Z"
+ },
+ "span500_pinn_b_1": {
+  "value": 0.8074026909517766,
+  "unit": "-",
+  "source": "lispan_inv_span500_c3_paper_wS_b5_20261009T044900Z"
+ },
+ "span500_pinn_b_2": {
+  "value": 1.0456414410782655,
+  "unit": "-",
+  "source": "lispan_inv_span500_c3_paper_wS_b5_20261009T044900Z"
+ },
+ "span500_pinn_b_3": {
+  "value": 0.9448395647244885,
+  "unit": "-",
+  "source": "lispan_inv_span500_c3_paper_wS_b5_20261009T044900Z"
+ },
+ "span500_pinn_fv_rms_mV": {
+  "value": 8.92529635967543,
+  "unit": "mV",
+  "source": "lispan_inv_span500_c3_paper_wS_b5_20261009T044900Z"
+ },
+ "span500_pinn_window_q_max": {
+  "value": 413.4944630872483,
+  "unit": "mAh/g_SPAN",
+  "source": "results/lispan/span500/V_span500_c3_paper_pinnwindow.npz"
+ }
+}

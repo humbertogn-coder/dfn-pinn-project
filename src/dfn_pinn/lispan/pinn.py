@@ -70,6 +70,8 @@ class LiSPANTrainConfig:
     huber_delta: float = 3.0
     salt_total_scale: float = 1.0         # mol/m3 of mean salt inventory error per unit residual (0 = off)
     charge_total_scale: float = 0.0       # mol/m3 of extent-inventory error per unit residual (0 = off; see residuals)
+    charge_total_start: int = 0           # step at which the inventory residual is switched on (from scratch: after the
+                                          # extents have roughly converged; active from step 1 it fights the extent ODEs)
     salt_sep_natural_scale: bool = False  # separator salt residual on its own scale (1-t+) I/(F L_sep) instead of the cathode's
     ema_decay: float = 0.0                # exponential moving average of the network weights (0 = off)
     ema_start: float = 0.5                # fraction of adam_steps after which the average starts
@@ -628,6 +630,7 @@ def train(cfg: LiSPANTrainConfig, params: LiSPANParams, protocol: LiSPANProtocol
 
     for step in range(start_step, cfg.adam_steps + 1):
         step_holder[0] = step
+        model.charge_total_scale = cfg.charge_total_scale if step >= cfg.charge_total_start else 0.0
         batch = sampler.draw()
         terms = residuals(model, batch)
         # potential residuals get a Huber loss (quadratic below huber_delta, linear above): the Tafel relation turns

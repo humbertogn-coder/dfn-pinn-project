@@ -1,0 +1,72 @@
+{
+  "name": "lispan_inv_span500_c3_paper",
+  "description": "Li-SPAN PINN inverse on measured SPAN500 C/10 cycle 3 (Wang et al., Nat. Mater. 2026, Fig. 4a): U0_1..3 and b_1..3 with k0 fixed at the Simanjuntak effective values ('paper' kinetics), Z_CC from the EIS high-frequency intercept, current and capacity axis from the FV calibration (scripts/lispan_span500.py: w_S 0.344 -> 1.336 A/m2). Trust-region LM on the parameters with physics-only fields, as for the Fig. 4b data; networks warm-started from the 0.1 C final-recipe model.",
+  "params": {
+    "Z_CC": 0.000218283,
+    "reversible": [
+      true,
+      false,
+      false
+    ]
+  },
+  "rates": [
+    {
+      "current": 1.3362996824646511,
+      "ramp_s": 30.0,
+      "init": "results/lispan_runs/lispan_final_0.1C_seed0_20261008T005207Z/final.pt",
+      "data_path": "results/lispan/span500/V_span500_c3_paper.npz"
+    }
+  ],
+  "train": {
+    "seed": 0,
+    "dtype": "float32",
+    "width": 96,
+    "depth": 4,
+    "fourier_t": 8,
+    "short_t": [
+      60.0,
+      600.0
+    ],
+    "ic_tau_s": 60.0,
+    "quad_order": 12,
+    "adam_steps": 8000,
+    "lr": 0.0002,
+    "lr_final": 5e-05,
+    "n_cathode": 768,
+    "n_separator": 512,
+    "n_boundary": 96,
+    "adaptive": true,
+    "adaptive_every": 50,
+    "log_every": 100,
+    "eval_every": 1000,
+    "checkpoint_every": 2500,
+    "latest_every": 250,
+    "salt_total_scale": 1.0,
+    "charge_total_scale": 1.0,
+    "ema_decay": 0.0,
+    "ema_start": 0.3,
+    "threads": 1,
+    "salt_sep_natural_scale": true,
+    "inverse_params": [
+      "U0_1",
+      "U0_2",
+      "U0_3",
+      "b_1",
+      "b_2",
+      "b_3"
+    ],
+    "inverse_init": {},
+    "data_noise_mV": 0.0,
+    "data_scale_mV": 5.0,
+    "param_lr": 0.002,
+    "param_warmup_steps": 0,
+    "param_log_bound": 2.0,
+    "gn_every": 500,
+    "gn_iters": 4,
+    "gn_until": 0,
+    "param_lr_final": 0.002,
+    "net_freeze_steps": 0,
+    "data_to_fields": false,
+    "gn_mode": "tr"
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "name": "lispan_inv_span500_c3_paper_wS_b5",
+  "description": "Li-SPAN PINN inverse on measured SPAN500 C/10 cycle 3 (Wang et al., Nat. Mater. 2026, Fig. 4a): U0_1..3 and b_1..3 with k0 fixed at the Simanjuntak effective values ('paper' kinetics), Z_CC from the EIS high-frequency intercept, current and capacity axis from the FV calibration (scripts/lispan_span500.py with absolute-step FD: w_S 0.3763 -> 1.2230 A/m2; the current is read from the model_json of the data file, which must come from the same fit). Trust-region LM on the parameters with physics-only fields, as for the Fig. 4b data; networks warm-started from the 0.1 C final-recipe model. Data window Q <= 0.95 x the FV model's end of discharge (138 of 150 points) and PINN window t_end = 0.98 x the fitted FV model's discharge time, so that neither contains the cut-off collapse. Networks from the stage-1 run (forward re-adaptation at the measured current, nominal parameters). param_log_bound 5 (U0 offsets within +-0.5 V; the default 2 clamps U0_3 at -0.2 V, FV optimum -0.224 V).",
+  "params": {
+    "Z_CC": 0.000218283,
+    "reversible": [
+      true,
+      false,
+      false
+    ]
+  },
+  "rates": [
+    {
+      "current": 1.2229850545021126,
+      "ramp_s": 30.0,
+      "init": "results/lispan_runs/lispan_span500_stage1_20261009T035530Z/final.pt",
+      "data_path": "results/lispan/span500/V_span500_c3_paper_pinnwindow.npz",
+      "t_end": 25652.8
+    }
+  ],
+  "train": {
+    "seed": 0,
+    "dtype": "float32",
+    "width": 96,
+    "depth": 4,
+    "fourier_t": 8,
+    "short_t": [
+      60.0,
+      600.0
+    ],
+    "ic_tau_s": 60.0,
+    "quad_order": 12,
+    "adam_steps": 8000,
+    "lr": 0.0002,
+    "lr_final": 5e-05,
+    "n_cathode": 768,
+    "n_separator": 512,
+    "n_boundary": 96,
+    "adaptive": true,
+    "adaptive_every": 50,
+    "log_every": 100,
+    "eval_every": 1000,
+    "checkpoint_every": 2500,
+    "latest_every": 250,
+    "salt_total_scale": 1.0,
+    "charge_total_scale": 1.0,
+    "ema_decay": 0.0,
+    "ema_start": 0.3,
+    "threads": 1,
+    "salt_sep_natural_scale": true,
+    "inverse_params": [
+      "U0_1",
+      "U0_2",
+      "U0_3",
+      "b_1",
+      "b_2",
+      "b_3"
+    ],
+    "inverse_init": {},
+    "data_noise_mV": 0.0,
+    "data_scale_mV": 5.0,
+    "param_lr": 0.002,
+    "param_warmup_steps": 0,
+    "param_log_bound": 5.0,
+    "gn_every": 500,
+    "gn_iters": 4,
+    "gn_until": 0,
+    "param_lr_final": 0.002,
+    "net_freeze_steps": 0,
+    "data_to_fields": false,
+    "gn_mode": "tr"
+  }
+}

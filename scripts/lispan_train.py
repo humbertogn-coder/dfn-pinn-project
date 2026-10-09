@@ -63,7 +63,7 @@ def main():
         resume = None
     known = {f.name for f in LiSPANParams.__dataclass_fields__.values()}
     params = LiSPANParams(**{k: (tuple(v) if isinstance(v, list) else v) for k, v in pdict.items() if k in known})
-    protocol = LiSPANProtocol(**{k: v for k, v in prot_d.items() if k in ("current", "ramp_s", "t_end_s", "V_min", "V_max")})
+    protocol = LiSPANProtocol.from_dict(prot_d)     # config files use 'current', run folders 'current_A_m2' 
     cfg = LiSPANTrainConfig(**tcfg)
     rev_tag = "".join("r" if r else "i" for r in params.reversible)
     ref_path = ROOT / "results" / "lispan" / f"pinn_reference_{protocol.crate:g}C_{rev_tag}_Zcc{params.Z_CC:g}.npz"

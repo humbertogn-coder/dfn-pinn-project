@@ -154,6 +154,17 @@ class LiSPANProtocol:
     def from_crate(cls, crate: float, **kw) -> "LiSPANProtocol":
         return cls(current=10.0 * crate, **kw)
 
+    @classmethod
+    def from_dict(cls, d: dict) -> "LiSPANProtocol":
+        """Inverse of to_dict (key 'current_A_m2'); also accepts the config-file key 'current'.  A dict without
+        either key is an error: silently falling back to the default current (0.1 C) once turned a resumed 1 C run
+        into a 0.1 C run (2026-10-08, lispan_final_1C_seed0_20261008T005207Z, see its STOPPED.txt)."""
+        cur = d.get("current", d.get("current_A_m2"))
+        if cur is None:
+            raise ValueError(f"protocol dict without 'current' / 'current_A_m2': {d}")
+        kw = {k: d[k] for k in ("ramp_s", "t_end_s", "V_min", "V_max") if k in d}
+        return cls(current=float(cur), **kw)
+
     @property
     def crate(self) -> float:
         return self.current / 10.0

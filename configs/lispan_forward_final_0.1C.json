@@ -1,0 +1,48 @@
+{
+  "name": "lispan_final_0.1C",
+  "description": "Li-SPAN forward PINN, FINAL recipe for the paper (step 1, reproducibility): 0.1 C, trained from scratch with every fix (global salt and charge inventories, separator salt residual on its natural scale), width 96, 8 Fourier modes, 30 000 Adam steps, lr 1e-3 -> 1e-5; run with seeds 0, 1, 2. The charge-inventory residual is switched on at step 10 000 (charge_total_start).",
+  "params": {
+    "Z_CC": 0.025,
+    "reversible": [
+      true,
+      false,
+      false
+    ]
+  },
+  "protocol": {
+    "current": 1.0,
+    "ramp_s": 30.0
+  },
+  "t_end": null,
+  "train": {
+    "seed": 0,
+    "dtype": "float32",
+    "width": 96,
+    "depth": 4,
+    "fourier_t": 8,
+    "short_t": [
+      60.0,
+      600.0
+    ],
+    "ic_tau_s": 60.0,
+    "quad_order": 12,
+    "adam_steps": 30000,
+    "lr": 0.001,
+    "lr_final": 1e-05,
+    "n_cathode": 768,
+    "n_separator": 512,
+    "n_boundary": 96,
+    "adaptive": true,
+    "adaptive_every": 50,
+    "log_every": 100,
+    "eval_every": 2500,
+    "checkpoint_every": 5000,
+    "latest_every": 250,
+    "salt_total_scale": 1.0,
+    "charge_total_scale": 1.0,
+    "salt_sep_natural_scale": true,
+    "ema_decay": 0.0,
+    "threads": 1,
+    "charge_total_start": 10000
+  }
+}

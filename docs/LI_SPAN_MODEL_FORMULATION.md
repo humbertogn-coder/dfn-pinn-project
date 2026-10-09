@@ -479,6 +479,21 @@ separator points, 15 000 steps at lr 2e-4 -> 1e-5, 92 min: **V 0.12 mV rms /
 0.66 mV max**, c_e 0.70 mol/m3 rms (2.5 max), phi_e 0.10 mV, Delta phi(0)
 0.35 mV, species 0.2-0.4 mol/m3 (0.80 mV after 1000 steps, 0.31 after 6000).
 
+**Final recipe, from scratch, three seeds (paper step 1, 2026-10-08/09).** `configs/lispan_forward_final_{0.1,1}C.json`
+(width 96, 8 Fourier modes, 30 000 Adam steps, lr 1e-3 -> 1e-5, 768 / 512 / 96 points, salt and charge inventories with
+the charge inventory from step 10 000, separator salt residual on its natural scale, one thread), random
+initialization, `--set seed=N`, run by `scripts/run_paper_queue.sh`:
+
+| rate | seed 0 | seed 1 | seed 2 | mean |
+| --- | --- | --- | --- | --- |
+| 0.1 C, V rms / max [mV] | 0.164 / 0.74 | 0.435 / 3.54 | 0.177 / 0.81 | 0.26 |
+| 1 C, V rms / max [mV] | 0.225 / 0.77 | 0.137 / 0.63 | 0.179 / 0.70 | 0.18 |
+
+Seed 1 at 0.1 C carries a narrow spike at the phase 2/3 hand-over (Q ~ 915 mAh/g; 0.35 mV rms without it). Species
+errors 0.12-0.94 mol/m3 rms; c_e 0.04-0.05 mol/m3 at 0.1 C, 0.9-1.5 mol/m3 rms (7 max) at 1 C. Evaluations every
+2500 steps: < 1 mV from step 12 500 (0.1 C) / 15 000-17 500 (1 C). The earlier 0.21 / 0.12 mV of run C / the sepscale
+run were warm-started continuations; these are the from-scratch numbers (paper Table 2, `paper/tables/T2_forward_accuracy.md`).
+
 ### 6.5 Local identifiability from discharge curves (finite-volume sensitivities)
 
 `scripts/lispan_identifiability.py` (results `results/lispan/identifiability/`,
@@ -525,8 +540,9 @@ Findings.
 3. **Electrolyte transport, solid conductivity and the Li2S kinetics are
    practically invisible in the discharge voltage**: kappa0, t_plus and
    kappa_SPAN act only through an ohmic-like drop collinear with Z_CC
-   (corr(kappa0, Z_CC) = +0.94, (kappa0, t_plus) = -0.99; CRLB 70-190 % with
-   all rates), D_salt is worth 4 mV per e-fold at 1 C (CRLB 10 %), and K_sp,
+   (corr(kappa0, Z_CC) = +0.94, (kappa0, t_plus) = -0.99; CRLB with all four
+   rates kappa0 72 %, t_plus 48 %, kappa_SPAN 15-17 % - corrected 2026-10-08 from
+   "70-190 %", which did not match identifiability.json), D_salt is worth 4 mV per e-fold at 1 C (CRLB 10 %), and K_sp,
    k0_L and D_S move the voltage by less than 0.1 mV per e-fold (the Li2S
    nucleation is not rate-limiting in this cell): they must be fixed from
    independent measurements or from other observables (impedance, the
@@ -661,6 +677,21 @@ depends on theta_0 (through V0) and R0 only; a voltage evaluated from the
 fields through the electrode kinetics (as the Li-SPAN PINN does) would make
 the LM step applicable there.
 
+**Nonlinear ideal estimator and error model (2026-10-08, paper step 2/3).** The "ideal estimator" column above was
+the linearized least-squares estimate. The full nonlinear finite-volume least-squares fit on the same noisy data,
+from the same initial guess (`scripts/lispan_fit_experiment.py --data nominal --noise-mV 1 --grid 40 20 --start
+<guess>`, absolute-step FD Jacobian, 68 solves per rate, `results/lispan/fit_experiment/fit_0.1+1C_nominal.json`)
+reaches 0.95 mV rms (the noise realization at the truth gives 0.97 mV) with errors k0 +1.58 / +1.10 / +0.07 %, b
++0.04 / +0.30 / +0.02 %, U0_1 -0.69 mV, Z_CC +0.04 % - within 0.05 % / 0.02 mV of the linearized values - and
+Cramer-Rao bounds on the actual points 1.02 / 0.71 / 0.72 %, 0.16 / 0.20 / 0.11 %, 0.43 mV, 0.09 %. The PINN (variant
+3) differs from it by at most 2.0 CRLB (k0_2; median 0.7). `scripts/paper_inverse_error_model.py`
+(`results/paper/inverse_error_model.json`): the PINN voltage at its final parameters differs from the finite-volume
+voltage at the same parameters by 0.15 mV rms (0.1 C) and 0.71 mV rms (1 C); propagated through the FV Jacobian,
+-(J^T J)^-1 J^T e predicts PINN - ideal = +0.60 / -1.08 / +0.18 % (k0), -0.15 / -0.22 / +0.01 % (b), -0.27 mV
+(U0_1), +0.09 % (Z_CC) against the actual +0.37 / -1.41 / +0.23 %, -0.17 / -0.24 / +0.05 %, -0.31 mV, +0.06 %. The
+PINN inverse is therefore the ideal estimator plus the bias of its forward error, mostly that of the 1 C
+electrolyte fields; a more accurate 1 C forward model removes it.
+
 ### 6.8 Measured data (digitized Fig. 4b of the paper)
 
 **Data.** `scripts/lispan_digitize_paper.py --experiment` extracts the
@@ -685,6 +716,11 @@ predicted; ~30 min each):
 | --- | --- | --- | ---: | ---: | --- | --- |
 | nominal | 1.04 / 0.68 / 3.14 | 1.00 / 0.57 / 1.00 | +24 mV | 1.32 | 18.43 (20.5 / 14.8) | 29.1 / 31.8 |
 | PINN-TR point | 1.13 / 0.77 / 3.76 | 1.02 / 0.61 / 1.02 | +27 mV | 1.33 | 18.39 (19.4 / 16.8) | 30.2 / 30.7 |
+| nominal, absolute-step FD Jacobian (2026-10-08, `fit_0.1+1C_fdabs.json`, 131 solves per rate) | 1.06 / 0.74 / 3.51 | 1.02 / 0.60 / 1.01 | +27 mV | 1.32 | 18.38 (19.8 / 16.1) | 29.8 / 31.1 |
+
+The first two rows used scipy's relative FD steps, which collapse to 1.5e-8 at x = 0 (section 6.9 note); the
+rerun with absolute steps (`dfn_pinn.lispan.fdjac`) lands on the same misfit and the same parameters within the
+valley, so the conclusions below stand.
 
 The misfit falls from 48.7 to 18.4 mV and stays there for different
 parameter sets (linearized standard deviations from the residual scatter:
@@ -740,6 +776,65 @@ reversibility, double layer, the sulfur-loading inconsistency of the paper,
 digitization) limits what any estimator can extract: Z_CC robustly, the
 rest only as trends.
 
+### 6.9 Measured data 2: SPAN500 C/10 (Wang et al., Nat. Mater. 25, 791 (2026), Fig. 4a)
+
+`scripts/lispan_span500.py` -> `results/lispan/span500/` (fit_cycle3.json / .png / .log; ckpt_*.json). Source data
+`data/span_natmater2026/41563_2026_2484_MOESM7_ESM.xlsx`, sheet Fig.4a: cycles 1-3 at C/10 (1 C = 600 mA per g
+SPAN), 1-3 V, discharge = rows up to the maximum capacity (the charge follows from 0). Cell (Methods of the paper):
+2032 coin cell, 12 mm cathode, ~2.0 mg/cm2, SPAN:Super-P:alginate 8:1:1, Celgard 2320, Li 250 um, ether
+electrolyte, room temperature. Not given: S content, thickness, porosity, which of the two electrolytes.
+
+Model: PINN-benchmark form with the Simanjuntak geometry and transport (at ~1.2 A/m2 the electrolyte and separator
+contribute < 1 mV, results/paper/assumption_checks.json), Z_CC = 2.2e-4 Ohm m2 (EIS high-frequency intercept
+1.93 Ohm x 1.131 cm2, Fig. 4c), 30 s ramp. Capacity axis Q_model [mAh/g_S] = Q [mAh/g_SPAN] / w_S with the
+effective sulfur fraction w_S fitted; w_S also sets the model current (0.06 A/g_SPAN / w_S per g of model
+sulfur). Fitted on cycle 3 (150 points, Q >= 5 mAh/g): w_S, U0_1..3, b_1..3; FD Jacobian with absolute steps
+(dfn_pinn.lispan.fdjac).
+
+| kinetics | rms / max [mV] | w_S | U0_1 / U0_2 / U0_3 [V] | b_1 / b_2 / b_3 [V] | cycle 2 with the same params | 1 C prediction (V at 50 / 150 / 250 mAh/g; capacity) |
+| --- | --- | --- | --- | --- | --- | --- |
+| Simanjuntak effective k0 ("paper") | 10.0 / 28.5 | 0.376 | 2.088 / 1.831 / 1.436 | 0.222 / 0.262 / 0.545 | 55.1 mV | 1.876 / 1.707 / 1.513 V; 393 mAh/g |
+| k0 x 1000 ("fast") | 11.3 / 31.3 | 0.396 | 2.049 / 1.484 / 1.005 | 0.209 / 0.337 / 0.547 | 54.6 mV | 1.971 / 1.787 / 1.511 V; 394 mAh/g |
+
+Nominal Simanjuntak parameters: 80 mV rms. Reading:
+
+1. One C/10 curve is reproduced to 10-11 mV rms, below the cycle-to-cycle change of the same cell (cycle 2 vs 3:
+   54 mV rms, cycle 2 on average 47 mV lower; the fitted model misses cycle 2 by 55 mV). Calibrated parameters are
+   therefore cycle-specific. The model's three phase transitions show as kinks that the data do not have (max
+   misfit 28-31 mV there).
+2. w_S = 0.38-0.40 g S per g SPAN at the model's 1.5 e- per S (6 e- per S4 chain), close to (slightly below) the
+   ~40-50 wt% sulfur the paper gives for typical SPAN - a consistency check, not a measurement (utilization and S
+   content are confounded).
+3. The two kinetic hypotheses fit equally well and differ at 1 C by up to 135 mV in the first plateau (95 mV at
+   50 mAh/g; `paper/numbers.json` span500_1C_prediction_max_diff_mV). For the
+   irreversible reactions 2 and 3, k0 x 1000 is exactly a U0 shift of (2RT/F) ln 1000 = 0.355 V at every rate
+   (section 6.5; the fits moved U0_2, U0_3 by -0.35 / -0.43 V), so the hypotheses differ only through reaction 1.
+   A second rate is needed to fix the kinetics; with C/10 alone the calibration is a quasi-equilibrium one.
+4. SPAN500 has shorter sulfur chains than the S4 chain of the model (the paper's own finding), so the fitted U0 / b
+   are phenomenological.
+
+The relative-step FD fits of the same day (stalled at 12.2 mV, `fit_cycle3_relstep.json`) are superseded.
+
+**PINN inverse on the SPAN500 data** (`configs/lispan_inverse_span500_paper_wS.json`, 6 parameters U0_1..3, b_1..3;
+k0 = Simanjuntak effective values; w_S and the current from the FV fit; trust-region LM with physics-only fields as
+for Fig. 4b). Lessons of the three attempts (all kept, with NOTE/STOPPED files):
+1. `lispan_inv_span500_c3_paper_2*`: current from an earlier FV fit (w_S 0.344) with the data file of the later one
+   -> a self-consistent calibration at w_S 0.344 (agrees with the FV fit at that w_S); superseded.
+2. Data to the measured end of discharge and a PINN window of 98 % of the nominal discharge: both reach into the cut-off
+   collapse of the fitted model, which a PINN cannot represent -> TR steps crawl. Fix: data Q <= 0.95 x the FV end
+   (V_span500_c3_paper_pinnwindow.npz, 138 of 150 points) and a rate-spec "t_end" = 0.98 x the fitted FV discharge time
+   (new option of lispan_inverse_multirate.py).
+3. Networks from the 0.1 C model (1.0 A/m2) used at 1.22 A/m2 without re-adaptation: the TR reference misfit of step 1
+   is taken with unadapted fields and every proposal is rejected. Fix: stage 1 (`configs/lispan_forward_span500_stage1.json`,
+   3000 steps at the measured current, 0.23 mV vs FV), as for the synthetic inverse.
+4. With 1-3 fixed, the run hit the parameter clamp U0_3 = -0.2 V (U0_SCALE x param_log_bound 2) -> param_log_bound 5.
+
+Final (`lispan_inv_span500_c3_paper_wS_b5_20261009T044900Z`, 8000 steps): U0 offsets -0.106 / -0.049 / -0.215 V,
+b x 0.807 / 1.046 / 0.945; the FV model at these parameters misses the window by 8.9 mV, the FV least-squares optimum
+on the same window and w_S (`scripts/lispan_span500_window_fit.py`, fit_cycle3_pinnwindow.json) by 8.2 mV (U0 -0.112 /
+-0.066 / -0.217 V, b x 0.747 / 0.956 / 0.937). As for the Fig. 4b data: with model-form error the trust-region PINN
+stops close to (0.7 mV above) the FV optimum, in the same flat valley.
+
 ## 7. Data for the Li-SPAN work
 
 * Forward PINN: no data; physics only. The numerical reference of section 5
@@ -754,8 +849,12 @@ rest only as trends.
 ## 8. Remaining open items
 
 1. Lundgren 2014 correlations D_LiPF6(c), kappa(c): constants at 1 M with
-   kappa scaled linearly in c; the salt gradient at 1 C is only 3 % (Fig.
-   `fields_0.1C.png`: 25 mol/m3 at 0.1 C), so the correlations matter little.
+   kappa scaled linearly in c. Largest salt excursion of the benchmark 1.8 %
+   at 0.1 C and 13.5 % at 1 C (`results/paper/assumption_checks.json`; an
+   earlier note here said 3 % at 1 C, which was the 0.1 C order of
+   magnitude); bracketing checks: conductivity -10 % moves V by 0.3 / 3.0 mV
+   rms, salt diffusivity -20 % by 0.1 / 1.0 mV (0.1 / 1 C), so the
+   correlations matter little (docs/PAPER_ASSUMPTIONS.md, A4).
 2. ~~i_F definition~~ settled: stoichiometric sum (section 5.1).
 3. Temperature assumed 25 C; sign of I fixed by Fig. 6b (Z_CC lowers E).
 4. Experimental data points: figures only, unless the authors share them.

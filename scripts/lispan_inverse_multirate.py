@@ -59,7 +59,9 @@ def main():
         ref_path = ROOT / "results" / "lispan" / f"pinn_reference_{prot.crate:g}C_{rev_tag}_Zcc{params.Z_CC:g}.npz"
         ref = reference_for(params, prot, ref_path)
         protocols.append(prot)
-        t_ends.append(float(ref["t"][-1]) * 0.98)
+        # PINN window: 98 % of the nominal discharge unless the rate entry sets "t_end" (measured data whose fitted
+        # model ends earlier than the nominal one: the window must not contain the cut-off collapse)
+        t_ends.append(float(r.get("t_end", float(ref["t"][-1]) * 0.98)))
         refs.append(ref)
         inits.append(torch.load(ROOT / r["init"], weights_only=False)["model"] if (r.get("init") and not resume) else None)
         data_paths.append(str(ROOT / r["data_path"]))
