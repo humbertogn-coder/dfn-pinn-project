@@ -1,0 +1,13 @@
+{
+ "species": "\\dfrac{\\partial c_{S4}}{\\partial t} = -\\frac{a\\,r_1}{2},\\quad \\dfrac{\\partial c_{S3}}{\\partial t} = \\frac{a\\,(r_1 - r_2)}{2},\\quad \\dfrac{\\partial c_{S2}}{\\partial t} = \\frac{a\\,(r_2 - r_3)}{2},\\quad \\dfrac{\\partial c_{S1}}{\\partial t} = \\frac{a\\,(r_1 + r_3)}{2}",
+ "rate": "r_m = k_{0,m}\\left[a^{\\mathrm{ed}}_m\\, e^{-x_m} - \\delta_m\\, a^{\\mathrm{prod}}_m\\, e^{x_m}\\right], \\qquad x_m = \\dfrac{F}{2RT}\\left(\\Delta\\phi - U_{0,m} + b_m \\zeta_m\\right)",
+ "voltage": "E(t) = \\Delta\\phi(0,t) + \\phi_e(0,t) - Z_{\\mathrm{CC}}\\, I(t)",
+ "extents": "e_m = \\exp(-T\\,P_m), \\qquad \\xi_1 = 1 - e_1, \\quad \\xi_2 = \\xi_1 (1 - e_2), \\quad \\xi_3 = \\xi_2 (1 - e_3)",
+ "inventory": "2 F\\, c_0\\, L_{\\mathrm{cat}} \\int_0^1 \\left(\\xi_1 + \\xi_2 + \\xi_3\\right) \\mathrm{d}Y \\;=\\; \\int_0^t I\\, \\mathrm{d}t'",
+ "loss": "\\mathcal{L} = \\sum_{g} w_g \\, \\overline{\\left(\\mathrm{residual}_g\\right)^2} \\qquad (g = \\mathrm{extents,\\ Ohm,\\ salt,\\ boundaries,\\ inventories})",
+ "tafel": "r_m \\propto k_{0,m}\\, \\exp\\!\\left(\\dfrac{F\\, U_{0,m}}{2RT}\\right) \\quad \\Rightarrow \\quad k_{0,m} \\times 1000 \\;\\equiv\\; U_{0,m} + \\dfrac{2RT}{F}\\ln 1000 = U_{0,m} + 0.355\\ \\mathrm{V}",
+ "crlb": "\\mathbf{F} = \\dfrac{1}{\\sigma^2} \\mathbf{S}^{\\top}\\mathbf{S}, \\qquad \\mathrm{std}(\\hat\\theta_i) \\;\\geq\\; \\sqrt{\\left(\\mathbf{F}^{-1}\\right)_{ii}}",
+ "lm": "\\Delta\\boldsymbol{\\theta} = -\\left(\\mathbf{J}^{\\top}\\mathbf{J} + \\lambda\\, \\mathrm{diag}(\\mathbf{J}^{\\top}\\mathbf{J})\\right)^{-1} \\mathbf{J}^{\\top}\\mathbf{r}",
+ "bias": "\\hat{\\theta}_{\\mathrm{PINN}} - \\hat{\\theta}_{\\mathrm{ideal}} \\;\\approx\\; -\\left(\\mathbf{J}^{\\top}\\mathbf{J}\\right)^{-1} \\mathbf{J}^{\\top}\\, \\mathbf{e}",
+ "rms": "\\mathrm{rms} = \\sqrt{\\dfrac{1}{N}\\sum_{k=1}^{N} \\left(V_{\\mathrm{PINN}}(t_k) - V_{\\mathrm{FV}}(t_k)\\right)^2}"
+}

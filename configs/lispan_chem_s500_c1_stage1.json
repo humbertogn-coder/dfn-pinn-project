@@ -1,0 +1,48 @@
+{
+  "name": "lispan_chem_s500_c1_stage1",
+  "description": "Stage 1 (forward re-adaptation, nominal parameters, no data) for the PINN inverse on data/span_natmater2026/41563_2026_2484_MOESM7_ESM.xlsx sheet Fig.4a, cycle 1 (source data); current 0.8475 A/m2 from the FV fit (w_S 0.5430), Z_CC from the EIS high-frequency intercept (1.93 Ohm).",
+  "params": {
+    "Z_CC": 0.000218283,
+    "reversible": [
+      true,
+      false,
+      false
+    ]
+  },
+  "protocol": {
+    "current": 0.8475479977663471,
+    "ramp_s": 30.0
+  },
+  "t_end": 36881.40788250677,
+  "train": {
+    "seed": 0,
+    "dtype": "float32",
+    "width": 96,
+    "depth": 4,
+    "fourier_t": 8,
+    "short_t": [
+      60.0,
+      600.0
+    ],
+    "ic_tau_s": 60.0,
+    "quad_order": 12,
+    "adam_steps": 3000,
+    "lr": 0.0002,
+    "lr_final": 2e-05,
+    "n_cathode": 768,
+    "n_separator": 256,
+    "n_boundary": 96,
+    "adaptive": true,
+    "adaptive_every": 50,
+    "log_every": 100,
+    "eval_every": 1000,
+    "checkpoint_every": 2500,
+    "latest_every": 250,
+    "salt_total_scale": 1.0,
+    "charge_total_scale": 1.0,
+    "ema_decay": 0.0,
+    "ema_start": 0.3,
+    "threads": 1,
+    "salt_sep_natural_scale": true
+  }
+}

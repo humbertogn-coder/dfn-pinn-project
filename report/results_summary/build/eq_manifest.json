@@ -1,0 +1,68 @@
+{
+ "species": {
+  "file": "/home/claude/v2/repo/report/results_summary/build/eq/species.png",
+  "w": 1306,
+  "h": 111,
+  "dpi": 220
+ },
+ "rate": {
+  "file": "/home/claude/v2/repo/report/results_summary/build/eq/rate.png",
+  "w": 1417,
+  "h": 113,
+  "dpi": 220
+ },
+ "voltage": {
+  "file": "/home/claude/v2/repo/report/results_summary/build/eq/voltage.png",
+  "w": 729,
+  "h": 74,
+  "dpi": 220
+ },
+ "extents": {
+  "file": "/home/claude/v2/repo/report/results_summary/build/eq/extents.png",
+  "w": 1385,
+  "h": 74,
+  "dpi": 220
+ },
+ "inventory": {
+  "file": "/home/claude/v2/repo/report/results_summary/build/eq/inventory.png",
+  "w": 819,
+  "h": 142,
+  "dpi": 220
+ },
+ "loss": {
+  "file": "/home/claude/v2/repo/report/results_summary/build/eq/loss.png",
+  "w": 1554,
+  "h": 116,
+  "dpi": 220
+ },
+ "tafel": {
+  "file": "/home/claude/v2/repo/report/results_summary/build/eq/tafel.png",
+  "w": 1680,
+  "h": 116,
+  "dpi": 220
+ },
+ "crlb": {
+  "file": "/home/claude/v2/repo/report/results_summary/build/eq/crlb.png",
+  "w": 753,
+  "h": 119,
+  "dpi": 220
+ },
+ "lm": {
+  "file": "/home/claude/v2/repo/report/results_summary/build/eq/lm.png",
+  "w": 725,
+  "h": 74,
+  "dpi": 220
+ },
+ "bias": {
+  "file": "/home/claude/v2/repo/report/results_summary/build/eq/bias.png",
+  "w": 665,
+  "h": 74,
+  "dpi": 220
+ },
+ "rms": {
+  "file": "/home/claude/v2/repo/report/results_summary/build/eq/rms.png",
+  "w": 755,
+  "h": 161,
+  "dpi": 220
+ }
+}

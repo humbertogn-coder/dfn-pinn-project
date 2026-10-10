@@ -1,0 +1,86 @@
+// Chapters 8-10 and appendices: limitations, readiness, presentation outline, key numbers, files
+module.exports = (h) => {
+  const { P, H1, H2, UL, OL, KEY, CAUTION, SLIDE, TABLE } = h;
+  return [
+    H1("8. Limitations"),
+    P("A reviewer will ask about these points, and the paper should state them before anyone asks."),
+    H2("8.1 Limitations of the physics"),
+    ...UL([
+      "**Inherited model assumptions.** One-dimensional cell, constant temperature (25 °C assumed; the paper does not state it), constant 1 M electrolyte properties (the concentration-dependent correlations the paper cites are not given; at 1 C the salt concentration changes by up to 13.5 %, which we bracketed: ≤ 3 mV), sulfur in S_{4} chains with three sequential steps, open-circuit potentials linear in the extent, no polysulfide shuttle, discharge only.",
+      "**Our closures.** Eight interpretations of the published model (Table {tabclos}). They reproduce the published curves to 16-18 mV, but only the authors' implementation could confirm them.",
+      "**Benchmark simplifications for the PINN.** Step 2 irreversible, no double layer, 30 s current ramp, the dissolved S^{2-} represented implicitly. Each is quantified (Table {tabass}); the double layer (4.6 mV rms, up to 12 mV) is the only one above 3 mV rms (step 2 irreversible: 2.7 mV rms, up to 5.6 mV, at 0.1 C).",
+    ]),
+    H2("8.2 Limitations of the data"),
+    ...UL([
+      "**Simanjuntak Fig. 4b**: digitized points (about 5 mV accuracy), 12-22 per rate, from a figure; the measured cell's sulfur loading is inconsistent with the model (0.6 vs 0.767 mg cm^{-2}).",
+      "**SPAN500**: one C-rate, ether electrolyte, unknown sulfur content and electrode thickness, short-chain SPAN (the model assumes S_{4} chains), large cycle-to-cycle change (54 mV). The fitted values are effective parameters for one cycle.",
+      "**No multi-rate measurements of our own**: the identifiability study shows that this is what limits a kinetic calibration.",
+    ]),
+    H2("8.3 Limitations of the method"),
+    ...UL([
+      "**Cost**: hours of training for what a stiff solver does in seconds (1-D).",
+      "**Seed sensitivity**: rms errors 0.14-0.44 mV across seeds; one 3.5 mV spike at a phase transition.",
+      "**Real-data inverse**: the trust-region PINN stops 0.7-1.8 mV (misfit) above the FV optimum, because its parameter step ignores how the fields respond to the parameters; a parametric PINN or implicit differentiation would fix it (future work).",
+      "**Window**: the PINN cannot represent the voltage collapse after the cell is empty, so its data window must stop before the end of discharge (98 % of the discharge time; for SPAN500, 95 % of the capacity).",
+      "**Computing platform**: a two-core cloud machine; timings measured in two separate sessions differed by 4-13 % (for example 3.9 vs 4.4 s for one FV discharge).",
+    ]),
+    KEY("none of these blocks the paper", ["Every limitation is either quantified in the results (physics, benchmark, seeds, cost) or is a scope statement (data, platform). The paper becomes stronger, not weaker, by listing them."]),
+
+    H1("9. Is the current work enough?"),
+    P("Short answer: **yes, it is enough for the advisor to approve the writing of the manuscript**, and a first full draft already exists. It is not yet enough to *submit*: three items are missing and two optional items would strengthen the paper. The checklist below separates them."),
+    ...TABLE(["Item", "Status", "Needed for"], [
+      ["Reference model + validation", "done", "paper"],
+      ["Forward PINN, three seeds per rate, from scratch", "done", "paper"],
+      ["Identifiability (Fisher / CRLB)", "done", "paper"],
+      ["Synthetic inverse + ideal estimator + error model", "done", "paper"],
+      ["Measured-data cases (Simanjuntak, SPAN500)", "done, with stated limits", "paper"],
+      ["Cost comparison", "done", "paper"],
+      ["Assumptions quantified", "done", "paper / supplementary"],
+      ["Traceable build of all figures and numbers", "done", "paper (and reviewers)"],
+      ["Draft manuscript (all sections)", "done (draft 1)", "paper"],
+      ["Literature review, novelty statement, reference list", "**to do** (needs the advisor and the group's references)", "submission"],
+      ["Agreed framing of the cost result and of the SPAN500 case", "**to decide** with the advisor (chapter 7)", "submission"],
+      ["Supplementary information (full equations, Table S1)", "**to assemble** (content exists in the repository docs)", "submission"],
+      ["Confirmation of the closures by the original authors (T. Danner, DLR)", "optional", "stronger paper"],
+      ["Multi-rate discharge data of a SPAN cell from our group", "optional", "much stronger real-data case"],
+    ], [4300, 3200, 1860], "Readiness checklist for the manuscript.", "tabready"),
+    P("If the advisor agrees, the remaining work is mostly writing: about one to two weeks for the literature section, the supplementary information and the conversion to the JES template, plus whatever time the optional items take. The optional multi-rate data are the single most valuable addition: with two C-rates of one cell, the SPAN500-type calibration would become a real kinetic calibration (section 4.4 shows exactly which parameters it would determine)."),
+    CAUTION("one thing that must not happen", ["No number may be typed into the manuscript by hand. If a value changes (for example after a new run), rebuild with `python scripts/paper_build.py` and every figure, table and number updates together."]),
+
+    H1("10. Suggested presentation for the advisor meeting"),
+    P("A 15-20 minute presentation, about 12 slides. Each line gives the slide's message and the figure or table of this document to use."),
+    ...TABLE(["#", "Slide message", "Material"], [
+      ["1", "Title: PINN for a Li-SPAN cell model: accuracy, identifiability, parameter estimation", "-"],
+      ["2", "Why: SPAN cells, continuum models, forward and inverse problems", "chapter 1"],
+      ["3", "The Simanjuntak model in one picture: three steps, Li_{2}S, electrolyte", "eqs. of 1.2; analogy box"],
+      ["4", "What we did: six phases", "Figure {figA}"],
+      ["5", "Reference model reproduces the paper (16 / 18 mV) with documented closures", "Figure {fig1}, Table {tabclos}"],
+      ["6", "PINN design: build the physics in; the charge inventory", "eqs. of 2.2; bank-statement analogy"],
+      ["7", "Forward accuracy: 0.26 / 0.18 mV, three seeds from scratch", "Figure {fig2}, Table {tabfwd}"],
+      ["8", "What a curve reveals: one rate is not enough", "Figure {fig4}"],
+      ["9", "Inverse: as good as the ideal estimator; the bias is predictable", "Figure {fig5}c, Table {tabinv}"],
+      ["10", "Real data: the model is the limit (Simanjuntak, SPAN500)", "Figure {fig6}, Table {tabmeas}"],
+      ["11", "Cost and honest message", "Figure {figB}; section 5.4"],
+      ["12", "Is it enough? Checklist and decisions needed", "Table {tabready}; chapter 7 caution box"],
+    ], [500, 5800, 3060], "Slide outline."),
+    SLIDE(["Keep one message per slide and put the number on the slide (for example '0.26 mV, 3 seeds'). Put the error-hierarchy table of chapter 5 on the conclusion slide: it answers most questions before they are asked."]),
+
+    H1("Appendices"),
+    H2("A. Key numbers"),
+    ...TABLE(["Quantity", "Value", "Source file"], [
+      ["FV vs paper Fig. 6a, rms (0.1 / 1 C)", "16.0 / 18.4 mV", "paper/numbers.json"],
+      ["PINN vs FV, rms, three seeds (0.1 C)", "0.164 / 0.435 / 0.177 mV (mean 0.26)", "lispan_final_0.1C_seed{0,1,2}"],
+      ["PINN vs FV, rms, three seeds (1 C)", "0.225 / 0.137 / 0.179 mV (mean 0.18)", "lispan_final_1C_seed{0,1,2}"],
+      ["CRLB with 0.1 + 1 C (largest of 8)", "1.04 % (k_{0,1})", "results/lispan/identifiability"],
+      ["CRLB at 0.1 C alone: k_{0,2} / Z_{CC}", "144 % / 296 %", "results/lispan/identifiability"],
+      ["Inverse: PINN vs ideal estimator", "max 2.0 CRLB, median 0.7", "paper/numbers.json (LM inverse run vs fit_0.1+1C_nominal.json)"],
+      ["PINN forward error at its estimate (0.1 / 1 C)", "0.15 / 0.71 mV", "results/paper/inverse_error_model.json"],
+      ["Simanjuntak Fig. 4b fit (overall; Z_{CC})", "18.4 mV; 0.033 Ω m^{2}", "fit_0.1+1C_fdabs.json"],
+      ["SPAN500 fit; cycle-to-cycle change", "10.0 mV; 54 mV", "results/lispan/span500"],
+      ["SPAN500 1 C predictions, largest difference", "135 mV", "paper/numbers.json"],
+      ["SPAN500 PINN vs FV optimum (same window)", "8.9 vs 8.2 mV", "lispan_inv_span500_c3_paper_wS_b5; fit_cycle3_pinnwindow.json"],
+    ], [3900, 2900, 2560], "Key numbers (all generated by scripts/paper_build.py)."),
+
+    P("Files: the draft is in `paper/manuscript/`, figures and tables in `paper/figures/` and `paper/tables/`, every number with its source in `paper/numbers.json`, input fingerprints in `paper/MANIFEST.json`; assumptions in `docs/PAPER_ASSUMPTIONS.md`; the full technical record in `docs/LI_SPAN_MODEL_FORMULATION.md`; the sources of this document in `report/results_summary/`. Everything is rebuilt with `python scripts/paper_build.py`."),
+  ];
+};

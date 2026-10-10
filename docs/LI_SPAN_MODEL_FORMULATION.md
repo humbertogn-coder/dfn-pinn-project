@@ -835,6 +835,36 @@ on the same window and w_S (`scripts/lispan_span500_window_fit.py`, fit_cycle3_p
 -0.066 / -0.217 V, b x 0.747 / 0.956 / 0.937). As for the Fig. 4b data: with model-form error the trust-region PINN
 stops close to (0.7 mV above) the FV optimum, in the same flat valley.
 
+### 6.10 Chemical-information study (2026-10-10, advisor summary)
+
+Inverse PINN (trust region, physics-only fields; gn_max_step 1.0 = 0.1 V per TR step on U0) on five more measured
+C/10 discharges of Wang et al., Nat. Mater. 2026, after an FV fit of w_S, U0_1..3, b_1..3
+(`scripts/lispan_span_chem.py`, `scripts/run_chem_queue.sh`, results in `results/lispan/span_chem/`):
+SPAN500 cycles 1 and 2 (source data Fig. 4a) and SPAN300/320/500 cycle 2 (digitized from SI Fig. 21,
+`scripts/digitize_natmater_si_fig21.py`). Z_CC from the EIS high-frequency intercept (Fig. 4c; Im = 0 crossing for
+the SI materials). PINN misfit (FV model at the PINN's parameters, PINN window) vs the FV optimum on the same window:
+
+| data | PINN / FV opt. [mV] | U0_1 / U0_2 / U0_3 [V] (PINN) | w_S (FV) |
+| --- | --- | --- | --- |
+| SPAN500 cycle 1 | 11.6 / 10.6 | 1.561 / 1.521 / 1.213 | 0.543 |
+| SPAN500 cycle 2 | 8.9 / 8.3 | 2.031 / 1.811 / 1.306 | 0.393 |
+| SPAN500 cycle 3 (6.9) | 8.9 / 8.2 | 2.094 / 1.851 / 1.445 | 0.376 |
+| SPAN300 cycle 2 (SI) | 8.6 / 7.7 | 2.129 / 1.872 / 1.545 | 0.519 |
+| SPAN320 cycle 2 (SI) | 10.9 / 10.0 | 2.100 / 1.881 / 1.452 | 0.446 |
+| SPAN500 cycle 2 (SI) | 8.75 / 8.2 | 2.011 / 1.803 / 1.311 | 0.395 |
+
+Reading (effective parameters of the S4-chain model): the first discharge sits 470 / 291 / 92 mV below cycle 2 (step
+1 most); w_S falls 28 % from cycle 1 to 2 (first-cycle loss 26 %, CE 73.55 %); from SPAN300 to SPAN500 the steps move
+down 118 / 68 / 234 mV and w_S from 0.52 to 0.40 (w_S follows the capacity). The b_m are poorly determined by one
+curve (cycle 1: PINN b_1 0.42 vs FV 1.05 at equal misfit) and are not interpreted. The SI and source-data SPAN500
+cycle-2 curves give U0 within 20 mV.
+
+Rate analysis of the Simanjuntak cell (`scripts/lispan_rate_analysis.py`, model at the Fig. 4b PINN-inverse
+estimates): 1 C voltage loss vs 0.05 C 470 mV (mean over 50-800 mAh/g_S); removing one mechanism at a time: Z_CC
+344 mV, kinetics (k0 x100) 136 mV, electrolyte transport (x100) 32 mV. Capacity 1253 -> 1003 mAh/g_S; at the 1.0 V
+cut-off 60 % of the chains are PAN-S2Li (step 3 unfinished); Li2S uniform within 2 %, salt within 13 %. As stated in
+6.8, only Z_CC is firmly determined by these data; the kinetic and electrolyte shares are trends.
+
 ## 7. Data for the Li-SPAN work
 
 * Forward PINN: no data; physics only. The numerical reference of section 5
