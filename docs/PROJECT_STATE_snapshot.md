@@ -481,3 +481,29 @@ correction (flux BC/inventory exact); resampling; gradient-norm group weights; g
 - Findings: (1) measured Simanjuntak cell: five C/10-only calibrations fit 0.1 C at 15.2-15.3 mV but miss 1 C by 32-318 mV (free Z_CC -> 0.0107 Ohm m2, 217 mV; only Z_CC = 0.035 assumed gives 32 mV); 0.1+0.2 C also misses 1 C by 217 mV (Z_CC 0.0079); 0.1+1 C: Z_CC 0.0331, predicts 0.05/0.2 C within 30/31 mV. (2) synthetic (5 mV noise): C/10-only fits within 0.7 mV at 0.1 C miss 1 C by 146-278 mV and 2 C by 236-306 mV; C/10+C/5 predicts 1 C to 6.2 mV; C/10+1C recovers all multipliers within 1.5 % (U0_1 within 0.6 mV) and predicts 2 C to 1.3 mV. (3) Fisher (5 mV): 1 C prediction sd 170 mV (C/10), 7.9 (C/10+C/5), 2.5 (C/10+C/2); Z_CC post/prior 0.82 (C/10) -> 0.05 (C/10+1C); k0 exp(F U0/2RT) of steps 2-3 identified (0.31 -> 0.026-0.034 with two rates) but k0, U0 separately never (>= 0.43, corr <= -0.996); electrolyte transport never identified (>= 0.46).
 - Hypothesis in the proposal doc REVISED: k0-U0 degeneracy of irreversible steps holds at every current (no rate set separates them; only the combination matters); a fast second rate fixes contact resistance and predictions. Proposal doc updated (hypothesis, status table, Phase 1 results subsection with 2 figures).
 - Next (Phase 2): literature SPAN rate-capability datasets (owner to collect PDFs); Gate 1 = advisor review.
+
+## 2026-10-15: Phase 2 - assessment of five owner-supplied files + literature pilot
+- Files: Moschner et al. Adv. Sci. 12, 2415436 (2025) + SI docx; Ma et al. Small 22, e74169 (2026); Hao et al. ACS Nano
+  19, 25385 (2025); Chen et al. Nat. Commun. 10, 1021 (2019). Note: docs/PHASE2_LITERATURE_DATA.md (fact-checked by a
+  subagent; corrections applied). Data: data/literature_span/ (README): chen2019 (Fig. 3b/3d, Se0.06SPAN, ether and
+  carbonate, 0.4-10 A/g, read EXACTLY from PDF vector paths, scripts/extract_chen2019_fig3.py) and ma2026 (Fig. 6c/6d,
+  SPAN and SPAN aerogel, carbonate, 0.1-2 C, digitized, scripts/digitize_ma2026_fig6.py; 0.1 C = first cycle).
+- Verdicts: Chen 2019 and Ma 2026 USE; Moschner 2025 (same group as the model: Danner/Simanjuntak/Latz) not a rate
+  dataset (C/50, C/10 only; rate tests as capacities in SI Fig. S8) but best for interpretation (full model parameter
+  tables SI S4-S6; EIS; resistive-layer simulations = Z_CC-like signature) -> ask authors for raw C-rate curves;
+  Hao 2025 low priority (FeS2/SPAN only in main text; FeS2 not in model). Moschner cites Perez Beltran & Balbuena
+  (JPCC 125, 13185 (2021); ACS AMI 13, 491 (2021)) - check whether they contain lithiation voltages.
+- Pilot (scripts/lispan_lit_rates.py; effective model = Simanjuntak geometry, w_S basis mapping; fitted w_S, U0_1..3,
+  b_1..3, k0_1, Z_CC; coarse 10/5 grid): one slow rate fitted to 7-10 mV misses faster rates by 58-433 mV (all 4
+  datasets). Chen: slowest+fastest (0.4+10 A/g) predicts intermediates within 33-50 mV; all-six fits 34/25 mV rms
+  (carbonate/ether; model limit); slow+medium (0.4+2) interpolates 1 A/g (25-29 mV) but extrapolates 4-10 A/g badly
+  (37-147 mV): two rates cannot split log (kinetic) vs linear (ohmic) loss (l3_split: 36/31 mV per e-fold + 40/56 mV
+  per A/g). Ma: 0.2 C alone fits to 8 mV; 0.2+1 C cannot be fitted (49-73 mV) - cells lose capacity with rate; forward
+  check (transport_check_ma2026_SPAN-A.json): salt diffusivity x0.1/x0.03 cuts 1 C capacity 1037 -> 899/486 at
+  unchanged voltage (measured 686) -> transport time scale ~10-30x slower than the model default (electrolyte in a
+  thicker electrode, or solid-state in SPAN particles). Fits with D_salt free STOPPED (salt-depleted solves too stiff;
+  NOTE.txt). Two all-rates fits were interrupted by a container restart and rerun (NOTE.txt).
+- Figures report/phase2/figures/l1_curves.png, l2_errors.png, l3_split.png. Proposal doc updated (data table, hypothesis:
+  "fastest rate of interest", status table, Phase 2 pilot subsection with l1 and l3).
+- Protocol consequence: calibrate on the slowest + the fastest rate of interest (no extrapolation); a third rate
+  splits kinetic/ohmic; the second rate also tests the model's transport. Solver needs robustness for salt depletion.
