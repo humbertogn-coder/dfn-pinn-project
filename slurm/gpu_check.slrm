@@ -1,0 +1,27 @@
+#!/bin/bash
+#SBATCH --job-name=gpu_check
+#SBATCH --time=00:20:00
+#SBATCH --partition=gpu
+#SBATCH --gres=gpu:a100:1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=16G
+#SBATCH --output=slurm_logs/gpu_check.%j.out
+#SBATCH --error=slurm_logs/gpu_check.%j.err
+# ---------------------------------------------------------------------------
+# Checks that this account can use an A100 on Grace and that the environment's torch sees it, then times a
+# PINN-like workload on CPU (8 cores) and GPU (scripts/hpc_bench.py).
+# Submit from the repository root:   mkdir -p slurm_logs; sbatch slurm/gpu_check.slrm
+# Cost: at most 0.33 h x (72 SU per A100 hour + 8 cores) = about 27 SUs; usually a few minutes.
+# ---------------------------------------------------------------------------
+module purge
+module load GCCcore/13.2.0
+module load Python/3.11.5
+source /scratch/user/$USER/pinn_env/bin/activate
+
+export OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8
+cd "$SLURM_SUBMIT_DIR"
+echo "host=$(hostname) start=$(date)"
+nvidia-smi
+python -u scripts/hpc_bench.py
+echo "end=$(date)"

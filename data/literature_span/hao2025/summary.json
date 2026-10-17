@@ -1,0 +1,108 @@
+{
+ "SPAN_0.1C": {
+  "figure": "S9",
+  "n": 347,
+  "Q_first": 31.6,
+  "Q_end": 745.0,
+  "Q_end_text": 743.89,
+  "largest_gap_mAh_g": 11.6,
+  "V_at_300": 1.9205,
+  "splice": {
+   "covered_by": "0.2C",
+   "splice_at_mAh_g": 526.5,
+   "voltage_step_at_splice_mV": {
+    "0.2C": -12.0,
+    "0.5C": 60.0
+   },
+   "discarded_visible_points_below": 0
+  }
+ },
+ "SPAN_0.2C": {
+  "figure": "S9",
+  "n": 330,
+  "Q_first": 31.6,
+  "Q_end": 694.7,
+  "Q_end_text": 692.95,
+  "largest_gap_mAh_g": 11.6,
+  "V_at_300": 1.9205,
+  "splice": null
+ },
+ "SPAN_0.5C": {
+  "figure": "S9",
+  "n": 316,
+  "Q_first": 31.6,
+  "Q_end": 654.1,
+  "Q_end_text": 652.11,
+  "largest_gap_mAh_g": 7.7,
+  "V_at_300": 1.8666,
+  "splice": null
+ },
+ "SPAN_1C": {
+  "figure": "S9",
+  "n": 302,
+  "Q_first": 31.6,
+  "Q_end": 623.2,
+  "Q_end_text": 622.04,
+  "largest_gap_mAh_g": 7.7,
+  "V_at_300": 1.8276,
+  "splice": null
+ },
+ "SPAN_2C": {
+  "figure": "S9",
+  "n": 291,
+  "Q_first": 31.6,
+  "Q_end": 592.2,
+  "Q_end_text": 591.53,
+  "largest_gap_mAh_g": 1.9,
+  "V_at_300": 1.7591,
+  "splice": null
+ },
+ "SPAN_0.5C_1cyc": {
+  "figure": "S12b",
+  "n": 244,
+  "Q_first": 30.6,
+  "Q_end": 913.1,
+  "Q_end_text": null,
+  "largest_gap_mAh_g": 145.6,
+  "V_at_300": 1.7793,
+  "splice": null
+ },
+ "SPAN_0.5C_2cyc": {
+  "figure": "S12b",
+  "n": 228,
+  "Q_first": 30.6,
+  "Q_end": 723.8,
+  "Q_end_text": 720.83,
+  "largest_gap_mAh_g": 14.6,
+  "V_at_300": 1.8423,
+  "splice": {
+   "covered_by": "cycle100",
+   "splice_at_mAh_g": 368.4,
+   "voltage_step_at_splice_mV": {
+    "cycle10": -45.0,
+    "cycle100": 13.5
+   },
+   "discarded_visible_points_below": 4
+  }
+ },
+ "SPAN_0.5C_10cyc": {
+  "figure": "S12b",
+  "n": 222,
+  "Q_first": 30.6,
+  "Q_end": 685.9,
+  "Q_end_text": null,
+  "largest_gap_mAh_g": 8.7,
+  "V_at_300": 1.8919,
+  "splice": null
+ },
+ "SPAN_0.5C_100cyc": {
+  "figure": "S12b",
+  "n": 200,
+  "Q_first": 30.6,
+  "Q_end": 616.0,
+  "Q_end_text": null,
+  "largest_gap_mAh_g": 5.8,
+  "V_at_300": 1.8423,
+  "splice": null
+ }
+}

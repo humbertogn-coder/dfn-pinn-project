@@ -5,6 +5,11 @@ Data (scripts/extract_chen2019_fig3.py, scripts/digitize_ma2026_fig6.py -> data/
       0.4, 1, 2, 4, 6, 10 A/g (per g S+Se; the 0.2 A/g curve is the cell's first cycle and is not used)
   ma2026_SPAN / ma2026_SPAN-A : Ma et al. Small 22, e74169 (2026) Fig. 6c / 6d, carbonate electrolyte,
       0.1, 0.2, 0.3, 0.5, 1, 2 C with 1 C = 1.675 A/g S (the 0.1 C curve is the first cycle of the rate test)
+  hao2025_SPAN : plain SPAN, Hao et al. ACS Nano 19, 25385 (2025) SI Fig. S9, 1 M LiPF6 EC/DEC/FEC,
+      0.1, 0.2, 0.5, 1, 2 C, capacity per g SPAN, 1 C = 0.71 A/g SPAN (from the GITT pulse size, SI Fig. S11a; the
+      paper does not define 1 C; data/literature_span/README.md)
+  hao2025_SPAN_cycling : same cell type, SI Fig. S12b, 0.5 C, cycles 2, 10, 100 (the "rates" of this entry are cycle
+      numbers; all at 0.5 C)
 
 Model (as for the SPAN500 calibration, scripts/lispan_span500.py): Simanjuntak geometry and electrolyte, PINN-benchmark
 form (reaction 1 reversible, 2-3 irreversible, no double layer, 30 s ramp). The papers' capacity basis is mapped to the
@@ -55,6 +60,10 @@ DATASETS = {
                     "rates": {r: 1.675 * r for r in (0.1, 0.2, 0.3, 0.5, 1.0, 2.0)}, "q_min": 60.0},
     "ma2026_SPAN-A": {"dir": "ma2026", "prefix": "SPAN-A", "unit": "C",
                       "rates": {r: 1.675 * r for r in (0.1, 0.2, 0.3, 0.5, 1.0, 2.0)}, "q_min": 60.0},
+    "hao2025_SPAN": {"dir": "hao2025", "prefix": "SPAN", "unit": "C",
+                     "rates": {r: 0.71 * r for r in (0.1, 0.2, 0.5, 1.0, 2.0)}, "q_min": 40.0},
+    "hao2025_SPAN_cycling": {"dir": "hao2025", "prefix": "SPAN_0.5C", "unit": "cyc",
+                             "rates": {2.0: 0.355, 10.0: 0.355, 100.0: 0.355}, "q_min": 40.0},
 }
 NAMES = ["w_S", "U0_1", "U0_2", "U0_3", "b_1", "b_2", "b_3", "k0_1", "Z_CC"]
 U0_SCALE = 0.1

@@ -1,0 +1,55 @@
+{
+ "source": "Hao et al. ACS Nano 19, 25385 (2025), SI Fig. S11; approximate (raster ~3 mAh/g, ~10 mV per px)",
+ "SPAN": {
+  "pulse_capacity_mAh_g": 18.0,
+  "implied_1C_A_per_g": 0.722,
+  "discharge_rest_recovery_mV_150_550": {
+   "mean": 65,
+   "min": 30,
+   "max": 101,
+   "n_rests": 11
+  },
+  "charge_rest_recovery_mV_150_550": {
+   "mean": 37,
+   "min": 30,
+   "max": 60,
+   "n_rests": 11
+  },
+  "rested_charge_minus_rested_discharge_mV": {
+   "300": 162,
+   "400": 168,
+   "500": 182
+  },
+  "apparent_log10_D_cm2_s_discharge": {
+   "min": -14.7,
+   "median": -13.6,
+   "max": -12.5
+  }
+ },
+ "FeS2/SPAN": {
+  "pulse_capacity_mAh_g": 20.0,
+  "implied_1C_A_per_g": 0.798,
+  "discharge_rest_recovery_mV_150_550": {
+   "mean": 84,
+   "min": 60,
+   "max": 101,
+   "n_rests": 20
+  },
+  "charge_rest_recovery_mV_150_550": {
+   "mean": 72,
+   "min": 60,
+   "max": 90,
+   "n_rests": 20
+  },
+  "rested_charge_minus_rested_discharge_mV": {
+   "300": 132,
+   "400": 159,
+   "500": 185
+  },
+  "apparent_log10_D_cm2_s_discharge": {
+   "min": -14.0,
+   "median": -13.3,
+   "max": -12.5
+  }
+ }
+}

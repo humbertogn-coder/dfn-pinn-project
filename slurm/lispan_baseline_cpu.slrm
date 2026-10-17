@@ -1,0 +1,32 @@
+#!/bin/bash
+#SBATCH --job-name=lispan_base
+#SBATCH --time=01:00:00
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=8G
+#SBATCH --output=slurm_logs/lispan_base.%j.out
+#SBATCH --error=slurm_logs/lispan_base.%j.err
+# ---------------------------------------------------------------------------
+# Baseline on Grace CPUs, before the parametric PINN (Phase 3): the existing fixed-case Li-SPAN PINN
+# (configs/lispan_forward_final_0.1C.json) for 3 000 Adam steps (the full recipe is 30 000), to measure the time per
+# step and how it scales with the number of cores. Torch threads = --cpus-per-task.
+#
+# Submit from the repository root, one job per core count:
+#     mkdir -p slurm_logs
+#     for c in 1 4 8; do sbatch --cpus-per-task=$c slurm/lispan_baseline_cpu.slrm; done
+# Output: slurm_logs/lispan_base.<jobid>.out and results/lispan_runs/grace_base_c<cores>_<time>/ (train.log,
+# history.json). Cost: about 0.3 h x (1 + 4 + 8) cores = a few SUs.
+# ---------------------------------------------------------------------------
+module purge
+module load GCCcore/13.2.0
+module load Python/3.11.5
+source /scratch/user/$USER/pinn_env/bin/activate
+
+C=${SLURM_CPUS_PER_TASK:-1}
+export OMP_NUM_THREADS=$C MKL_NUM_THREADS=$C OPENBLAS_NUM_THREADS=$C
+export PYTHONDONTWRITEBYTECODE=1
+cd "$SLURM_SUBMIT_DIR"
+echo "cores=$C host=$(hostname) start=$(date)"
+python -u scripts/lispan_train.py --config configs/lispan_forward_final_0.1C.json --name grace_base_c$C \
+    --set adam_steps=3000 eval_every=1000 log_every=100 threads=$C
+echo "end=$(date)"
