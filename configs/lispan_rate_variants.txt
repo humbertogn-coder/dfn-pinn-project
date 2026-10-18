@@ -1,0 +1,9 @@
+# Phase 3a variants for slurm/lispan_rate_array.slrm: one line per array index (0, 1, 2, ...), comments and blank lines
+# skipped.  Format: <run name> key=value ... (overrides of configs/lispan_rate_0.1-1C.json, JSON values, no spaces).
+# The run folder is results/lispan_rate_runs/<run name>; resubmitting the array resumes unfinished runs.
+# Wave 1 (2026-10-18): baseline + seed spread + network width + collocation points + training length.
+rate_w96_s0        seed=0
+rate_w96_s1        seed=1
+rate_w128_s0       width=128 seed=0
+rate_w96_2xpts_s0  seed=0 n_cathode=3072 n_separator=2048 n_boundary=384
+rate_w96_120k_s0   seed=0 adam_steps=120000 charge_total_start=40000 checkpoint_every=20000

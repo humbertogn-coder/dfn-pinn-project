@@ -27,6 +27,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import json
+import os
 from pathlib import Path
 
 import numpy as np
@@ -334,7 +335,11 @@ def export(res: dict, path, params: LiSPANParams, protocol: LiSPANProtocol, extr
     if extra_meta:
         meta.update(extra_meta)
     data = {k: np.asarray(v) for k, v in res.items() if k != "solver"}
-    np.savez_compressed(path, meta=json.dumps(meta), **data)
+    # Write to a private temporary file and rename it into place: several cluster jobs may create the same
+    # reference at once, and a reader must never see a half-written file (os.replace is atomic on one filesystem).
+    tmp = path.with_name(f"{path.stem}.tmp{os.getpid()}.npz")
+    np.savez_compressed(tmp, meta=json.dumps(meta), **data)
+    os.replace(tmp, path)
     return path
 
 
