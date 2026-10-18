@@ -17,10 +17,19 @@
 # Output: slurm_logs/lispan_base.<jobid>.out and results/lispan_runs/grace_base_c<cores>_<time>/ (train.log,
 # history.json). Cost: about 0.3 h x (1 + 4 + 8) cores = a few SUs.
 # ---------------------------------------------------------------------------
+# Environment. Default: HPRC's PyTorch module alone, no venv. It brings Python 3.11, numpy, scipy and torch (CUDA
+# build), all the Li-SPAN code needs, and lives under /sw, so it uses none of our 250 000-file scratch quota.
+# Check the module name with: module spider PyTorch
+# Optional: use an existing venv that ALREADY has torch (built on GCCcore/13.2.0 + Python/3.11.5), e.g.
+#     sbatch --cpus-per-task=4 --export=ALL,PINN_VENV=/scratch/user/$USER/ase_env slurm/lispan_baseline_cpu.slrm
 module purge
-module load GCCcore/13.2.0
-module load Python/3.11.5
-source /scratch/user/$USER/pinn_env/bin/activate
+if [ -n "$PINN_VENV" ]; then
+    module load GCCcore/13.2.0 Python/3.11.5
+    source "$PINN_VENV/bin/activate"
+else
+    module load GCC/12.3.0 OpenMPI/4.1.5 PyTorch/2.1.2-CUDA-12.1.1
+fi
+python -c "import sys, numpy, scipy, torch; print('python', sys.version.split()[0], '| numpy', numpy.__version__, '| scipy', scipy.__version__, '| torch', torch.__version__)" || exit 1
 
 C=${SLURM_CPUS_PER_TASK:-1}
 export OMP_NUM_THREADS=$C MKL_NUM_THREADS=$C OPENBLAS_NUM_THREADS=$C
