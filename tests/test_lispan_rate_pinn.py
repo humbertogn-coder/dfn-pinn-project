@@ -149,3 +149,53 @@ def test_matches_single_rate_model_at_fixed_rate():
             torch.testing.assert_close(out_r[k].detach(), out_b[k].detach(), rtol=1e-10, atol=1e-12)
         with torch.no_grad():
             torch.testing.assert_close(rm.voltage(T, full(T)), bm.voltage(T), rtol=1e-12, atol=1e-12)
+
+
+def test_guarded_weights_do_not_retreat_from_a_rising_group():
+    """Plain gradient-norm balancing lowers the weight of a group whose loss (and gradient) grows; the guarded rule
+    keeps it and pushes it up instead (wave-1 runaway, docs/PHASE3_PARAMETRIC_PINN.md)."""
+    from dfn_pinn.lispan.rate_pinn import GuardedWeights
+    from dfn_pinn.v2.train import AdaptiveWeights
+    p = torch.nn.Parameter(torch.ones(2, dtype=torch.float64))
+    model = torch.nn.Module(); model.p = p
+    groups = {"a": ["la"], "b": ["lb"]}
+
+    def losses(scale_a):
+        return {"la": (scale_a * p[0]) ** 2, "lb": p[1] ** 2}
+    plain, guarded = AdaptiveWeights(groups, 0.0), GuardedWeights(groups, 0.0, rise=3.0, boost=1.25, decay=0.0)
+    for w in (plain, guarded):
+        L = losses(1.0)
+        if isinstance(w, GuardedWeights):
+            w.observe(L)
+        w.update(model, L)
+    wa_plain, wa_guard = plain.w["a"], guarded.w["a"]
+    L = losses(10.0)                       # group a gets 100x worse, its gradient 100x larger
+    plain.update(model, L)
+    guarded.observe(L); guarded.update(model, L)
+    assert plain.w["a"] < 0.6 * wa_plain                     # the runaway: the plain rule cuts the weight
+    assert guarded.rising("a") and guarded.w["a"] >= 1.25 * wa_guard * (1 - 1e-12)
+
+
+def test_rollback_restores_a_healthy_state(tmp_path, monkeypatch):
+    """An injected blow-up of the kinetics residuals triggers a rollback to the last healthy snapshot."""
+    import dfn_pinn.lispan.rate_pinn as rp
+    real = rp.rate_residuals
+    calls = {"n": 0}
+
+    def faulty(model, batch):
+        calls["n"] += 1
+        out = real(model, batch)
+        if 620 <= calls["n"] <= 700:      # sustained blow-up (EMA must exceed 20x its median)
+            out["ode1"] = out["ode1"] * 1e4
+        return out
+    monkeypatch.setattr(rp, "rate_residuals", faulty)
+    cfg = RateTrainConfig(width=8, depth=1, fourier_t=1, quad_order=4, n_cathode=8, n_separator=4, n_boundary=4,
+                          adam_steps=800, log_every=1000, eval_every=10**9, latest_every=0, checkpoint_every=0, threads=1,
+                          weight_guard=True, rollback=True, snapshot_every=100, rollback_floor=1e-6, rollback_factor=20.0,
+                          rollback_cooldown=50)
+    coef, _ = fit_window(list(T_CUT), list(T_CUT.values()))
+    msgs = []
+    rp.train_rate(cfg, PARAMS, coef, tmp_path, refs=None, log=msgs.append)
+    ck = torch.load(tmp_path / "final.pt", weights_only=False)
+    assert ck["guard"]["n_rollbacks"] >= 1 and ck["guard"]["lr_scale"] == 1.0      # cooldown over by the end
+    assert any("ROLLBACK" in m for m in msgs) and any("back to the schedule" in m for m in msgs)

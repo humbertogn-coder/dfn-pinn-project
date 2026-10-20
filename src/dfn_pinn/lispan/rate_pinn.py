@@ -19,6 +19,8 @@ O(1) and no rate dominates the loss.
 
 from __future__ import annotations
 
+from collections import deque
+import copy
 from dataclasses import dataclass, field
 import json
 import math
@@ -49,6 +51,20 @@ class RateTrainConfig(LiSPANTrainConfig):
     eval_rates: tuple = (0.1, 0.15, 0.2, 0.3, 0.5, 0.7, 1.0)      # FV references for the evaluation only
     history_every: int = 10               # keep every n-th step in history.json (all logged steps are kept too)
     device: str = "cpu"                   # "cpu", "cuda" or "auto"
+    stop_step: int = 0                    # stop (save latest.pt) after this step; 0 = run to adam_steps (replays, splits)
+    # --- training stabilization (wave 2; off by default so that wave-1 runs resume unchanged, see GuardedWeights)
+    weight_guard: bool = False            # a loss group that is getting worse may not lose adaptive weight
+    weight_guard_rise: float = 3.0        #   "getting worse" = EMA of its loss > rise x the best EMA so far
+    weight_guard_boost: float = 1.25      #   such a group's weight is multiplied by boost at each update instead
+    loss_ema_decay: float = 0.98          #   per-step EMA of the unweighted group losses (~50 steps)
+    rollback: bool = False                # restore the last healthy in-memory snapshot when the kinetics blow up
+    rollback_factor: float = 100.0        #   trigger: EMA(ode + charge losses) > factor x its running median ...
+    rollback_floor: float = 1e-2          #   ... and above this absolute level (wave-1 histories: factor 100 fires
+                                          #   at every lasting excursion and only 5x in the two runs that stayed good)
+    snapshot_every: int = 500             #   healthy snapshot interval (steps)
+    rollback_lr_factor: float = 0.5       #   learning rate multiplied by this after a rollback (again for every further
+    rollback_cooldown: int = 2000         #   rollback within the cooldown) for this many steps, then back to the schedule
+    max_rollbacks: int = 10
 
     def to_dict(self):
         d = super().to_dict()
@@ -427,6 +443,55 @@ def evaluate_rates(model: LiSPANRatePINN, refs: dict) -> dict:
     return out
 
 
+# ====================================================================== stabilization
+class GuardedWeights(AdaptiveWeights):
+    """Gradient-norm loss balancing (AdaptiveWeights) without its runaway.
+
+    The plain rule sets w_g ~ mean_g' |grad L_g'| / |grad L_g|: a group whose residual starts to grow has a growing
+    gradient and therefore gets a SMALLER weight, so nothing pulls it back (wave 1: charge weight 54 -> 10 while its
+    residual went 1.5e-3 -> 66; charge-inventory weight ~0.2 while its residual went 1 -> 1e4).  Here a group whose
+    EMA loss exceeds `rise` x its best EMA may not lose weight and is pushed up by `boost` per update (capped at wmax),
+    which turns the positive feedback into a restoring one; otherwise the plain rule applies."""
+
+    def __init__(self, groups, alpha=0.9, rise=3.0, boost=1.25, decay=0.98, wmax=1e3):
+        super().__init__(groups, alpha)
+        self.rise, self.boost, self.decay, self.wmax = float(rise), float(boost), float(decay), float(wmax)
+        self.ema, self.best = {}, {}
+
+    def observe(self, losses):
+        for g, names in self.groups.items():
+            present = [float(losses[n].detach()) if torch.is_tensor(losses[n]) else float(losses[n]) for n in names if n in losses]
+            if not present:
+                continue
+            v = sum(present)
+            if not math.isfinite(v):
+                continue
+            e = self.ema.get(g)
+            e = v if e is None else self.decay * e + (1.0 - self.decay) * v
+            self.ema[g] = e
+            self.best[g] = min(self.best.get(g, e), e)
+
+    def rising(self, g):
+        return g in self.ema and self.ema[g] > self.rise * self.best[g]
+
+    def update(self, model, losses):
+        old = dict(self.w)
+        norms = super().update(model, losses)
+        for g in norms:
+            if self.rising(g):
+                self.w[g] = min(self.wmax, max(self.w[g], old[g]) * self.boost)
+        return norms
+
+    def state(self):
+        return {"w": dict(self.w), "ema": dict(self.ema), "best": dict(self.best)}
+
+    def load(self, st):
+        self.w.update(st.get("w", {})); self.ema.update(st.get("ema", {})); self.best.update(st.get("best", {}))
+
+
+HEALTH_TERMS = ("ode1", "ode2", "ode3", "charge_s", "charge_e")     # the terms that blew up in every wave-1 excursion
+
+
 # ====================================================================== model I/O
 def build_model(cfg: RateTrainConfig, params: LiSPANParams, window_coef) -> LiSPANRatePINN:
     return LiSPANRatePINN(params, window_coef, cfg.rate_min, cfg.rate_max, cfg.ramp_s, cfg.window_fraction, cfg.width,
@@ -463,7 +528,9 @@ def resolve_device(name: str) -> torch.device:
 def train_rate(cfg: RateTrainConfig, params: LiSPANParams, window_coef, out_dir: Path, refs: dict | None = None,
                log=print, resume=None):
     """Forward training of the rate-parametric PINN.  refs = {rate: FV reference} for the evaluation (optional).
-    SIGTERM / SIGUSR1 (e.g. the SLURM time limit) save latest.pt and return; resume=<latest.pt> continues a run."""
+    SIGTERM / SIGUSR1 (e.g. the SLURM time limit) save latest.pt and return; resume=<latest.pt> continues a run.
+    cfg.weight_guard / cfg.rollback switch on the wave-2 stabilization (GuardedWeights; rollback to the last healthy
+    in-memory snapshot with a reduced learning rate when the kinetics residuals blow up)."""
     dtype = torch.float64 if cfg.dtype == "float64" else torch.float32
     device = resolve_device(cfg.device)
     torch.manual_seed(cfg.seed)
@@ -476,16 +543,23 @@ def train_rate(cfg: RateTrainConfig, params: LiSPANParams, window_coef, out_dir:
     net_params = [p_ for n, p_ in model.named_parameters() if not n.startswith("log_mult")]
     opt = torch.optim.Adam(net_params, lr=cfg.lr)
     gamma = (cfg.lr_final / cfg.lr) ** (1 / max(cfg.adam_steps, 1))
-    aw = AdaptiveWeights(dict(GROUPS), cfg.adaptive_alpha)
+    if cfg.weight_guard:
+        aw = GuardedWeights(dict(GROUPS), cfg.adaptive_alpha, cfg.weight_guard_rise, cfg.weight_guard_boost, cfg.loss_ema_decay)
+    else:
+        aw = AdaptiveWeights(dict(GROUPS), cfg.adaptive_alpha)
     history, evals, start_step = [], [], 1
+    guard = {"lr_scale": 1.0, "n_rollbacks": 0, "cooldown_until": 0}
     if resume is not None:
         ck = torch.load(resume, map_location=device, weights_only=False)
         model.load_state_dict(ck["model"])
         opt.load_state_dict(ck["optimizer"])
         aw.w.update(ck.get("group_weights", {}))
+        if cfg.weight_guard and ck.get("weight_guard"):
+            aw.load(ck["weight_guard"])
+        guard.update(ck.get("guard", {}))
         start_step = int(ck.get("step", 0)) + 1
-        for group in opt.param_groups:
-            group["lr"] = cfg.lr * gamma ** (start_step - 1)          # closed form (no double decay on resume)
+        for group in opt.param_groups:      # closed form (no double decay on resume), times the rollback reductions
+            group["lr"] = cfg.lr * gamma ** (start_step - 1) * guard["lr_scale"]
         if ck.get("gen_state") is not None:
             gen.set_state(ck["gen_state"].cpu())
         prev = Path(resume).parent / "history.json"
@@ -496,11 +570,28 @@ def train_rate(cfg: RateTrainConfig, params: LiSPANParams, window_coef, out_dir:
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "config.json").write_text(json.dumps({"kind": "lispan_rate", "train": cfg.to_dict(), "params": params.to_dict(),
                                                      "window_coef": list(window_coef)}, indent=2))
-    log(f"device {device} | dtype {dtype} | threads {torch.get_num_threads()} | rates [{cfg.rate_min:g}, {cfg.rate_max:g}] C")
+    log(f"device {device} | dtype {dtype} | threads {torch.get_num_threads()} | rates [{cfg.rate_min:g}, {cfg.rate_max:g}] C"
+        f" | weight guard {cfg.weight_guard} | rollback {cfg.rollback}")
     t0 = time.perf_counter() - (history[-1]["time_s"] if history else 0.0)
     step_holder = [start_step - 1]
     stop = {"signal": None}
     n_skip = [0]
+
+    # ---- health monitor for the rollback: EMA of the unweighted kinetics losses vs its running median
+    health = {"ema": None, "samples": deque(maxlen=40)}
+    past = [sum(r[k] for k in HEALTH_TERMS if k in r) for r in history if r["step"] > start_step - 2000]
+    if len(past) >= 25:                 # seed from the stored history (records every history_every steps)
+        health["samples"].extend(float(np.median(past[j:j + 5])) for j in range(0, len(past) - 4, 5))
+        health["ema"] = float(np.median(past[-5:]))
+
+    def baseline():
+        return float(np.median(health["samples"])) if len(health["samples"]) >= 10 else None
+
+    snap = {}
+
+    def take_snapshot(step):
+        snap.update(step=step, model=copy.deepcopy(model.state_dict()), opt=copy.deepcopy(opt.state_dict()),
+                    aw=copy.deepcopy(aw.state() if cfg.weight_guard else {"w": dict(aw.w)}))
 
     def on_signal(signum, _frame):
         stop["signal"] = signum
@@ -515,15 +606,55 @@ def train_rate(cfg: RateTrainConfig, params: LiSPANParams, window_coef, out_dir:
     def save(name):
         torch.save({"kind": "lispan_rate", "model": model.state_dict(), "optimizer": opt.state_dict(), "train": cfg.to_dict(),
                     "params": params.to_dict(), "window_coef": list(window_coef), "group_weights": aw.w,
+                    "weight_guard": aw.state() if cfg.weight_guard else None, "guard": dict(guard),
                     "step": step_holder[0], "gen_state": gen.get_state()}, out_dir / name)
         (out_dir / "history.json").write_text(json.dumps({"history": history, "evals": evals}))
 
+    if cfg.rollback:
+        take_snapshot(start_step - 1)
     try:
         for step in range(start_step, cfg.adam_steps + 1):
             step_holder[0] = step
             model.charge_total_scale = cfg.charge_total_scale if step >= cfg.charge_total_start else 0.0
             terms = rate_residuals(model, sampler.draw())
             losses = {k: (huber(v, cfg.huber_delta) if k in ("charge_s", "charge_e") else v.square()).mean() for k, v in terms.items()}
+            # ---- monitors (unweighted losses)
+            if cfg.weight_guard:
+                aw.observe(losses)
+            h = sum(float(losses[k].detach()) for k in HEALTH_TERMS if k in losses)
+            if math.isfinite(h):
+                health["ema"] = h if health["ema"] is None else cfg.loss_ema_decay * health["ema"] + (1 - cfg.loss_ema_decay) * h
+                if step % 50 == 0:
+                    health["samples"].append(health["ema"])
+            base = baseline()
+            if cfg.rollback and base is not None and health["ema"] is not None:
+                healthy = health["ema"] <= 3.0 * base
+                if (health["ema"] > cfg.rollback_factor * base and health["ema"] > cfg.rollback_floor
+                        and guard["n_rollbacks"] < cfg.max_rollbacks and snap):
+                    guard["n_rollbacks"] += 1
+                    # halve the learning rate for the cooldown; a further rollback inside the cooldown halves it again
+                    in_cooldown = step < guard.get("cooldown_until", 0)
+                    guard["lr_scale"] = (guard["lr_scale"] if in_cooldown else 1.0) * cfg.rollback_lr_factor
+                    guard["cooldown_until"] = step + cfg.rollback_cooldown
+                    log(f"step {step}: ROLLBACK #{guard['n_rollbacks']} to step {snap['step']} (kinetics EMA "
+                        f"{health['ema']:.2e} > {cfg.rollback_factor:g} x median {base:.2e}); lr scale {guard['lr_scale']:g}")
+                    model.load_state_dict(snap["model"])
+                    opt.load_state_dict(copy.deepcopy(snap["opt"]))
+                    if cfg.weight_guard:
+                        aw.load(copy.deepcopy(snap["aw"]))
+                    else:
+                        aw.w.update(snap["aw"]["w"])
+                    for group in opt.param_groups:
+                        group["lr"] = cfg.lr * gamma ** (step - 1) * guard["lr_scale"]
+                    health["ema"] = base
+                    continue
+                if healthy and step % cfg.snapshot_every == 0:
+                    take_snapshot(step)
+            if guard["lr_scale"] != 1.0 and step >= guard.get("cooldown_until", 0):
+                guard["lr_scale"] = 1.0                      # cooldown over: back to the schedule
+                for group in opt.param_groups:
+                    group["lr"] = cfg.lr * gamma ** (step - 1)
+                log(f"step {step}: learning rate back to the schedule after the rollback cooldown")
             if cfg.adaptive and (step == start_step or step % cfg.adaptive_every == 0):
                 aw.update(model, losses)
             loss = sum(aw.w[g] * sum(losses[n] for n in names if n in losses) for g, names in GROUPS.items())
@@ -546,6 +677,7 @@ def train_rate(cfg: RateTrainConfig, params: LiSPANParams, window_coef, out_dir:
                    **{k: float(v.detach()) for k, v in losses.items()}}
             logged = step % cfg.log_every == 0 or step == start_step
             if logged or step % max(cfg.history_every, 1) == 0:
+                rec["w"] = {g: round(float(v), 4) for g, v in aw.w.items()}
                 history.append(rec)
             if logged:
                 log(f"step {step:6d} loss {rec['loss']:.3e} | " + " ".join(f"{k} {rec[k]:.2e}" for k in losses) + f" | {rec['time_s']:.0f}s")
@@ -562,9 +694,13 @@ def train_rate(cfg: RateTrainConfig, params: LiSPANParams, window_coef, out_dir:
                 save("latest.pt")
                 log(f"signal {stop['signal']} received: latest.pt saved at step {step}; resubmit to continue")
                 return model, history, evals
+            if cfg.stop_step and step >= cfg.stop_step and step < cfg.adam_steps:
+                save("latest.pt")
+                log(f"stop_step {cfg.stop_step} reached: latest.pt saved")
+                return model, history, evals
         save("final.pt")
-        log(f"finished: {n_skip[0]} batches skipped (non-finite loss or gradients)")
+        log(f"finished: {n_skip[0]} batches skipped (non-finite loss or gradients), {guard['n_rollbacks']} rollbacks")
     finally:
-        for sig, h in old_handlers.items():
-            signal.signal(sig, h)
+        for sig, h_ in old_handlers.items():
+            signal.signal(sig, h_)
     return model, history, evals

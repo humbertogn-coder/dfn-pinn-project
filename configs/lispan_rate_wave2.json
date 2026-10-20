@@ -1,0 +1,75 @@
+{
+  "name": "lispan_rate_wave2",
+  "description": "Phase 3a wave 2: the wave-1 recipe (configs/lispan_rate_0.1-1C.json) with the length of the best wave-1 run (120 000 Adam steps, charge inventory from 40 000) and the training stabilization against the adaptive-weight runaway found in wave 1 (docs/PHASE3_PARAMETRIC_PINN.md): weight_guard (a group whose loss rises may not lose weight) and rollback (restore the last healthy snapshot, half learning rate for 2000 steps, if the kinetics residuals exceed 100x their running median). Validated by replaying the rate_w96_2xpts_s0 excursion from its step-10000 checkpoint.",
+  "params": {
+    "Z_CC": 0.025,
+    "reversible": [
+      true,
+      false,
+      false
+    ]
+  },
+  "train": {
+    "seed": 0,
+    "dtype": "float32",
+    "device": "cpu",
+    "threads": 1,
+    "width": 96,
+    "depth": 4,
+    "fourier_t": 8,
+    "short_t": [
+      60.0,
+      600.0
+    ],
+    "ic_tau_s": 60.0,
+    "quad_order": 12,
+    "rate_min": 0.1,
+    "rate_max": 1.0,
+    "ramp_s": 30.0,
+    "window_rates": [
+      0.1,
+      0.2,
+      0.5,
+      1.0
+    ],
+    "window_degree": 2,
+    "window_fraction": 0.98,
+    "eval_rates": [
+      0.1,
+      0.15,
+      0.2,
+      0.3,
+      0.5,
+      0.7,
+      1.0
+    ],
+    "adam_steps": 120000,
+    "lr": 0.001,
+    "lr_final": 1e-05,
+    "n_cathode": 1536,
+    "n_separator": 1024,
+    "n_boundary": 192,
+    "adaptive": true,
+    "adaptive_every": 50,
+    "log_every": 200,
+    "eval_every": 5000,
+    "checkpoint_every": 20000,
+    "latest_every": 250,
+    "history_every": 10,
+    "salt_total_scale": 1.0,
+    "charge_total_scale": 1.0,
+    "charge_total_start": 40000,
+    "salt_sep_natural_scale": true,
+    "weight_guard": true,
+    "weight_guard_rise": 3.0,
+    "weight_guard_boost": 1.25,
+    "loss_ema_decay": 0.98,
+    "rollback": true,
+    "rollback_factor": 100.0,
+    "rollback_floor": 0.01,
+    "snapshot_every": 500,
+    "rollback_lr_factor": 0.5,
+    "rollback_cooldown": 2000,
+    "max_rollbacks": 10
+  }
+}

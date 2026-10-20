@@ -1,0 +1,8 @@
+# Phase 3a wave 2 (configs/lispan_rate_wave2.json: 120k steps, weight guard + rollback) for slurm/lispan_rate_array.slrm.
+# One line per array index; <run name> key=value ... (JSON values, no spaces).  Run folders results/lispan_rate_runs/<name>.
+# 0-2: seed spread of the stabilized recipe (gate criterion 3); 3: training range 0.08-1.25 C around the 0.1-1 C range
+# of use (edge errors at 0.1 and 1 C in wave 1), evaluated also at 0.08 and 1.25 C.
+rate_v2_s0      seed=0
+rate_v2_s1      seed=1
+rate_v2_s2      seed=2
+rate_v2_wide_s0 seed=0 rate_min=0.08 rate_max=1.25 window_rates=[0.08,0.2,0.5,1.25] eval_rates=[0.08,0.1,0.15,0.2,0.3,0.5,0.7,1.0,1.25]

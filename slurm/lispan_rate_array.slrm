@@ -1,11 +1,11 @@
 #!/bin/bash
 #SBATCH --job-name=lispan_rate
-#SBATCH --time=24:00:00
+#SBATCH --time=36:00:00
 #SBATCH --signal=B:USR1@300
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=3G
-#SBATCH --array=0-4
+#SBATCH --array=0-3
 #SBATCH --output=slurm_logs/lispan_rate.%A_%a.out
 #SBATCH --error=slurm_logs/lispan_rate.%A_%a.err
 # ---------------------------------------------------------------------------
@@ -16,14 +16,17 @@
 #
 # Submit from the repository root:
 #     mkdir -p slurm_logs
-#     sbatch slurm/lispan_rate_array.slrm                 # all variants (keep --array in line with the variants file)
+#     sbatch slurm/lispan_rate_array.slrm                 # wave 2 (default): 4 variants, keep --array in line with the file
+#     sbatch --array=0-4 --export=ALL,CONFIG=configs/lispan_rate_0.1-1C.json,VARIANTS=configs/lispan_rate_variants.txt \
+#            slurm/lispan_rate_array.slrm                 # wave 1 (finished 2026-10-20; would only skip/resume)
 #     sbatch --array=2 slurm/lispan_rate_array.slrm       # one variant
 #     sbatch --export=ALL,CONFIG=configs/other.json,VARIANTS=configs/other_variants.txt slurm/lispan_rate_array.slrm
 #
 # Why one core: on Grace the existing PINN runs 279 / 212 / 153 ms per step on 1 / 4 / 8 cores (2026-10-17), so
 # single-core jobs in parallel give ~4x more training per SU.  Memory: the PINN needs < 1 GB (MaxRSS 0.7 GB);
 # 3G stays below the per-core memory share, so each job is charged 1 SU per hour.
-# Cost: about 1 SU per hour per job; budget 10-20 h per variant (measured step time x 60 000 steps, see the log).
+# Cost: about 1 SU per hour per job. Wave 2: 120 000 steps at 0.55-0.7 s per step = 18-24 h per variant (36 h limit;
+# a run that still hits it resumes when the array is resubmitted).
 #
 # Clean shutdown: --signal=B:USR1@300 sends USR1 to this shell 5 min before the time limit; the trap forwards
 # SIGTERM to python, which saves latest.pt and exits; the wait loop keeps the shell alive until python has exited
@@ -40,8 +43,8 @@ fi
 export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1
 cd "$SLURM_SUBMIT_DIR"
 
-CONFIG=${CONFIG:-configs/lispan_rate_0.1-1C.json}
-VARIANTS=${VARIANTS:-configs/lispan_rate_variants.txt}
+CONFIG=${CONFIG:-configs/lispan_rate_wave2.json}
+VARIANTS=${VARIANTS:-configs/lispan_rate_variants_wave2.txt}
 LINE=$(grep -v '^[[:space:]]*#' "$VARIANTS" | grep -v '^[[:space:]]*$' | sed -n "$((SLURM_ARRAY_TASK_ID + 1))p")
 if [ -z "$LINE" ]; then
     echo "no variant line for array index $SLURM_ARRAY_TASK_ID in $VARIANTS"; exit 1
@@ -55,6 +58,7 @@ fi
 echo "variant=$NAME overrides=[$SETS] config=$CONFIG host=$(hostname) start=$(date)"
 python -c "import sys, numpy, scipy, torch; print('python', sys.version.split()[0], '| numpy', numpy.__version__, '| scipy', scipy.__version__, '| torch', torch.__version__)" || exit 1
 
+set -f            # no filename globbing of the overrides (JSON lists contain [ ])
 # shellcheck disable=SC2086
 python -u scripts/lispan_rate_train.py --config "$CONFIG" --run-dir "$RUN_DIR" --set threads=1 $SETS &
 PID=$!
