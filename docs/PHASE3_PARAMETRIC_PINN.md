@@ -28,6 +28,7 @@ outside the trained range (no extrapolation).  `load_rate_model(final.pt)` rebui
 
 - `src/dfn_pinn/lispan/rate_pinn.py`: model, residuals, sampler, evaluation, training (`train_rate`), I/O.
 - `scripts/lispan_rate_train.py`: CLI; `--run-dir` folders resume automatically from `latest.pt`.
+- `scripts/lispan_rate_summary.py`: error table + gate checks for finished or running waves (standard library only).
 - `configs/lispan_rate_0.1-1C.json`: Phase 3a recipe (0.1-1 C).
 - `configs/lispan_rate_variants.txt`: one line per SLURM array task (`<name> key=value ...`).
 - `slurm/lispan_rate_array.slrm`: one single-core job per variant; resubmitting resumes unfinished runs.
@@ -59,6 +60,10 @@ sbatch slurm/lispan_rate_array.slrm            # wave 2 (default since 2026-10-2
 squeue -u $USER
 tail -n 3 results/lispan_rate_runs/*/train.log # progress; evaluations every 5000 steps
 ```
+
+After the wave: `python scripts/lispan_rate_summary.py` prints the error table (all evaluation rates, skipped batches,
+rollbacks with their steps) and the three gate checks for `results/lispan_rate_runs/rate_v2_*`; pass other run folders
+as arguments (e.g. `results/lispan_rate_runs/rate_w96_*`) and `--json <file>` to keep it.
 
 GPU (if the GPU check shows a large speed-up): add a variants line with `device=cuda` and submit that index with
 `sbatch --partition=gpu --gres=gpu:a100:1 --cpus-per-task=1 --array=<i> slurm/lispan_rate_array.slrm`.
