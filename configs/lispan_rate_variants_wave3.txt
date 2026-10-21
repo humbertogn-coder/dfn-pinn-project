@@ -1,0 +1,7 @@
+# Phase 3a wave 3 (configs/lispan_rate_wave3.json: 120k steps, rollback with the best-recent-level baseline, no weight
+# guard) for slurm/lispan_rate_array.slrm.  Same seeds and ranges as wave 2, so every line is a paired comparison with
+# the matching rate_v2_* run (only the stabilization differs).  Run folders results/lispan_rate_runs/<name>.
+rate_v3_s0      seed=0
+rate_v3_s1      seed=1
+rate_v3_s2      seed=2
+rate_v3_wide_s0 seed=0 rate_min=0.08 rate_max=1.25 window_rates=[0.08,0.2,0.5,1.25] eval_rates=[0.08,0.1,0.15,0.2,0.3,0.5,0.7,1.0,1.25]

@@ -31,9 +31,14 @@ outside the trained range (no extrapolation).  `load_rate_model(final.pt)` rebui
 - `scripts/lispan_rate_summary.py`: error table + gate checks for finished or running waves (standard library only).
 - `configs/lispan_rate_0.1-1C.json`: Phase 3a recipe (0.1-1 C).
 - `configs/lispan_rate_variants.txt`: one line per SLURM array task (`<name> key=value ...`).
+- `configs/lispan_rate_wave2.json` / `_variants_wave2.txt` (weight guard + rollback) and `configs/lispan_rate_wave3.json`
+  / `_variants_wave3.txt` (rollback with the best-recent-level baseline, no guard, best.pt).
+- `scripts/lispan_rate_replay.py`: resume a checkpoint into a new folder with changed settings, up to a given step.
+- `report/phase3/make_figures.py`, `make_replay_figure.py`, `make_wave2_figures.py`: figures in report/phase3/figures.
 - `slurm/lispan_rate_array.slrm`: one single-core job per variant; resubmitting resumes unfinished runs.
 - `tests/test_lispan_rate_pinn.py`: window fit, hard structure (extents, current projection, charge passed),
-  residual shapes, save/load/resume.
+  residual shapes, save/load/resume, equality with the single-rate model, weight guard, rollback, rollback monitor on
+  slow ramps, best.pt selection.
 - `src/dfn_pinn/lispan/model.py`: `export` now writes the FV reference atomically (parallel jobs create the same
   cached file).
 
@@ -56,13 +61,13 @@ first thousand steps, exactly like the 1 C single-rate run, while the kinetics r
 cd /scratch/user/$USER/dfn-pinn-project
 git pull
 mkdir -p slurm_logs
-sbatch slurm/lispan_rate_array.slrm            # wave 2 (default since 2026-10-20): 4 variants, 1 core each, ~80-90 SU
+sbatch slurm/lispan_rate_array.slrm            # wave 3 (default since 2026-10-21): 4 variants, 1 core each, ~75 SU
 squeue -u $USER
 tail -n 3 results/lispan_rate_runs/*/train.log # progress; evaluations every 5000 steps
 ```
 
 After the wave: `python scripts/lispan_rate_summary.py` prints the error table (all evaluation rates, skipped batches,
-rollbacks with their steps) and the three gate checks for `results/lispan_rate_runs/rate_v2_*`; pass other run folders
+rollbacks with their steps) and the three gate checks for the latest wave (`results/lispan_rate_runs/rate_vN_*`); pass other run folders
 as arguments (e.g. `results/lispan_rate_runs/rate_w96_*`) and `--json <file>` to keep it.
 
 GPU (if the GPU check shows a large speed-up): add a variants line with `device=cuda` and submit that index with
@@ -133,6 +138,8 @@ guard restores the last healthy in-memory snapshot if the kinetics residuals exc
 
 ### Stabilization and its test (2026-10-20)
 
+(Wave 2 showed that the weight guard does harm; it is off from wave 3 on, see "Wave 2 results".)
+
 Implemented in `rate_pinn.py` (both off by default so that wave-1 runs resume unchanged; on in
 `configs/lispan_rate_wave2.json`):
 
@@ -185,4 +192,75 @@ trajectory), and is not counted either way.
 Wave 2 (`configs/lispan_rate_wave2.json`, `configs/lispan_rate_variants_wave2.txt`, array 0-3, 36 h limit): the
 120k-step recipe with the stabilization, seeds 0/1/2 (criterion 3), and one run on the wider training range 0.08-1.25 C
 (window anchors 0.08/0.2/0.5/1.25 C: windows 96.8-98.9 % of the cut-off) evaluated also at 0.08 and 1.25 C.
-Then Phase 3b (chemistry parameters as inputs).
+Then Phase 3b (chemistry parameters as inputs).  Results and the change for wave 3: next section.
+
+## Wave 2 results (Grace, array 20213153, finished 2026-10-21)
+
+`python scripts/lispan_rate_summary.py` (voltage rms error vs FV [mV], final model, window up to ~98 % of the cut-off,
+t > 100 s):
+
+| Run | 0.1 C | 0.15 | 0.2 | 0.3 | 0.5 | 0.7 | 1 C | mean | worst | V max worst | skipped | rollbacks |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| rate_v2_s1 | 0.29 | 0.24 | 0.21 | 0.20 | 0.16 | 0.21 | 0.36 | **0.24** | **0.36** | 2.0 | 82 | 10 |
+| rate_v2_s2 | 0.59 | 0.40 | 0.38 | 0.26 | 0.35 | 0.49 | 0.62 | **0.44** | **0.62** | 2.3 | 1580 | 10 |
+| rate_v2_s0 | 306 | 302 | 294 | 277 | 245 | 220 | 194 | 262 | 306 | 815 | 96 | 3 |
+| rate_v2_wide_s0 (0.08-1.25 C; also 1065 at 0.08 C, 937 at 1.25 C) | 1066 | 1072 | 1076 | 1075 | 1068 | 1034 | 967 | 1040 | 1076 | 1546 | 497 | 6 |
+
+18.7-18.8 h per run, MaxRSS 0.99-1.13 GB, ~75 SU (Grace balance after the wave: 1 621.66 SU on the group account).
+Gate: s1 and s2 pass criteria 1 and 2 (s1 is the second-best network so far); s0 and the wide run failed, so criterion 3
+fails (one of three seeds collapsed).  Figure: report/phase3/figures/p3a_wave2.png (report/phase3/make_wave2_figures.py).
+
+Diagnosis (history.json of the four runs and the checkpoints every 20 000 steps):
+
+1. **Paired comparison.**  rate_v2_s0 is rate_w96_120k_s0 of wave 1 plus the weight guard and the rollback, nothing else
+   (config.json diff).  Wave 1: 0.15 mV.  Wave 2: collapse between 5 000 and 10 000 steps (176 mV), frozen afterwards
+   (identical evaluations from 15 000 to 45 000 steps), 262 mV at the end.
+2. **The weight guard inflates the weights.**  "Rising" means the loss EMA is above 3x the best EMA ever reached; the
+   ordinary fluctuations of the residuals exceed that, so a group gets x1.25 at every 50-step update and reaches the cap
+   (1000) within ~1 500 steps.  By 3 000-5 000 steps the ode, charge, boundary and salt groups were all at 1000 in s0,
+   s2 and the wide run (wave-1 checkpoints at 10 000 steps: ode 250-300, charge 28-112, salt 6-15, boundary 320-370).
+   In both failed runs the salt weight stayed at the cap to the end (relative to the ode group 20-50x heavier than in
+   wave 1), and from 40 000-60 000 steps the charge-inventory weight too (wave 1: 0.21).  In the two runs that ended
+   well the salt weight came back to 6-30, the wave-1 range (panel c).
+3. **The rollback monitor follows slow ramps.**  In s0 the kinetics losses rose x5-10 per 1000 steps from 5 000 steps
+   (1.9e-2) to 10 000 (130).  The baseline (running median of the last 2000 steps) rose with them, so the EMA stayed
+   ~10x the baseline and never reached the 100x trigger; and "healthy" snapshots, judged against the same baseline,
+   were already degraded (the rollback at 6 819 restored step 6 000, whose kinetics loss was 6x the level at 5 000).
+   s2: the same ramp from 1 000 to 4 000 steps, collapse at 6 000-8 000 (~1 100 mV), rescued only when the charge
+   inventory came in at 40 000 (1.15 mV at 70 000, 0.44 mV final).  s1 and s2 used up the 10 allowed rollbacks (s1:
+   seven between 29 097 and 32 481, restoring 29 000-31 500 with the learning rate down to 1/64; it recovered).
+4. **Wide run:** a kinetics ramp from 2e-2 to 65 between 30 000 and 34 000 steps (rollbacks at 29 126 and 30 818 against
+   a baseline already raised), no recovery (inventory weight at the cap after 60 000).  Whether the wider range is
+   harder by itself cannot be told from this run.
+
+### Change for wave 3 and its test (2026-10-21)
+
+- `weight_guard` off: back to the plain gradient-norm rule of wave 1 (the guard was meant to stop a group from being
+  switched off while it grows; the replays below show the rollback alone contains both wave-1 runaways).
+- `rollback_horizon = 5000` (`HealthMonitor` in `rate_pinn.py`): the baseline is the LOWEST 500-step running median of
+  the last 5 000 steps, i.e. the best recent level, so a ramp of any speed fires at ~100x that level and only snapshots
+  close to it count as healthy.  A lasting level shift below 100x does not fire and is absorbed after 5 000 steps.
+  Tests (`tests/test_lispan_rate_pinn.py`): ramps of x10 and x3 per 1000 steps fire at ~100x with the new baseline and
+  never with the wave-2 one; a lasting x5 shift does not fire.
+- `max_rollbacks = 20`.
+- `keep_best`: the evaluation with the lowest mean error over the ANCHOR rates (0.1/0.2/0.5/1 C) is kept as best.pt and
+  best_metrics.json; the non-anchor rates stay unseen by that choice.  The gate is still checked on final.pt.
+
+Replays on the sandbox from the same wave-1 checkpoints (identical to the earlier replays step by step until the first
+rollback):
+
+| Replay | settings | rollbacks | mean V rmse | worst |
+|---|---|---|---|---|
+| rate_w96_2xpts_s0, 10 000 -> 11 500 | wave 1 (no stabilization), at 11 000 | - | 138.6 mV | 202.8 mV |
+| | wave 2 (guard + rollback) | 2 | 6.25 mV | 10.1 mV |
+| | wave 3 (rollback with the horizon baseline, no guard) | 1 (10 207 -> 10 000) | 5.91 mV | 13.7 mV |
+| rate_w128_s0, 20 000 -> 23 000 | wave 1, at 23 000 | - | 47.8 mV | 55.5 mV |
+| | wave 2 | 1 | 1.03 mV | 1.70 mV |
+| | wave 3 | 1 (22 781 -> 22 500) | 1.49 mV | 3.19 mV |
+
+Wave 3 (`configs/lispan_rate_wave3.json`, `configs/lispan_rate_variants_wave3.txt`, default of
+`slurm/lispan_rate_array.slrm`): the same four lines as wave 2 (seeds 0/1/2 on 0.1-1 C, seed 0 on 0.08-1.25 C), so each
+run is a paired comparison with its wave-2 twin; ~75 SU.  Decision after wave 3: three of three seeds below 1 mV ->
+criterion 3 met, Phase 3b.  If a seed still collapses, the documented procedure becomes multi-start (two or three seeds,
+keep the best by the anchor-rate evaluation) and the success rate is reported with it.
+

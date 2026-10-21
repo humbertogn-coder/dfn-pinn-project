@@ -65,6 +65,11 @@ class RateTrainConfig(LiSPANTrainConfig):
     rollback_lr_factor: float = 0.5       #   learning rate multiplied by this after a rollback (again for every further
     rollback_cooldown: int = 2000         #   rollback within the cooldown) for this many steps, then back to the schedule
     max_rollbacks: int = 10
+    rollback_horizon: int = 0             # wave 3: > 0 -> the rollback baseline is the lowest 500-step median of the last
+                                          #   rollback_horizon steps (HealthMonitor), so a slow ramp cannot drag it along;
+                                          #   0 = the wave-2 monitor (running median, follows slow ramps and never fires)
+    keep_best: bool = True                # save best.pt / best_metrics.json at the evaluation with the lowest mean V error
+                                          #   over the ANCHOR rates (window_rates); the other rates stay unseen by the choice
 
     def to_dict(self):
         d = super().to_dict()
@@ -492,6 +497,60 @@ class GuardedWeights(AdaptiveWeights):
 HEALTH_TERMS = ("ode1", "ode2", "ode3", "charge_s", "charge_e")     # the terms that blew up in every wave-1 excursion
 
 
+class HealthMonitor:
+    """Rollback trigger: EMA of the summed kinetics losses against a baseline built from samples of that EMA (one
+    every `every` steps).
+
+    horizon = 0 (wave 2): baseline = median of the last `window` samples (2000 steps).  It follows any ramp slower
+        than ~x100 per 1000 steps, so the slow kinetics ramps of wave 2 (x3-10 per 1000 steps) never fired.
+    horizon > 0 (wave 3): baseline = the LOWEST 500-step running median over the last `horizon` steps, i.e. the best
+        recent level.  A ramp of any speed fires once it is `factor` above that level; a lasting level shift below
+        `factor` does not fire and is absorbed once it is older than the horizon (until then no snapshots are taken,
+        because "healthy" means within healthy_factor of the baseline)."""
+
+    def __init__(self, decay=0.98, factor=100.0, floor=1e-2, healthy_factor=3.0, horizon=0, every=50, window=40, short=10):
+        self.decay, self.factor, self.floor, self.healthy_factor = decay, factor, floor, healthy_factor
+        self.horizon, self.every, self.short = int(horizon), every, short
+        self.ema, self.samples = None, deque(maxlen=max(window, short))
+        self.medians = deque(maxlen=max(int(horizon) // every, 1))
+
+    def _add(self, v):
+        self.samples.append(v)
+        if self.horizon > 0 and len(self.samples) >= self.short:
+            self.medians.append(float(np.median(list(self.samples)[-self.short:])))
+
+    def seed(self, past):
+        """past = summed kinetics losses of the stored history records (every history_every steps)."""
+        if len(past) >= 25:
+            for j in range(0, len(past) - 4, 5):
+                self._add(float(np.median(past[j:j + 5])))
+            self.ema = float(np.median(past[-5:]))
+
+    def baseline(self):
+        if len(self.samples) < 10:
+            return None
+        if self.horizon > 0:
+            return min(self.medians) if self.medians else None
+        return float(np.median(self.samples))
+
+    def observe(self, step, h):
+        if not math.isfinite(h):
+            return
+        self.ema = h if self.ema is None else self.decay * self.ema + (1.0 - self.decay) * h
+        if step % self.every == 0:
+            self._add(self.ema)
+
+    def status(self):
+        """(fire, healthy, baseline); fire = the EMA exceeds factor x baseline and the absolute floor."""
+        base = self.baseline()
+        if base is None or self.ema is None:
+            return False, None, base
+        return (self.ema > self.factor * base and self.ema > self.floor), self.ema <= self.healthy_factor * base, base
+
+    def reset(self):
+        self.ema = self.baseline()
+
+
 # ====================================================================== model I/O
 def build_model(cfg: RateTrainConfig, params: LiSPANParams, window_coef) -> LiSPANRatePINN:
     return LiSPANRatePINN(params, window_coef, cfg.rate_min, cfg.rate_max, cfg.ramp_s, cfg.window_fraction, cfg.width,
@@ -578,14 +637,12 @@ def train_rate(cfg: RateTrainConfig, params: LiSPANParams, window_coef, out_dir:
     n_skip = [0]
 
     # ---- health monitor for the rollback: EMA of the unweighted kinetics losses vs its running median
-    health = {"ema": None, "samples": deque(maxlen=40)}
-    past = [sum(r[k] for k in HEALTH_TERMS if k in r) for r in history if r["step"] > start_step - 2000]
-    if len(past) >= 25:                 # seed from the stored history (records every history_every steps)
-        health["samples"].extend(float(np.median(past[j:j + 5])) for j in range(0, len(past) - 4, 5))
-        health["ema"] = float(np.median(past[-5:]))
-
-    def baseline():
-        return float(np.median(health["samples"])) if len(health["samples"]) >= 10 else None
+    health = HealthMonitor(cfg.loss_ema_decay, cfg.rollback_factor, cfg.rollback_floor, horizon=cfg.rollback_horizon)
+    health.seed([sum(r[k] for k in HEALTH_TERMS if k in r) for r in history if r["step"] > start_step - 2000])
+    # ---- best evaluation so far (anchor rates), kept in the guard dict so that it survives a resume
+    guard.setdefault("best_score", None)
+    guard.setdefault("best_step", None)
+    anchors = [r for r in cfg.window_rates if refs and any(abs(r - q) < 1e-9 for q in refs)]
 
     snap = {}
 
@@ -621,23 +678,17 @@ def train_rate(cfg: RateTrainConfig, params: LiSPANParams, window_coef, out_dir:
             # ---- monitors (unweighted losses)
             if cfg.weight_guard:
                 aw.observe(losses)
-            h = sum(float(losses[k].detach()) for k in HEALTH_TERMS if k in losses)
-            if math.isfinite(h):
-                health["ema"] = h if health["ema"] is None else cfg.loss_ema_decay * health["ema"] + (1 - cfg.loss_ema_decay) * h
-                if step % 50 == 0:
-                    health["samples"].append(health["ema"])
-            base = baseline()
-            if cfg.rollback and base is not None and health["ema"] is not None:
-                healthy = health["ema"] <= 3.0 * base
-                if (health["ema"] > cfg.rollback_factor * base and health["ema"] > cfg.rollback_floor
-                        and guard["n_rollbacks"] < cfg.max_rollbacks and snap):
+            health.observe(step, sum(float(losses[k].detach()) for k in HEALTH_TERMS if k in losses))
+            fire, healthy, base = health.status()
+            if cfg.rollback and base is not None and health.ema is not None:
+                if fire and guard["n_rollbacks"] < cfg.max_rollbacks and snap:
                     guard["n_rollbacks"] += 1
                     # halve the learning rate for the cooldown; a further rollback inside the cooldown halves it again
                     in_cooldown = step < guard.get("cooldown_until", 0)
                     guard["lr_scale"] = (guard["lr_scale"] if in_cooldown else 1.0) * cfg.rollback_lr_factor
                     guard["cooldown_until"] = step + cfg.rollback_cooldown
                     log(f"step {step}: ROLLBACK #{guard['n_rollbacks']} to step {snap['step']} (kinetics EMA "
-                        f"{health['ema']:.2e} > {cfg.rollback_factor:g} x median {base:.2e}); lr scale {guard['lr_scale']:g}")
+                        f"{health.ema:.2e} > {cfg.rollback_factor:g} x median {base:.2e}); lr scale {guard['lr_scale']:g}")
                     model.load_state_dict(snap["model"])
                     opt.load_state_dict(copy.deepcopy(snap["opt"]))
                     if cfg.weight_guard:
@@ -646,7 +697,7 @@ def train_rate(cfg: RateTrainConfig, params: LiSPANParams, window_coef, out_dir:
                         aw.w.update(snap["aw"]["w"])
                     for group in opt.param_groups:
                         group["lr"] = cfg.lr * gamma ** (step - 1) * guard["lr_scale"]
-                    health["ema"] = base
+                    health.reset()
                     continue
                 if healthy and step % cfg.snapshot_every == 0:
                     take_snapshot(step)
@@ -686,6 +737,16 @@ def train_rate(cfg: RateTrainConfig, params: LiSPANParams, window_coef, out_dir:
                 evals.append(ev)
                 log("  eval V rmse [mV]: " + " ".join(f"{r:g}C {ev[f'V_rmse_mV@{r:g}']:.3g}" for r in sorted(refs))
                     + f" | mean {ev['V_rmse_mean_mV']:.3g} worst {ev['V_rmse_worst_mV']:.3g} | V max worst {ev['V_max_worst_mV']:.3g}")
+                if cfg.keep_best:
+                    score = (float(np.mean([ev[f"V_rmse_mV@{r:g}"] for r in anchors])) if anchors
+                             else float(ev["V_rmse_mean_mV"]))
+                    if math.isfinite(score) and (guard["best_score"] is None or score < guard["best_score"]):
+                        guard["best_score"], guard["best_step"] = score, step
+                        save("best.pt")
+                        (out_dir / "best_metrics.json").write_text(json.dumps(
+                            {**ev, "selected_on": [float(r) for r in anchors] or "all eval rates",
+                             "selection_score_mV": score}, indent=1))
+                        log(f"  best so far (mean V rmse at the anchor rates {score:.3g} mV): best.pt")
             if cfg.latest_every and step % cfg.latest_every == 0:
                 save("latest.pt")
             if cfg.checkpoint_every and step % cfg.checkpoint_every == 0:
@@ -699,7 +760,8 @@ def train_rate(cfg: RateTrainConfig, params: LiSPANParams, window_coef, out_dir:
                 log(f"stop_step {cfg.stop_step} reached: latest.pt saved")
                 return model, history, evals
         save("final.pt")
-        log(f"finished: {n_skip[0]} batches skipped (non-finite loss or gradients), {guard['n_rollbacks']} rollbacks")
+        log(f"finished: {n_skip[0]} batches skipped (non-finite loss or gradients), {guard['n_rollbacks']} rollbacks"
+            + (f", best evaluation at step {guard['best_step']}" if guard.get("best_step") else ""))
     finally:
         for sig, h_ in old_handlers.items():
             signal.signal(sig, h_)

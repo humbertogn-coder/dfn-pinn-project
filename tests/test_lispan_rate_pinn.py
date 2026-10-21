@@ -199,3 +199,54 @@ def test_rollback_restores_a_healthy_state(tmp_path, monkeypatch):
     ck = torch.load(tmp_path / "final.pt", weights_only=False)
     assert ck["guard"]["n_rollbacks"] >= 1 and ck["guard"]["lr_scale"] == 1.0      # cooldown over by the end
     assert any("ROLLBACK" in m for m in msgs) and any("back to the schedule" in m for m in msgs)
+
+
+def _monitor_run(mon, levels):
+    fired = []
+    for step, h in enumerate(levels, start=1):
+        mon.observe(step, h)
+        fire, _, _ = mon.status()
+        if fire:
+            fired.append(step)
+            mon.reset()
+    return fired
+
+
+def test_health_monitor_catches_a_slow_ramp_but_not_a_level_shift():
+    """Wave 2: kinetics ramps of x3-10 per 1000 steps were followed by the running median and never fired.  With the
+    best-recent-level baseline (horizon) both ramps fire near factor x the flat level; a lasting x5 shift does not."""
+    from dfn_pinn.lispan.rate_pinn import HealthMonitor
+    rng = np.random.default_rng(0)
+    flat = 1e-2 * np.exp(0.3 * rng.standard_normal(3000))
+    ramp = 1e-2 * 10.0 ** (np.arange(3000) / 1000.0) * np.exp(0.3 * rng.standard_normal(3000))   # x10 per 1000 steps
+    slow = 1e-2 * 3.0 ** (np.arange(5000) / 1000.0) * np.exp(0.3 * rng.standard_normal(5000))     # x3 per 1000 steps
+    for r in (ramp, slow):
+        assert _monitor_run(HealthMonitor(factor=100.0, floor=1e-2), np.concatenate([flat, r])) == []
+        fired = _monitor_run(HealthMonitor(factor=100.0, floor=1e-2, horizon=5000), np.concatenate([flat, r]))
+        growth = 10.0 if r is ramp else 3.0
+        assert fired and 60 < growth ** ((fired[0] - 3000) / 1000.0) < 250       # fires at ~100x the flat level
+    shift = np.concatenate([flat, 5.0 * flat, 5.0 * flat])
+    assert _monitor_run(HealthMonitor(factor=100.0, floor=1e-2, horizon=5000), shift) == []
+
+
+def test_keep_best_saves_the_best_anchor_evaluation(tmp_path, monkeypatch):
+    """best.pt / best_metrics.json follow the lowest mean error over the anchor rates, not the last evaluation."""
+    import json
+    import dfn_pinn.lispan.rate_pinn as rp
+    scores = iter([5.0, 2.0, 3.0, 1.5, 4.0])
+
+    def fake_eval(model, refs):
+        s = next(scores)
+        ev = {f"V_rmse_mV@{r:g}": (s if r in (0.1, 0.2, 0.5, 1.0) else 100.0) for r in refs}
+        ev.update(V_rmse_mean_mV=s, V_rmse_worst_mV=100.0, V_max_worst_mV=100.0)
+        return ev
+    monkeypatch.setattr(rp, "evaluate_rates", fake_eval)
+    cfg = RateTrainConfig(width=8, depth=1, fourier_t=1, quad_order=4, n_cathode=8, n_separator=4, n_boundary=4,
+                          adam_steps=50, log_every=1000, eval_every=10, latest_every=0, checkpoint_every=0, threads=1)
+    coef, _ = fit_window(list(T_CUT), list(T_CUT.values()))
+    refs = {r: None for r in (0.1, 0.15, 0.2, 0.5, 1.0)}
+    rp.train_rate(cfg, PARAMS, coef, tmp_path, refs=refs, log=lambda m: None)
+    best = json.loads((tmp_path / "best_metrics.json").read_text())
+    ck = torch.load(tmp_path / "best.pt", weights_only=False)
+    assert best["step"] == 40 and ck["step"] == 40 and best["selection_score_mV"] == 1.5
+    assert best["selected_on"] == [0.1, 0.2, 0.5, 1.0]

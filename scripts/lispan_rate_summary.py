@@ -1,12 +1,13 @@
 """Summarize rate-parametric Li-SPAN PINN runs (scripts/lispan_rate_train.py) and check the Phase 3a gate
 (docs/PHASE3_PARAMETRIC_PINN.md, "Acceptance").  Standard library only, so it also runs with the system python.
 
-    python scripts/lispan_rate_summary.py                                   # results/lispan_rate_runs/rate_v2_*
+    python scripts/lispan_rate_summary.py                                   # latest wave: results/lispan_rate_runs/rate_vN_*
     python scripts/lispan_rate_summary.py results/lispan_rate_runs/rate_w96_* --json summary_wave1.json
 
 Per run: status (finished = final.pt), last step, wall hours, voltage rms error vs FV at every evaluation rate (from
 final_metrics.json, else the last evaluation in history.json), V max, c_e max at the highest rate, skipped batches and
-rollbacks (counted in train.log, with their steps).  Then the gate:
+rollbacks (counted in train.log, with their steps), and best.pt (best evaluation over the anchor rates, wave 3 on) if
+present.  Then the gate (always on the final model):
   1. V rms < 2 mV at every evaluation rate;
   2. no error growth at the non-anchor rates: mean over non-anchor rates <= 1.5 x mean over the anchors (window_rates);
   3. seed spread below the error: runs whose configs differ only in the seed form a group; at every rate the standard
@@ -70,6 +71,11 @@ def load_run(d: Path):
     run["skipped"] = int(m[-1]) if m else len(re.findall(r"non-finite", log))
     run["rollback_steps"] = [int(s) for s in re.findall(r"step (\d+): ROLLBACK", log)]
     run["resumes"] = len(re.findall(r"resum", log, flags=re.I))
+    best_path = d / "best_metrics.json"
+    if best_path.exists():
+        b = json.loads(best_path.read_text())
+        run["best"] = {"step": b.get("step"), "anchor_mean_mV": b.get("selection_score_mV"),
+                       "mean_mV": b.get("V_rmse_mean_mV"), "worst_mV": b.get("V_rmse_worst_mV")}
     return run
 
 
@@ -110,7 +116,12 @@ def main():
     ap.add_argument("--json", help="also write the summary to this JSON file")
     a = ap.parse_args()
     root = Path(__file__).resolve().parents[1]
-    paths = a.runs or sorted(glob.glob(str(root / "results" / "lispan_rate_runs" / "rate_v2_*")))
+    if a.runs:
+        paths = a.runs
+    else:                                   # the latest wave: rate_v<N>_* with the largest N
+        cands = glob.glob(str(root / "results" / "lispan_rate_runs" / "rate_v*_*"))
+        waves = sorted({int(m.group(1)) for c in cands for m in [re.search(r"rate_v(\d+)_", Path(c).name)] if m})
+        paths = sorted(c for c in cands if waves and Path(c).name.startswith("rate_v%d_" % waves[-1]))
     runs = [load_run(Path(p)) for p in paths if Path(p).is_dir()]
     if not runs:
         raise SystemExit("no run folders found")
@@ -140,6 +151,10 @@ def main():
                                         [fmt_rate(r) for r in run["anchors"]], GATE_V_MV,
                                         {True: "PASS", False: "FAIL", None: "n/a"}[g["c1"]], g["growth"], GATE_GROWTH,
                                         {True: "PASS", False: "FAIL", None: "n/a"}[g["c2"]]))
+        if run.get("best"):
+            b = run["best"]
+            print("    best.pt: step %s, anchor-rate mean %.2f mV; all rates mean %.2f, worst %.2f mV" % (
+                b["step"], b["anchor_mean_mV"], b["mean_mV"], b["worst_mV"]))
 
     print("\nGate 3 (seed spread: std over seeds < mean over seeds at every rate)")
     groups = seed_groups(runs)
