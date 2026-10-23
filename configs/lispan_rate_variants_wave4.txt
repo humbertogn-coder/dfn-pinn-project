@@ -1,0 +1,6 @@
+# Phase 3a wave 4 (configs/lispan_rate_wave4.json: wave 3 + weights frozen at 50 000 + rollbacks from 30 000, budget
+# per 20 000 steps) for slurm/lispan_rate_array.slrm.  Same seeds and ranges as waves 2-3 (paired comparisons).
+rate_v4_s0      seed=0
+rate_v4_s1      seed=1
+rate_v4_s2      seed=2
+rate_v4_wide_s0 seed=0 rate_min=0.08 rate_max=1.25 window_rates=[0.08,0.2,0.5,1.25] eval_rates=[0.08,0.1,0.15,0.2,0.3,0.5,0.7,1.0,1.25]

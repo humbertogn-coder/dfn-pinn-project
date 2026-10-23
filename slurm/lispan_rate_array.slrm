@@ -16,7 +16,9 @@
 #
 # Submit from the repository root:
 #     mkdir -p slurm_logs
-#     sbatch slurm/lispan_rate_array.slrm                 # wave 3 (default): 4 variants, keep --array in line with the file
+#     sbatch slurm/lispan_rate_array.slrm                 # wave 4 (default): 4 variants, keep --array in line with the file
+#     sbatch --export=ALL,CONFIG=configs/lispan_rate_wave3.json,VARIANTS=configs/lispan_rate_variants_wave3.txt \
+#            slurm/lispan_rate_array.slrm                 # wave 3 (finished 2026-10-22; would only skip)
 #     sbatch --export=ALL,CONFIG=configs/lispan_rate_wave2.json,VARIANTS=configs/lispan_rate_variants_wave2.txt \
 #            slurm/lispan_rate_array.slrm                 # wave 2 (finished 2026-10-21; would only skip)
 #     sbatch --array=0-4 --export=ALL,CONFIG=configs/lispan_rate_0.1-1C.json,VARIANTS=configs/lispan_rate_variants.txt \
@@ -27,7 +29,7 @@
 # Why one core: on Grace the existing PINN runs 279 / 212 / 153 ms per step on 1 / 4 / 8 cores (2026-10-17), so
 # single-core jobs in parallel give ~4x more training per SU.  Memory: the PINN needs < 1 GB (MaxRSS 0.7 GB);
 # 3G stays below the per-core memory share, so each job is charged 1 SU per hour.
-# Cost: about 1 SU per hour per job. Waves 2-3: 120 000 steps, 18.7-18.8 h per variant on Grace (36 h limit;
+# Cost: about 1 SU per hour per job. Waves 2-4: 120 000 steps, 17-19 h per variant on Grace (36 h limit;
 # a run that still hits it resumes when the array is resubmitted).
 #
 # Clean shutdown: --signal=B:USR1@300 sends USR1 to this shell 5 min before the time limit; the trap forwards
@@ -45,8 +47,8 @@ fi
 export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1
 cd "$SLURM_SUBMIT_DIR"
 
-CONFIG=${CONFIG:-configs/lispan_rate_wave3.json}
-VARIANTS=${VARIANTS:-configs/lispan_rate_variants_wave3.txt}
+CONFIG=${CONFIG:-configs/lispan_rate_wave4.json}
+VARIANTS=${VARIANTS:-configs/lispan_rate_variants_wave4.txt}
 LINE=$(grep -v '^[[:space:]]*#' "$VARIANTS" | grep -v '^[[:space:]]*$' | sed -n "$((SLURM_ARRAY_TASK_ID + 1))p")
 if [ -z "$LINE" ]; then
     echo "no variant line for array index $SLURM_ARRAY_TASK_ID in $VARIANTS"; exit 1

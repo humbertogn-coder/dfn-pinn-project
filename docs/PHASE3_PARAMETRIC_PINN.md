@@ -31,10 +31,13 @@ outside the trained range (no extrapolation).  `load_rate_model(final.pt)` rebui
 - `scripts/lispan_rate_summary.py`: error table + gate checks for finished or running waves (standard library only).
 - `configs/lispan_rate_0.1-1C.json`: Phase 3a recipe (0.1-1 C).
 - `configs/lispan_rate_variants.txt`: one line per SLURM array task (`<name> key=value ...`).
-- `configs/lispan_rate_wave2.json` / `_variants_wave2.txt` (weight guard + rollback) and `configs/lispan_rate_wave3.json`
-  / `_variants_wave3.txt` (rollback with the best-recent-level baseline, no guard, best.pt).
+- `configs/lispan_rate_wave2.json` / `_variants_wave2.txt` (weight guard + rollback), `configs/lispan_rate_wave3.json`
+  / `_variants_wave3.txt` (rollback with the best-recent-level baseline, no guard, best.pt) and
+  `configs/lispan_rate_wave4.json` / `_variants_wave4.txt` (+ weights frozen at 50 000, rollbacks from 30 000 with a
+  budget per 20 000 steps).
 - `scripts/lispan_rate_replay.py`: resume a checkpoint into a new folder with changed settings, up to a given step.
-- `report/phase3/make_figures.py`, `make_replay_figure.py`, `make_wave2_figures.py`: figures in report/phase3/figures.
+- `report/phase3/make_figures.py`, `make_replay_figure.py`, `make_wave2_figures.py`, `make_wave3_figure.py`: figures in
+  report/phase3/figures.
 - `slurm/lispan_rate_array.slrm`: one single-core job per variant; resubmitting resumes unfinished runs.
 - `tests/test_lispan_rate_pinn.py`: window fit, hard structure (extents, current projection, charge passed),
   residual shapes, save/load/resume, equality with the single-rate model, weight guard, rollback, rollback monitor on
@@ -61,7 +64,7 @@ first thousand steps, exactly like the 1 C single-rate run, while the kinetics r
 cd /scratch/user/$USER/dfn-pinn-project
 git pull
 mkdir -p slurm_logs
-sbatch slurm/lispan_rate_array.slrm            # wave 3 (default since 2026-10-21): 4 variants, 1 core each, ~75 SU
+sbatch slurm/lispan_rate_array.slrm            # wave 4 (default since 2026-10-22): 4 variants, 1 core each, ~72 SU
 squeue -u $USER
 tail -n 3 results/lispan_rate_runs/*/train.log # progress; evaluations every 5000 steps
 ```
@@ -264,3 +267,76 @@ run is a paired comparison with its wave-2 twin; ~75 SU.  Decision after wave 3:
 criterion 3 met, Phase 3b.  If a seed still collapses, the documented procedure becomes multi-start (two or three seeds,
 keep the best by the anchor-rate evaluation) and the success rate is reported with it.
 
+## Wave 3 results (Grace, array 20231451, finished 2026-10-22)
+
+| Run | 0.08 C | 0.1 C | 0.15 | 0.2 | 0.3 | 0.5 | 0.7 | 1 C | 1.25 C | mean | worst | best.pt (step): mean / worst | rollbacks |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| rate_v3_s1 | - | 0.42 | 0.17 | 0.13 | 0.15 | 0.13 | 0.14 | 0.31 | - | **0.21** | **0.42** | 0.21 / 0.39 (115 000) | 18 |
+| rate_v3_wide_s0 | 0.96 | 0.59 | 0.41 | 0.44 | 0.52 | 0.60 | 0.67 | 0.64 | 1.17 | **0.67** | **1.17** | 0.49 / 1.12 (65 000) | 7 |
+| rate_v3_s2 | - | 4.72 | 4.43 | 4.54 | 5.32 | 7.05 | 8.60 | 10.11 | - | 6.40 | 10.11 | 0.64 / 1.62 (60 000) | 20 |
+| rate_v3_s0 | - | 33.88 | 27.44 | 20.52 | 12.65 | 11.08 | 14.11 | 15.88 | - | 19.37 | 33.88 | 4.35 / 5.47 (75 000) | 20 |
+
+17.2-18.2 h per run, MaxRSS 0.96-1.07 GB, ~72 SU (Grace group balance 1 549.46 SU).  Figure:
+report/phase3/figures/p3a_wave3.png (report/phase3/make_wave3_figure.py).
+
+Gate: s1 and the wide run pass criteria 1-2 on final.pt (the wide run is the first network valid over 0.08-1.25 C);
+s2 passes on best.pt only; s0 fails; criterion 3 fails again.  Against the wave-2 twins: wide 1040 -> 0.67 mV,
+s0 262 -> 19 mV, s1 0.24 -> 0.21 mV, s2 0.44 -> 6.4 mV (best.pt 0.64).
+
+Count over the runs without the weight guard (wave 1 w96 + wave 3): 6 of 8 below 2 mV on final.pt, 7 of 8 on best.pt.
+
+Diagnosis (figure panels b-c; history.json):
+
+1. **Every excursion starts in the solid-charge residual (charge_s) and the charge-group weight falls with it**, from
+   100-800 to ~0.2 in a few thousand steps, while the ode / salt / boundary / inventory weights go to the cap: the
+   positive feedback of the gradient-norm rule found in wave 1, now without the guard that was meant to stop it.
+   The late, fatal ones are set off by the charge inventory (charge_total, on from 40 000): s2 at ~64 500
+   (charge_total 0.9 -> 1 800 within 4 000 steps, then the kinetics), s0 at ~91 500, the wide run at 84 000-110 000
+   (recovered).  Before them the inventory residual was already poor in the runs that failed (median over
+   60 000-64 000 steps: s1 0.07, s2 0.28, wide 0.51, s0 3.4).
+2. **The rollback budget was spent early.**  s0, s1 and s2 used 18-20 of the 20 rollbacks before ~26 000 steps,
+   most of them in loops back to the same snapshot (s1: eleven restorations of step 20 000; learning rate down to
+   1/128), so nothing protected the late phase.  The early kinetics bursts (x10-100, ~every 1 000-3 000 steps until
+   ~30 000) recover by themselves in every run with or without rollbacks (wave 1 had them too).
+3. **s0 froze** after ~97 000 steps (identical evaluations from 105 000: the saturated state seen in wave 1 w128 and
+   wave 2 s0).
+
+Replays on the sandbox (2026-10-22):
+
+| Replay | settings | outcome |
+|---|---|---|
+| rate_v3_s1 20 000 -> 23 000 | wave 3 as on Grace (control) | the same loop: 6 rollbacks to 20 000 (Grace: 7), 4.8 -> 9.2 mV |
+| | + hold guard (weight_guard_ref "recent", boost 1.0) | same loop (stopped at 21 700) |
+| | + charge-weight floor 0.3 x or 1.0 x the ode weight | same loop (stopped at 21 200) |
+| rate_v3_s2 60 000 -> 66 000 (Grace: inventory runaway at ~64 500) | wave 3 as on Grace (no rollbacks left) | no runaway this time (chaotic: not reproduced), 0.64 -> 0.53 mV |
+| | adaptive weights frozen at their 60 000 values | no runaway, 0.64 -> 0.59 mV |
+
+Reading: the early loops are not caused by the charge weight (holding or flooring it does not change them); they come
+from rolling back bursts that the run would survive anyway.  The late failures are random events (the s2 runaway does
+not recur from the same state on another machine), each one a weight runaway set off by the charge inventory after the
+rollbacks were used up.  Freezing the weights removes that mechanism by construction and cost nothing in the replay.
+
+### Change for wave 4 (2026-10-22)
+
+`configs/lispan_rate_wave4.json` = wave 3 plus:
+
+- `adaptive_stop = 50000`: the adaptive weights are frozen at step 50 000 at the median of their values over the
+  previous 5 000 steps (inventory on since 40 000, so its weight has settled); no weight runaway is possible after it.
+  A rollback after the freeze keeps the frozen weights.
+- `rollback_start = 30000` and `rollback_budget_window = 20000` (10 rollbacks per 20 000 steps): no rollbacks of the
+  early bursts, protection for the whole late phase.
+- Unchanged: rollback with the best-recent-level baseline, best.pt, no weight guard.  The hold guard
+  (`weight_guard_ref = "recent"`, `weight_guard_boost = 1.0`) and `charge_weight_floor` stay available but off (no
+  effect in the replays).
+
+`configs/lispan_rate_variants_wave4.txt`: the same four lines again (rate_v4_s0/s1/s2/wide_s0), paired with waves 2-3;
+~72 SU.  Decision: 3 of 3 seeds below 1 mV on final.pt -> criterion 3 met.  Either way the training procedure for
+Phase 3b is multi-start (2-3 seeds, keep the best by the anchor-rate evaluation): with ~75 % of runs succeeding,
+three seeds give a usable network with ~98 % probability.
+
+### Phase 3a networks to use
+
+- 0.1-1 C: `results/lispan_rate_runs/rate_w96_120k_s0/final.pt` (wave 1; 0.07-0.33 mV, mean 0.15 mV), runner-up
+  `rate_v3_s1/final.pt` (0.13-0.42 mV, mean 0.21 mV).
+- 0.08-1.25 C: `rate_v3_wide_s0/best.pt` (step 65 000; mean 0.49 mV, worst 1.12 mV at 1.25 C; chosen on the anchor rates
+  only) or its final.pt (0.67 / 1.17 mV).

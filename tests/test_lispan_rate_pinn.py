@@ -250,3 +250,66 @@ def test_keep_best_saves_the_best_anchor_evaluation(tmp_path, monkeypatch):
     ck = torch.load(tmp_path / "best.pt", weights_only=False)
     assert best["step"] == 40 and ck["step"] == 40 and best["selection_score_mV"] == 1.5
     assert best["selected_on"] == [0.1, 0.2, 0.5, 1.0]
+
+
+def test_hold_guard_recent_reference_holds_without_inflating():
+    """Wave-4 guard (ref "recent", boost 1.0): a group whose loss ramps keeps its weight instead of losing it, the
+    weights are not ratcheted up by ordinary noise, and a rollback restores the weights but not the monitor history."""
+    from dfn_pinn.lispan.rate_pinn import GuardedWeights
+    from dfn_pinn.v2.train import AdaptiveWeights
+    p = torch.nn.Parameter(torch.ones(2, dtype=torch.float64))
+    model = torch.nn.Module(); model.p = p
+    groups = {"a": ["la"], "b": ["lb"]}
+    rng = np.random.default_rng(0)
+    plain = AdaptiveWeights(groups, 0.9)
+    hold = GuardedWeights(groups, 0.9, rise=3.0, boost=1.0, ref="recent", horizon=5000)
+    snap, w_at_rise = None, None
+    for n in range(3000):
+        sa = 1.0 if n < 2000 else 10.0 ** ((n - 2000) / 300.0)
+        L = {"la": (sa * float(np.exp(0.5 * rng.standard_normal())) * p[0]) ** 2,
+             "lb": (float(np.exp(0.5 * rng.standard_normal())) * p[1]) ** 2}
+        hold.observe(L)
+        if n % 50 == 0:
+            if hold.rising("a") and w_at_rise is None:
+                w_at_rise = hold.w["a"]
+            plain.update(model, L); hold.update(model, L)
+        if n == 1950:
+            wa_before = hold.w["a"]
+            assert max(hold.w.values()) < 10.0                 # noise alone does not inflate the weights
+            snap = hold.state()
+    assert w_at_rise is not None and hold.rising("a")
+    assert hold.w["a"] >= w_at_rise * (1 - 1e-12) and hold.w["a"] > 0.5 * wa_before and hold.w["a"] > 2.0 * plain.w["a"]
+    n_samples = len(hold.mon["a"].samples)
+    hold.restore_weights(snap)
+    assert hold.w["a"] == snap["w"]["a"] and len(hold.mon["a"].samples) == n_samples
+
+
+def test_adaptive_stop_freezes_weights_and_rollback_start(tmp_path, monkeypatch):
+    """adaptive_stop freezes the group weights at the median of their recent values; rollback_start keeps the
+    rollback off before it (an injected burst early does not roll back)."""
+    import json
+    import dfn_pinn.lispan.rate_pinn as rp
+    real = rp.rate_residuals
+    calls = {"n": 0}
+
+    def faulty(model, batch):
+        calls["n"] += 1
+        out = real(model, batch)
+        if 620 <= calls["n"] <= 700:
+            out["ode1"] = out["ode1"] * 1e4
+        return out
+    monkeypatch.setattr(rp, "rate_residuals", faulty)
+    cfg = RateTrainConfig(width=8, depth=1, fourier_t=1, quad_order=4, n_cathode=8, n_separator=4, n_boundary=4,
+                          adam_steps=800, log_every=1000, eval_every=10**9, latest_every=0, checkpoint_every=0, threads=1,
+                          adaptive_every=10, adaptive_stop=400, adaptive_freeze_window=200, rollback=True,
+                          rollback_start=750, snapshot_every=100, rollback_floor=1e-6, rollback_factor=20.0,
+                          rollback_cooldown=50)
+    coef, _ = fit_window(list(T_CUT), list(T_CUT.values()))
+    msgs = []
+    rp.train_rate(cfg, PARAMS, coef, tmp_path, refs=None, log=msgs.append)
+    hist = json.loads((tmp_path / "history.json").read_text())["history"]
+    after = [r["w"] for r in hist if "w" in r and r["step"] >= 400]
+    assert after and all(w == after[0] for w in after)
+    assert any("adaptive weights frozen" in m for m in msgs)
+    rb = [int(m.split(":")[0].split()[1]) for m in msgs if "ROLLBACK" in m]
+    assert all(s_ >= 750 for s_ in rb)                       # the burst at ~620-700: no rollback before rollback_start
