@@ -248,7 +248,7 @@ class LiSPANRatePINN(LiSPANPINN):
         nodes = self.q_nodes.to(T.dtype).view(1, q)
         Yq = (Yc_upper.view(n, 1) * nodes).reshape(-1, 1)
         Tq = T.view(n, 1).expand(n, q).reshape(-1, 1)
-        rq = r.view(n, 1).expand(n, q).reshape(-1, 1)
+        rq = r.reshape(n, 1, -1).expand(n, q, r.shape[-1]).reshape(n * q, -1)     # (n, 1) rates or (n, K) conditions
         val = (self.species(Yq, Tq, rq)["a"] * self.rho(Yq, Tq, rq)).view(n, q)
         return Yc_upper.view(n, 1) * (val * self.q_weights.to(T.dtype).view(1, q)).sum(1, keepdim=True)
 
@@ -372,7 +372,7 @@ def rate_residuals(model: LiSPANRatePINN, batch):
         q = model.q_nodes.shape[0]; nb = Tb.shape[0]
         nodes = model.q_nodes.to(Tb.dtype).view(1, q); w = model.q_weights.to(Tb.dtype).view(1, q)
         Tq = Tb.view(nb, 1).expand(nb, q).reshape(-1, 1)
-        rq = rb.view(nb, 1).expand(nb, q).reshape(-1, 1)
+        rq = rb.reshape(nb, 1, -1).expand(nb, q, rb.shape[-1]).reshape(nb * q, -1)
         Yc_q = nodes.expand(nb, q).reshape(-1, 1)
     if model.salt_total_scale > 0:
         spq = model.species(Yc_q, Tq, rq)
@@ -637,20 +637,29 @@ def resolve_device(name: str) -> torch.device:
 
 # ====================================================================== training
 def train_rate(cfg: RateTrainConfig, params: LiSPANParams, window_coef, out_dir: Path, refs: dict | None = None,
-               log=print, resume=None):
+               log=print, resume=None, *, model=None, sampler_factory=None, residual_fn=None, evaluate_fn=None,
+               score_fn=None, eval_summary_fn=None, kind="lispan_rate", extra_save=None):
     """Forward training of the rate-parametric PINN.  refs = {rate: FV reference} for the evaluation (optional).
     SIGTERM / SIGUSR1 (e.g. the SLURM time limit) save latest.pt and return; resume=<latest.pt> continues a run.
     cfg.weight_guard / cfg.rollback switch on the wave-2 stabilization (GuardedWeights; rollback to the last healthy
-    in-memory snapshot with a reduced learning rate when the kinetics residuals blow up)."""
+    in-memory snapshot with a reduced learning rate when the kinetics residuals blow up).
+
+    The keyword hooks let other conditioned models (chem_pinn.py, Phase 3b) reuse this loop unchanged: model (built
+    by the caller), sampler_factory(cfg, dtype, gen, device), residual_fn(model, batch), evaluate_fn(model, refs) ->
+    metrics dict with 'V_rmse_mean_mV' / 'V_rmse_worst_mV' / 'V_max_worst_mV', score_fn(metrics) -> the number best.pt
+    minimizes, eval_summary_fn(metrics) -> log line, kind + extra_save -> stored in config.json and every checkpoint."""
     dtype = torch.float64 if cfg.dtype == "float64" else torch.float32
     device = resolve_device(cfg.device)
     torch.manual_seed(cfg.seed)
     if cfg.threads:
         torch.set_num_threads(cfg.threads)
     gen = torch.Generator().manual_seed(cfg.seed + 1)
-    model = build_model(cfg, params, window_coef).to(device=device, dtype=dtype)
+    model = (model if model is not None else build_model(cfg, params, window_coef)).to(device=device, dtype=dtype)
     model.salt_total_scale = cfg.salt_total_scale
-    sampler = RateSampler(cfg, dtype, gen, device)
+    sampler = (sampler_factory or RateSampler)(cfg, dtype, gen, device)
+    residual_fn = residual_fn or rate_residuals
+    evaluate_fn = evaluate_fn or evaluate_rates
+    extra_save = dict(extra_save or {})
     net_params = [p_ for n, p_ in model.named_parameters() if not n.startswith("log_mult")]
     opt = torch.optim.Adam(net_params, lr=cfg.lr)
     gamma = (cfg.lr_final / cfg.lr) ** (1 / max(cfg.adam_steps, 1))
@@ -680,8 +689,8 @@ def train_rate(cfg: RateTrainConfig, params: LiSPANParams, window_coef, out_dir:
         log(f"Resumed from {resume} at step {start_step}")
     sched = torch.optim.lr_scheduler.ExponentialLR(opt, gamma)
     out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / "config.json").write_text(json.dumps({"kind": "lispan_rate", "train": cfg.to_dict(), "params": params.to_dict(),
-                                                     "window_coef": list(window_coef)}, indent=2))
+    (out_dir / "config.json").write_text(json.dumps({"kind": kind, "train": cfg.to_dict(), "params": params.to_dict(),
+                                                     "window_coef": list(window_coef), **extra_save}, indent=2))
     log(f"device {device} | dtype {dtype} | threads {torch.get_num_threads()} | rates [{cfg.rate_min:g}, {cfg.rate_max:g}] C"
         f" | weight guard {cfg.weight_guard} | rollback {cfg.rollback}")
     t0 = time.perf_counter() - (history[-1]["time_s"] if history else 0.0)
@@ -697,7 +706,8 @@ def train_rate(cfg: RateTrainConfig, params: LiSPANParams, window_coef, out_dir:
     # ---- best evaluation so far (anchor rates), kept in the guard dict so that it survives a resume
     guard.setdefault("best_score", None)
     guard.setdefault("best_step", None)
-    anchors = [r for r in cfg.window_rates if refs and any(abs(r - q) < 1e-9 for q in refs)]
+    anchors = ([] if score_fn is not None else
+               [r for r in cfg.window_rates if refs and any(abs(r - q) < 1e-9 for q in refs)])
 
     snap = {}
 
@@ -716,8 +726,8 @@ def train_rate(cfg: RateTrainConfig, params: LiSPANParams, window_coef, out_dir:
                 pass
 
     def save(name):
-        torch.save({"kind": "lispan_rate", "model": model.state_dict(), "optimizer": opt.state_dict(), "train": cfg.to_dict(),
-                    "params": params.to_dict(), "window_coef": list(window_coef), "group_weights": aw.w,
+        torch.save({"kind": kind, "model": model.state_dict(), "optimizer": opt.state_dict(), "train": cfg.to_dict(),
+                    "params": params.to_dict(), "window_coef": list(window_coef), **extra_save, "group_weights": aw.w,
                     "weight_guard": aw.state() if cfg.weight_guard else None, "guard": dict(guard),
                     "step": step_holder[0], "gen_state": gen.get_state()}, out_dir / name)
         (out_dir / "history.json").write_text(json.dumps({"history": history, "evals": evals}))
@@ -728,7 +738,7 @@ def train_rate(cfg: RateTrainConfig, params: LiSPANParams, window_coef, out_dir:
         for step in range(start_step, cfg.adam_steps + 1):
             step_holder[0] = step
             model.charge_total_scale = cfg.charge_total_scale if step >= cfg.charge_total_start else 0.0
-            terms = rate_residuals(model, sampler.draw())
+            terms = residual_fn(model, sampler.draw())
             losses = {k: (huber(v, cfg.huber_delta) if k in ("charge_s", "charge_e") else v.square()).mean() for k, v in terms.items()}
             # ---- monitors (unweighted losses)
             if cfg.weight_guard:
@@ -804,20 +814,27 @@ def train_rate(cfg: RateTrainConfig, params: LiSPANParams, window_coef, out_dir:
             if logged:
                 log(f"step {step:6d} loss {rec['loss']:.3e} | " + " ".join(f"{k} {rec[k]:.2e}" for k in losses) + f" | {rec['time_s']:.0f}s")
             if refs and (step % cfg.eval_every == 0 or step == cfg.adam_steps):
-                ev = evaluate_rates(model, refs); ev["step"] = step; ev["time_s"] = rec["time_s"]
+                ev = evaluate_fn(model, refs); ev["step"] = step; ev["time_s"] = rec["time_s"]
                 evals.append(ev)
-                log("  eval V rmse [mV]: " + " ".join(f"{r:g}C {ev[f'V_rmse_mV@{r:g}']:.3g}" for r in sorted(refs))
-                    + f" | mean {ev['V_rmse_mean_mV']:.3g} worst {ev['V_rmse_worst_mV']:.3g} | V max worst {ev['V_max_worst_mV']:.3g}")
+                if eval_summary_fn is not None:
+                    log("  eval " + eval_summary_fn(ev))
+                else:
+                    log("  eval V rmse [mV]: " + " ".join(f"{r:g}C {ev[f'V_rmse_mV@{r:g}']:.3g}" for r in sorted(refs))
+                        + f" | mean {ev['V_rmse_mean_mV']:.3g} worst {ev['V_rmse_worst_mV']:.3g} | V max worst {ev['V_max_worst_mV']:.3g}")
                 if cfg.keep_best:
-                    score = (float(np.mean([ev[f"V_rmse_mV@{r:g}"] for r in anchors])) if anchors
-                             else float(ev["V_rmse_mean_mV"]))
+                    if score_fn is not None:
+                        score = float(score_fn(ev))
+                    else:
+                        score = (float(np.mean([ev[f"V_rmse_mV@{r:g}"] for r in anchors])) if anchors
+                                 else float(ev["V_rmse_mean_mV"]))
                     if math.isfinite(score) and (guard["best_score"] is None or score < guard["best_score"]):
                         guard["best_score"], guard["best_step"] = score, step
                         save("best.pt")
                         (out_dir / "best_metrics.json").write_text(json.dumps(
-                            {**ev, "selected_on": [float(r) for r in anchors] or "all eval rates",
+                            {**ev, "selected_on": ("score_fn" if score_fn is not None
+                                                   else [float(r) for r in anchors] or "all eval rates"),
                              "selection_score_mV": score}, indent=1))
-                        log(f"  best so far (mean V rmse at the anchor rates {score:.3g} mV): best.pt")
+                        log(f"  best so far (selection score {score:.3g} mV): best.pt")
             if cfg.latest_every and step % cfg.latest_every == 0:
                 save("latest.pt")
             if cfg.checkpoint_every and step % cfg.checkpoint_every == 0:

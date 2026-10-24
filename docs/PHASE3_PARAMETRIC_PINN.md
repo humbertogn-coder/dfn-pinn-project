@@ -2,7 +2,7 @@
 
 Goal: one trained network that returns the discharge curve (and the internal fields) of the nominal Simanjuntak cell at
 **any C-rate in a range** in one forward pass, instead of one training per rate.  This is the forward half of the
-two-curve calibration tool; Phase 3b adds 3-5 chemistry parameters as further inputs.
+two-curve calibration tool; Phase 3b adds 3-5 chemistry parameters as further inputs (docs/PHASE3B_CHEM_PINN.md).
 
 ## What changed with respect to the single-rate PINN (`src/dfn_pinn/lispan/pinn.py`)
 
@@ -334,9 +334,56 @@ rollbacks were used up.  Freezing the weights removes that mechanism by construc
 Phase 3b is multi-start (2-3 seeds, keep the best by the anchor-rate evaluation): with ~75 % of runs succeeding,
 three seeds give a usable network with ~98 % probability.
 
-### Phase 3a networks to use
+## Wave 4 results (Grace, array 20254184, finished 2026-10-23)
 
-- 0.1-1 C: `results/lispan_rate_runs/rate_w96_120k_s0/final.pt` (wave 1; 0.07-0.33 mV, mean 0.15 mV), runner-up
-  `rate_v3_s1/final.pt` (0.13-0.42 mV, mean 0.21 mV).
+17.1-19.0 h per run, MaxRSS 1.0-1.15 GB, ~74 SU.  Voltage rms error vs FV [mV], mean / worst over the evaluation rates:
+
+| Run | final.pt | best.pt (step) | rollbacks | skipped batches |
+|---|---|---|---|---|
+| rate_v4_s0 | **0.15 / 0.34** | 0.15 / 0.34 (120 000) | 0 | 220 |
+| rate_v4_s1 | 5.65 / 8.69 | **0.32 / 0.64** (55 000) | 26 (all after 50 000) | 179 |
+| rate_v4_s2 | 1.30 / 2.97 | 1.21 / 2.76 (90 000) | 3 | 80 |
+| rate_v4_wide_s0 | 279 / 339 | 4.93 / 15.9 (10 000) | 0 | 31 |
+
+Each wave-4 run is identical, step by step, to its wave-3 twin until the twin's first rollback (steps 3030, 10910, 2660
+and 8350; Grace runs are deterministic), so the pairs isolate the two changes (figure `report/phase3/figures/
+p3a_wave4.png`, `report/phase3/make_wave4_figure.py`):
+
+1. **No rollbacks before 30 000 lost two runs.**  The wide run collapsed at 11 000-13 000 steps with the signature of
+   every failure since wave 1: charge_s 1e-3 -> 0.4 -> 120 within 2 000 steps, the charge-group weight 74 -> 0.25, all
+   other weights at the 1000 cap.  It never recovered: at 30 000 the best-recent-level baseline was already the
+   collapsed level, so no rollback fired later.  rate_v4_s2 collapsed at 17 000-20 000 steps (226 mV) and recovered
+   only after the inventory term switched on (40 000), to 1.3 mV.  With rollbacks (wave 3) the same seeds stayed at
+   2-3 mV through 40 000 (wide) or were held to 51 mV (s2).  The opposite case is s0 (wave 3's early-rollback path
+   ended at 19.4 mV, wave 4's at 0.15 mV), but there wave 3's fatal excursion (131 mV at 35 000) came after its 20
+   rollbacks were used up - what the budget window now prevents.
+2. **Freezing the weights at 50 000 is neutral to positive.**  Under frozen weights s0 went 0.35 -> 0.15 mV and s2
+   9.3 -> 1.3 mV (s2 froze with the charge weight at 10, the state left by its collapse).  s1 froze at good values
+   (ode 884, charge 623, inventory 0.44) but its inventory residual stalled at ~0.2 (s0: 0.25 -> 0.006) and grew from
+   ~100 000 steps (0.4 -> 3 -> 65) together with the kinetics; 26 rollbacks after the freeze, most on short spikes
+   (0.3-1.2 mV between them), the last ones to the same snapshot (107 000).  Its best.pt (55 000) is 0.32 mV.
+3. **The failure signature is the same in waves 3 and 4**: the charge-group weight collapses (to 0-10) while the
+   inventory weight explodes (300-1000), or the inventory residual stops falling.  Successful runs keep charge
+   ~600-900, inventory ~0.2 and an inventory residual that falls steadily (0.25 -> 0.006 over 40 000-120 000).
+
+**Success statistics (all 17 Phase 3a runs).**  final.pt passes (every evaluation rate < 2 mV) in 9 of 17: wave 1 4/5,
+wave 2 2/4 (with the harmful weight guard), wave 3 2/4, wave 4 1/4; best.pt (waves 3-4) passes in 5 of 8.  Every wave
+produced at least one passing 0.1-1 C network (4 of 4); the wide range passed in 1 of 3 attempts.
+
+**Gate outcome.**  Criteria 1-2 are met by two independent networks (wave 1 rate_w96_120k_s0 and wave 4 rate_v4_s0,
+both 0.15 mV mean).  Criterion 3 (seed spread below the error) is not met in waves 2-4: a single run fails about half
+of the time, by a chaotic event (a charge-group collapse) whose timing no setting tested here removes.  The training
+procedure is therefore **multi-start with selection on the FV evaluation** (best.pt): with a per-run success of ~0.5,
+five runs give a passing network with ~97 % probability.  No further Phase 3a wave is needed now.
+
+**Recipe for Phase 3b** (`configs/lispan_chem_v1.json`): rollbacks from step 0 (`rollback_start = 0`, the wave-3
+protection) with the wave-4 budget window (10 per 20 000 steps, so early loops cannot use up the protection), weights
+frozen at 60 000, best.pt; five runs (three seeds and two warm starts from the two 0.15 mV networks).  This combination
+itself has not been run on Phase 3a; the Phase 3b runs are its test.
+
+## Phase 3a networks to use
+
+- 0.1-1 C: `results/lispan_rate_runs/rate_w96_120k_s0/final.pt` (wave 1) or `rate_v4_s0/final.pt` (wave 4): both mean
+  0.15 mV, worst 0.33-0.34 mV (at the range ends); runner-up `rate_v3_s1/final.pt` (0.13-0.42 mV, mean 0.21 mV).
 - 0.08-1.25 C: `rate_v3_wide_s0/best.pt` (step 65 000; mean 0.49 mV, worst 1.12 mV at 1.25 C; chosen on the anchor rates
   only) or its final.pt (0.67 / 1.17 mV).

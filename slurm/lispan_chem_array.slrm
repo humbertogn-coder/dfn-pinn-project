@@ -1,0 +1,68 @@
+#!/bin/bash
+#SBATCH --job-name=lispan_chem
+#SBATCH --time=36:00:00
+#SBATCH --signal=B:USR1@300
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=3G
+#SBATCH --array=0-4
+#SBATCH --output=slurm_logs/lispan_chem.%A_%a.out
+#SBATCH --error=slurm_logs/lispan_chem.%A_%a.err
+# ---------------------------------------------------------------------------
+# Phase 3b: chemistry-conditioned Li-SPAN PINN (scripts/lispan_chem_train.py), one single-core job per VARIANT.
+# Array index i runs the i-th non-comment line of the VARIANTS file ("<name> key=value ..."); the run folder is
+# results/lispan_chem_runs/<name>, so resubmitting the same array RESUMES every unfinished run from its latest.pt and
+# skips the finished ones (final.pt present).  Failed or stopped runs are never deleted.
+#
+# Submit from the repository root (the FV evaluation references are built by the first job that needs them, ~1 min
+# each, or beforehand with: python scripts/lispan_chem_design.py --refs-only --out configs/lispan_chem_design_v1.json):
+#     mkdir -p slurm_logs
+#     sbatch slurm/lispan_chem_array.slrm                  # v1: 3 seeds + 2 warm starts (configs/lispan_chem_variants_v1.txt)
+#     sbatch --array=1 slurm/lispan_chem_array.slrm        # one variant
+#
+# Cost: about 1 SU per hour per job; 150 000 steps at ~0.6 s per step (Phase 3a points; the Phase 3a model takes 0.54 s
+# on Grace) = ~25 h per variant, inside the 36 h limit.  If a job does hit the limit, resubmit: it resumes from latest.pt.
+# The warm-start variants need results/lispan_rate_runs/rate_w96_120k_s0/final.pt (Phase 3a wave 1) and
+# results/lispan_rate_runs/rate_v4_s0/final.pt (wave 4) in this repository.  Five runs: ~125 SU.
+#
+# Clean shutdown: --signal=B:USR1@300 sends USR1 to this shell 5 min before the time limit; the trap forwards
+# SIGTERM to python, which saves latest.pt and exits; the wait loop keeps the shell alive until python has exited.
+# ---------------------------------------------------------------------------
+# Environment: HPRC's PyTorch module (numpy + scipy + torch, no venv; see slurm/lispan_baseline_cpu.slrm).
+module purge
+if [ -n "$PINN_VENV" ]; then
+    module load GCCcore/13.2.0 Python/3.11.5
+    source "$PINN_VENV/bin/activate"
+else
+    module load GCC/12.3.0 OpenMPI/4.1.5 PyTorch/2.1.2-CUDA-12.1.1
+fi
+export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1
+cd "$SLURM_SUBMIT_DIR"
+
+CONFIG=${CONFIG:-configs/lispan_chem_v1.json}
+VARIANTS=${VARIANTS:-configs/lispan_chem_variants_v1.txt}
+LINE=$(grep -v '^[[:space:]]*#' "$VARIANTS" | grep -v '^[[:space:]]*$' | sed -n "$((SLURM_ARRAY_TASK_ID + 1))p")
+if [ -z "$LINE" ]; then
+    echo "no variant line for array index $SLURM_ARRAY_TASK_ID in $VARIANTS"; exit 1
+fi
+NAME=$(echo "$LINE" | awk '{print $1}')
+SETS=$(echo "$LINE" | awk '{$1=""; print}')
+RUN_DIR=results/lispan_chem_runs/$NAME
+if [ -f "$RUN_DIR/final.pt" ]; then
+    echo "$NAME already finished ($RUN_DIR/final.pt)"; exit 0
+fi
+echo "variant=$NAME overrides=[$SETS] config=$CONFIG host=$(hostname) start=$(date)"
+python -c "import sys, numpy, scipy, torch; print('python', sys.version.split()[0], '| numpy', numpy.__version__, '| scipy', scipy.__version__, '| torch', torch.__version__)" || exit 1
+
+set -f            # no filename globbing of the overrides (JSON lists contain [ ])
+# shellcheck disable=SC2086
+python -u scripts/lispan_chem_train.py --config "$CONFIG" --run-dir "$RUN_DIR" --set threads=1 $SETS &
+PID=$!
+trap 'echo "time limit near: forwarding SIGTERM to python $PID"; kill -TERM $PID' USR1 TERM
+wait $PID
+STATUS=$?
+while kill -0 $PID 2>/dev/null; do
+    wait $PID
+    STATUS=$?
+done
+echo "variant $NAME finished with status $STATUS at $(date)"

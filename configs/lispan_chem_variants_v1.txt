@@ -1,0 +1,10 @@
+# Phase 3b v1 (configs/lispan_chem_v1.json) for slurm/lispan_chem_array.slrm: multi-start (Phase 3a: ~half of the runs
+# pass on their own, every wave produced at least one passing network), keep the best by the 'select' evaluation cases.
+# Three seeds from scratch and two warm starts from the two 0.15 mV Phase 3a networks (0.1-1 C; wave 1 and wave 4),
+# whose first layers get zero weights on the chemistry columns, with a lower initial learning rate.
+# One line per array index; <run name> key=value ... (JSON values, no spaces).
+chem_v1_s0  seed=0
+chem_v1_s1  seed=1
+chem_v1_s2  seed=2
+chem_v1_warm_s0  seed=0 init_from="results/lispan_rate_runs/rate_w96_120k_s0/final.pt" lr=0.0003
+chem_v1_warm_s1  seed=1 init_from="results/lispan_rate_runs/rate_v4_s0/final.pt" lr=0.0003
