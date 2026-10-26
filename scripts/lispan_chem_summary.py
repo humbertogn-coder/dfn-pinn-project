@@ -5,10 +5,17 @@
     python scripts/lispan_chem_summary.py results/lispan_chem_runs/chem_v1_* --json summary_chem_v1.json
 
 Per run: status, steps, wall hours, rollbacks, skipped batches, the select / test means and the worst case of final.pt
-(final_metrics.json, else the last evaluation) and of best.pt (best_metrics.json); per case the final errors.  Gate:
+(final_metrics.json, else the last evaluation) and of best.pt (best_metrics.json); per case the final errors.
+Strict gate (v1 proposal):
   1. test cases: mean < 2 mV and every case < 5 mV;
   2. test mean <= 1.5 x select mean;
   3. at least two runs pass 1-2 (on final.pt or best.pt).
+Revised gate (docs/PHASE3B_CHEM_PINN.md, after v1; needs the cliff-aware metrics that evaluate_chem writes since v2):
+  1. test cases OUTSIDE the voltage cliffs: mean < 2 mV, every case < 5 mV;
+  2. cliff positions within 1 % of the capacity (every case);
+  3. outside-cliff test mean <= 1.5 x outside-cliff select mean;
+  4. at least two runs pass 1-3.
+The parameter-recovery part of the revised gate is scripts/lispan_chem_recovery.py.
 """
 
 import argparse
@@ -18,6 +25,9 @@ import re
 from pathlib import Path
 
 GATE_MEAN, GATE_CASE, GATE_RATIO = 2.0, 5.0, 1.5
+
+
+GATE_SHIFT = 1.0          # % of the capacity
 
 
 def metrics_of(m, select_ids):
@@ -30,6 +40,16 @@ def metrics_of(m, select_ids):
            "cases": cases}
     out["pass"] = bool(test) and out["test_mean"] < GATE_MEAN and all(v < GATE_CASE for v in test.values()) \
         and out["test_mean"] <= GATE_RATIO * out["select_mean"]
+    co = {k.split("@", 1)[1]: v for k, v in m.items() if k.startswith("V_rmse_out_mV@")}
+    sh = {k.split("@", 1)[1]: v for k, v in m.items() if k.startswith("cliff_shift_pct@")}
+    if co:
+        t_o = [v for c, v in co.items() if c not in select_ids]; s_o = [v for c, v in co.items() if c in select_ids]
+        out.update(out_select=mean(s_o), out_test=mean(t_o), out_test_worst=max(t_o) if t_o else float("nan"),
+                   shift_max=max(sh.values()) if sh else 0.0, cases_out=co, shifts=sh)
+        out["pass_revised"] = bool(t_o) and out["out_test"] < GATE_MEAN and all(v < GATE_CASE for v in t_o) \
+            and out["shift_max"] < GATE_SHIFT and out["out_test"] <= GATE_RATIO * out["out_select"]
+    else:
+        out["pass_revised"] = None
     return out
 
 
@@ -84,9 +104,27 @@ def main():
         print(f"| {r['name']} | {r['status']} | {r['step']} | {r['wall_h']:.1f} | {f['select_mean']:.2f} | "
               f"{f['test_mean']:.2f} | {f['worst']:.2f} | {bs} | {len(r['rollbacks'])} | {r['skipped']} | "
               f"{'PASS' if ok else 'FAIL'} |")
-    print(f"\nGate 3 (multi-start): {n_pass} of {len(runs)} runs pass 1-2 -> {'PASS' if n_pass >= 2 else 'FAIL'}")
+    print(f"\nStrict gate 3 (multi-start): {n_pass} of {len(runs)} runs pass 1-2 -> {'PASS' if n_pass >= 2 else 'FAIL'}")
+    rev = [r for r in runs if r["final"]["pass_revised"] is not None]
+    if rev:
+        print("\nRevised gate (outside the voltage cliffs; cliff positions) [mV, %]")
+        print("| Run | final out select | out test | out worst test | cliff shift max | best.pt out select / test / shift | revised |")
+        print("|---|---|---|---|---|---|---|")
+        n_rev = 0
+        for r in rev:
+            f, b = r["final"], r["best"]
+            ok = bool(f["pass_revised"]) or bool(b and b.get("pass_revised"))
+            n_rev += ok
+            bs = "-" if not b or b.get("pass_revised") is None else \
+                f"{b['out_select']:.2f} / {b['out_test']:.2f} / {b['shift_max']:.2f} ({b['step']})"
+            print(f"| {r['name']} | {f['out_select']:.2f} | {f['out_test']:.2f} | {f['out_test_worst']:.2f} | "
+                  f"{f['shift_max']:.2f} | {bs} | {'PASS' if ok else 'FAIL'} |")
+        print(f"Revised gate 4 (multi-start): {n_rev} of {len(rev)} runs pass 1-3 -> {'PASS' if n_rev >= 2 else 'FAIL'}")
     for r in runs:
-        print(f"\n{r['name']} final per case: " + ", ".join(f"{c} {v:.2f}" for c, v in sorted(r["final"]["cases"].items())))
+        f = r["final"]
+        print(f"\n{r['name']} final per case: " + ", ".join(
+            f"{c} {v:.2f}" + (f" (out {f['cases_out'][c]:.2f}, shift {f['shifts'].get(c, 0):.2f} %)" if f.get("cases_out") else "")
+            for c, v in sorted(f["cases"].items())))
     if a.json:
         Path(a.json).write_text(json.dumps(runs, indent=1))
         print("\nwritten", a.json)

@@ -31,7 +31,7 @@ sys.path.insert(0, str(ROOT / "src"))
 import numpy as np  # noqa: E402
 
 from dfn_pinn.lispan import LiSPANParams, LiSPANProtocol, solve  # noqa: E402
-from dfn_pinn.lispan.chem_pinn import CHEM_INPUTS_V1, apply_chem, check_spec, fit_chem_window, normalize  # noqa: E402
+from dfn_pinn.lispan.chem_pinn import CHEM_SPECS, apply_chem, check_spec, fit_chem_window, normalize  # noqa: E402
 
 
 def base_params(Z_CC, reversible=(True, False, False)):
@@ -108,7 +108,10 @@ def check_invariances(Z_CC):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=str(ROOT / "configs" / "lispan_chem_design_v1.json"))
-    ap.add_argument("--spec", default="", help="JSON file with a list of {name, lo, hi} (default: CHEM_INPUTS_V1)")
+    ap.add_argument("--spec", default="", help="JSON file with a list of {name, lo, hi} (instead of --spec-name)")
+    ap.add_argument("--spec-name", default="v1", choices=sorted(CHEM_SPECS), help="built-in box (chem_pinn.CHEM_SPECS)")
+    ap.add_argument("--eval-extra", default="", help="JSON file: extra evaluation chemistries [{id (no '_'), chem: "
+                    "{input: value}, select: bool}], e.g. points of literature fits")
     ap.add_argument("--Z-CC", type=float, default=0.010, help="the network's (window) contact resistance [Ohm m2]")
     ap.add_argument("--rates", type=float, nargs="+", default=[0.1, 0.2, 0.5, 1.0])
     ap.add_argument("--n-lhs", type=int, default=32)
@@ -129,7 +132,7 @@ def main():
     if a.refs_only:
         build_refs(json.loads(out.read_text()), a.workers)
         return
-    spec = check_spec(json.loads(Path(a.spec).read_text()) if a.spec else CHEM_INPUTS_V1)
+    spec = check_spec(json.loads(Path(a.spec).read_text()) if a.spec else CHEM_SPECS[a.spec_name])
     k = len(spec)
     rng = np.random.default_rng(a.seed)
     corners = list(itertools.product(list(np.linspace(0.0, 1.0, a.levels)), repeat=k))
@@ -187,6 +190,19 @@ def main():
             cases.append({"id": cid, "rate": float(r), "chem": {s["name"]: float(v) for s, v in zip(spec, th)},
                           "chem_values": [float(v) for v in th], "select": j < a.eval_points // 2,
                           "ref": f"data/lispan_chem_refs/{name}/{cid}.npz"})
+    if a.eval_extra:
+        lo = np.array([s_["lo"] for s_ in spec]); hi = np.array([s_["hi"] for s_ in spec])
+        for e in json.loads(Path(a.eval_extra).read_text()):
+            if "_" in e["id"]:
+                raise SystemExit(f"extra evaluation id {e['id']!r}: no '_' (case ids are <chemistry>_<rate>C)")
+            th = np.array([float(e["chem"].get(s_["name"], 0.0)) for s_ in spec])
+            if np.any(th < lo) or np.any(th > hi):
+                raise SystemExit(f"extra evaluation chemistry {e['id']} lies outside the box: {e['chem']}")
+            for r in a.eval_rates:
+                cid = f"{e['id']}_{r:g}C"
+                cases.append({"id": cid, "rate": float(r), "chem": {s_["name"]: float(v) for s_, v in zip(spec, th)},
+                              "chem_values": [float(v) for v in th], "select": bool(e.get("select", False)),
+                              "ref": f"data/lispan_chem_refs/{name}/{cid}.npz", "note": e.get("note", "")})
     design = {"spec": spec, "Z_CC": a.Z_CC, "reversible": [True, False, False], "window_rates": a.rates,
               "rate_min": min(a.rates), "rate_max": max(a.rates),
               "window": {"coef": coef, "degree": deg, "max_rel_err": emax, "rms_rel_err": erms, "holdout_max_rel_err": hold,

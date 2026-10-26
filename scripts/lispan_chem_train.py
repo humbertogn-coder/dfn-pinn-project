@@ -21,8 +21,9 @@ sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
 import numpy as np  # noqa: E402
+import torch  # noqa: E402
 
-from dfn_pinn.lispan.chem_pinn import (ChemSampler, ChemTrainConfig, build_chem_model, check_spec,  # noqa: E402
+from dfn_pinn.lispan.chem_pinn import (ChemRARSampler, ChemSampler, ChemTrainConfig, build_chem_model, check_spec,  # noqa: E402
                                        chem_eval_summary, chem_window_t_end, evaluate_chem, warm_start_from_rate)
 from dfn_pinn.lispan.rate_pinn import params_from_dict, train_rate  # noqa: E402
 from lispan_chem_design import reference_case  # noqa: E402
@@ -106,6 +107,12 @@ def main():
         flag = "" if te < tc else "  <-- WINDOW PASSES THE CUT-OFF"
         log(f"  {cid}{' (select)' if c['select'] else ''}: FV cut-off {tc:.0f} s, window {te:.0f} s "
             f"({100 * te / tc:.1f} %){flag}")
+    if cfg.rar:
+        log(f"residual-based sampling: {100 * cfg.rar_fraction:g} % of the cathode points from the {cfg.rar_pool} worst "
+            f"of {cfg.rar_candidates} candidates, refreshed every {cfg.rar_every} steps")
+    # the initial weights follow the seed (v1 built the model before train_rate seeded torch, so all v1 runs started
+    # from torch's default seed and the seed only changed the batches)
+    torch.manual_seed(cfg.seed)
     model = build_chem_model(cfg, params, window_coef)
     if resume is None and cfg.init_from:
         src = Path(cfg.init_from)
@@ -113,7 +120,7 @@ def main():
         log(f"warm start from {cfg.init_from}: {info['layers']} layers (rate network at step {info['rate_step']}); "
             f"chemistry columns zero")
     _, history, evals = train_rate(cfg, params, window_coef, run_dir, refs=cases, log=log, resume=resume, model=model,
-                                   sampler_factory=ChemSampler, evaluate_fn=evaluate_chem,
+                                   sampler_factory=ChemRARSampler if cfg.rar else ChemSampler, evaluate_fn=evaluate_chem,
                                    score_fn=lambda ev: ev["V_rmse_select_mV"], eval_summary_fn=chem_eval_summary,
                                    kind="lispan_chem", extra_save={"design_file": str(design_path)})
     if (run_dir / "final.pt").exists():

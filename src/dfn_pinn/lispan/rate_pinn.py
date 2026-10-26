@@ -738,6 +738,8 @@ def train_rate(cfg: RateTrainConfig, params: LiSPANParams, window_coef, out_dir:
         for step in range(start_step, cfg.adam_steps + 1):
             step_holder[0] = step
             model.charge_total_scale = cfg.charge_total_scale if step >= cfg.charge_total_start else 0.0
+            if hasattr(sampler, "before_step"):         # e.g. residual-based sampling (chem_pinn.ChemRARSampler)
+                sampler.before_step(step, model, residual_fn)
             terms = residual_fn(model, sampler.draw())
             losses = {k: (huber(v, cfg.huber_delta) if k in ("charge_s", "charge_e") else v.square()).mean() for k, v in terms.items()}
             # ---- monitors (unweighted losses)
@@ -821,6 +823,8 @@ def train_rate(cfg: RateTrainConfig, params: LiSPANParams, window_coef, out_dir:
                 else:
                     log("  eval V rmse [mV]: " + " ".join(f"{r:g}C {ev[f'V_rmse_mV@{r:g}']:.3g}" for r in sorted(refs))
                         + f" | mean {ev['V_rmse_mean_mV']:.3g} worst {ev['V_rmse_worst_mV']:.3g} | V max worst {ev['V_max_worst_mV']:.3g}")
+                if getattr(sampler, "stats", None):
+                    log("  sampler: " + ", ".join(f"{k} {v:.3g}" for k, v in sampler.stats.items()))
                 if cfg.keep_best:
                     if score_fn is not None:
                         score = float(score_fn(ev))

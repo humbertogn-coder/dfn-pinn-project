@@ -1,0 +1,10 @@
+# Phase 3b v2 (configs/lispan_chem_v2.json) for slurm/lispan_chem_array.slrm: multi-start, keep the best by the
+# 'select' evaluation cases.  Three seeds with residual-based sampling (the v2 default), the first seed again without
+# it (same initial weights; the batches differ from step 1, so one pair is only a first indication), and one warm start
+# from the wave-4 Phase 3a network (0.1-1 C, 0.15 mV; chemistry columns start at zero) with a lower learning rate.
+# One line per array index; <run name> key=value ... (JSON values, no spaces).
+chem_v2_s0  seed=0
+chem_v2_s1  seed=1
+chem_v2_s2  seed=2
+chem_v2_norar_s0  seed=0 rar=false
+chem_v2_warm_s0  seed=0 init_from="results/lispan_rate_runs/rate_v4_s0/final.pt" lr=0.0003

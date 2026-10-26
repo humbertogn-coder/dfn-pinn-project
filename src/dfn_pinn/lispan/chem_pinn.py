@@ -5,9 +5,12 @@ One trained network returns the discharge (voltage and internal fields) of the S
 training.
 
 Condition vector z, shape (n, 1 + k): z[:, 0] = C-rate r; z[:, 1 + j] = chemistry input j in its own unit:
-    "dU0_m"   offset of the equilibrium potential of step m [V]
-    "b"       natural log of a common multiplier of the three OCV slopes b_1..b_3   ("b_m": of b_m alone)
-    "k0_m"    natural log of a multiplier of the rate constant of step m
+    "dU0_m"     offset of the equilibrium potential of step m [V]
+    "dU0_3rel2" offset of step 3 relative to step 2 [V]: U0_3 moves by dU0_2 + dU0_3rel2, so the step-2/3 gap is
+                0.24 V - dU0_3rel2 and a box on it keeps the steps in order (v2)
+    "b"         natural log of a common multiplier of the three OCV slopes b_1..b_3   ("b_m": of b_m alone;
+                "b_12": of b_1 and b_2 together)
+    "k0_m"      natural log of a multiplier of the rate constant of step m
 The networks see each input mapped to [-1, 1] over its box (appended to the time features, like the rate).
 
 Parameters handled analytically, after the network (exact invariances of the model; the first two checked with the
@@ -17,9 +20,13 @@ finite-volume solver to 1e-6 V, scripts/lispan_chem_design.py --check-invariance
     effective sulfur fraction w_S   -> capacity x w_S, current / w_S (a scaling of the data axes, lispan_lit_rates.py)
 For the irreversible steps 2-3 only k0_m exp(F U0_m / 2RT) enters, so "dU0_m" also stands for their k0_m.
 
-Time window: T = t / t_end(r, theta), ln(r t_cut) a full quadratic in (ln r, theta_hat) fitted to FV cut-off times
-over a design of chemistries (scripts/lispan_chem_design.py), computed at the network's own contact resistance
-params.Z_CC (the window value: a smaller Z_CC than any to be fitted, so that the window covers their discharges).
+Time window: T = t / t_end(r, theta), ln(r t_cut) a polynomial in (ln r, theta_hat) (degree 2-4; v1 and v2 use 4)
+fitted to FV cut-off times over a design of chemistries (scripts/lispan_chem_design.py), computed at the network's own
+contact resistance params.Z_CC (the window value: no larger than any Z_CC to be fitted, so that the window covers their
+discharges; v1 0.010 Ohm m2, v2 0).
+
+Training aids (v2): ChemRARSampler (residual-based sampling at the voltage cliffs) and cliff_metrics (voltage error
+outside the cliffs and the shift of each cliff), reported by evaluate_chem.
 """
 
 from __future__ import annotations
@@ -43,7 +50,18 @@ CHEM_INPUTS_V1 = (
     {"name": "b", "lo": math.log(0.6), "hi": math.log(1.5)},
     {"name": "k0_1", "lo": math.log(0.1), "hi": math.log(10.0)},
 )
-KNOWN_INPUTS = ("dU0_1", "dU0_2", "dU0_3", "b", "b_1", "b_2", "b_3", "k0_1", "k0_2", "k0_3")
+# v2 (2026-10-25): the box of the literature fits (docs/PHASE3B_CHEM_PINN.md, "v1 results", point 5): step 2 up to
+# +0.28 V (gap 1-2 >= 0.02 V), the step-2/3 gap 0.04-0.50 V (always in order), separate OCV slopes for steps 1-2 and 3,
+# k0_1 up to x100.  Used with the network's contact resistance 0 (window covers every Z_CC >= 0).
+CHEM_INPUTS_V2 = (
+    {"name": "dU0_2", "lo": -0.15, "hi": 0.28},
+    {"name": "dU0_3rel2", "lo": -0.26, "hi": 0.20},
+    {"name": "b_12", "lo": math.log(0.5), "hi": math.log(1.6)},
+    {"name": "b_3", "lo": math.log(0.4), "hi": math.log(3.5)},
+    {"name": "k0_1", "lo": math.log(0.1), "hi": math.log(100.0)},
+)
+KNOWN_INPUTS = ("dU0_1", "dU0_2", "dU0_3", "dU0_3rel2", "b", "b_1", "b_2", "b_3", "b_12", "k0_1", "k0_2", "k0_3")
+CHEM_SPECS = {"v1": CHEM_INPUTS_V1, "v2": CHEM_INPUTS_V2}
 
 
 def check_spec(spec):
@@ -59,6 +77,10 @@ def check_spec(spec):
             raise ValueError(f"chemistry input {name!r}: need lo < hi and 0 (nominal) inside [{lo}, {hi}]")
         if name == "b" and any(n.startswith("b_") for n in seen) or name.startswith("b_") and "b" in seen:
             raise ValueError("use either the common 'b' or the individual 'b_m', not both")
+        if name == "b_12" and seen & {"b_1", "b_2"} or name in ("b_1", "b_2") and "b_12" in seen:
+            raise ValueError("'b_12' already moves b_1 and b_2")
+        if {name} | seen >= {"dU0_3", "dU0_3rel2"}:
+            raise ValueError("use either 'dU0_3' or 'dU0_3rel2', not both")
         seen.add(name)
         out.append({"name": name, "lo": lo, "hi": hi})
     return out
@@ -73,20 +95,37 @@ def chem_vector(spec, chem: dict | None):
     return [float(chem.get(s["name"], 0.0)) for s in spec]
 
 
+def chem_effects(spec, values):
+    """Offsets of U0_1..U0_3 [V] and natural-log multipliers of b_1..b_3 and k0_1..k0_3 caused by the inputs; values may
+    be floats or (n, 1) tensors (the same linear map serves the FV solver and the network)."""
+    dU, lb, lk = [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]
+    named = {s["name"]: v for s, v in zip(spec, values)}
+    for name, v in named.items():
+        if name == "dU0_3rel2":
+            dU[2] = dU[2] + v + named.get("dU0_2", 0.0)
+        elif name.startswith("dU0_"):
+            m = int(name[-1]) - 1
+            dU[m] = dU[m] + v
+        elif name == "b":
+            lb = [x + v for x in lb]
+        elif name == "b_12":
+            lb[0], lb[1] = lb[0] + v, lb[1] + v
+        elif name.startswith("b_"):
+            m = int(name[-1]) - 1
+            lb[m] = lb[m] + v
+        elif name.startswith("k0_"):
+            m = int(name[-1]) - 1
+            lk[m] = lk[m] + v
+    return dU, lb, lk
+
+
 def apply_chem(params: LiSPANParams, spec, values) -> LiSPANParams:
     """LiSPANParams with the chemistry inputs applied (for the finite-volume solver)."""
-    U0, b, k0 = list(params.U0), list(params.b), list(params.k0)
-    for s, v in zip(spec, values):
-        name = s["name"]
-        if name.startswith("dU0_"):
-            U0[int(name[-1]) - 1] += v
-        elif name == "b":
-            b = [x * math.exp(v) for x in b]
-        elif name.startswith("b_"):
-            b[int(name[-1]) - 1] *= math.exp(v)
-        elif name.startswith("k0_"):
-            k0[int(name[-1]) - 1] *= math.exp(v)
-    return replace(params, U0=tuple(U0), b=tuple(b), k0=tuple(k0))
+    dU, lb, lk = chem_effects(spec, [float(v) for v in values])
+    U0 = tuple(u + d for u, d in zip(params.U0, dU))
+    b = tuple(x * math.exp(v) for x, v in zip(params.b, lb))
+    k0 = tuple(x * math.exp(v) for x, v in zip(params.k0, lk))
+    return replace(params, U0=U0, b=b, k0=k0)
 
 
 def normalize(spec, values):
@@ -244,24 +283,11 @@ class LiSPANChemPINN(LiSPANRatePINN):
 
     def chem_values(self, z):
         """Per-point U0_m [V], b_m [V], k0_m [mol/m2/s] (each a float or an (n, 1) tensor)."""
-        U0 = [self.U0(m) for m in range(3)]
-        b = [self.b(m) for m in range(3)]
-        k0 = [self.k0(m) for m in range(3)]
-        for j, s in enumerate(self.chem_inputs):
-            col = z[:, 1 + j:2 + j]
-            name = s["name"]
-            if name.startswith("dU0_"):
-                m = int(name[-1]) - 1
-                U0[m] = U0[m] + col
-            elif name == "b":
-                f = torch.exp(col)
-                b = [bm * f for bm in b]
-            elif name.startswith("b_"):
-                m = int(name[-1]) - 1
-                b[m] = b[m] * torch.exp(col)
-            else:                                           # k0_m
-                m = int(name[-1]) - 1
-                k0[m] = k0[m] * torch.exp(col)
+        cols = [z[:, 1 + j:2 + j] for j in range(self.k)]
+        dU, lb, lk = chem_effects(self.chem_inputs, cols)
+        U0 = [self.U0(m) + dU[m] for m in range(3)]
+        b = [self.b(m) * (torch.exp(lb[m]) if torch.is_tensor(lb[m]) else math.exp(lb[m])) for m in range(3)]
+        k0 = [self.k0(m) * (torch.exp(lk[m]) if torch.is_tensor(lk[m]) else math.exp(lk[m])) for m in range(3)]
         return {"U0": U0, "b": b, "k0": k0}
 
     def species(self, Yc, T, z):
@@ -349,6 +375,19 @@ class ChemTrainConfig(RateTrainConfig):
     chem_inputs: tuple = CHEM_INPUTS_V1
     design_file: str = ""                 # window design + evaluation cases (scripts/lispan_chem_design.py)
     init_from: str = ""                   # Phase 3a rate checkpoint to warm-start from (chemistry columns start at zero)
+    # residual-based sampling (v2; ChemRARSampler): every rar_every steps the kinetics residuals (ode1-3 + charge_s) are
+    # evaluated on rar_candidates uniform cathode points; the rar_pool worst are kept and rar_fraction of every cathode
+    # batch is drawn from them with a small jitter (the voltage cliffs of v1 sit where these residuals peak)
+    rar: bool = False
+    rar_every: int = 250
+    rar_candidates: int = 8192
+    rar_pool: int = 1024
+    rar_fraction: float = 0.25
+    rar_chunk: int = 2048
+    rar_jitter_T: float = 0.003           # in T = t / t_end
+    rar_jitter_Y: float = 0.05
+    rar_jitter_lnr: float = 0.02
+    rar_jitter_theta: float = 0.01        # fraction of each box width
 
     def to_dict(self):
         d = super().to_dict()
@@ -376,12 +415,124 @@ class ChemSampler(RateSampler):
                 "b": (self.times(c.n_boundary).to(dev), self.conds(c.n_boundary).to(dev))}
 
 
+class ChemRARSampler(ChemSampler):
+    """ChemSampler plus residual-based refinement of the cathode points (cfg.rar_*).  train_rate calls
+    before_step(step, model, residual_fn) before every draw; the pool of high-residual points is rebuilt every
+    rar_every steps (and on the first step, also after a resume).  Separator and boundary points stay uniform."""
+
+    KIN = ("ode1", "ode2", "ode3", "charge_s")
+
+    def __init__(self, cfg: ChemTrainConfig, dtype, gen, device):
+        super().__init__(cfg, dtype, gen, device)
+        self.pool = None
+        self.last_refresh = None
+        self.stats = {}
+
+    def before_step(self, step, model, residual_fn):
+        c = self.cfg
+        if not c.rar or (self.pool is not None and step - self.last_refresh < c.rar_every):
+            return
+        self.refresh(model, residual_fn)
+        self.last_refresh = step
+
+    def refresh(self, model, residual_fn):
+        c, dev = self.cfg, self.device
+        Y, T, Z = self.u(c.rar_candidates), self.u(c.rar_candidates), self.conds(c.rar_candidates)
+        scores = []
+        for i in range(0, c.rar_candidates, c.rar_chunk):
+            sl = slice(i, i + c.rar_chunk)
+            n = Y[sl].shape[0]
+            batch = {"c": (Y[sl].to(dev), T[sl].to(dev), Z[sl].to(dev)),
+                     "s": (self.u(8).to(dev), self.times(8).to(dev), self.conds(8).to(dev)),
+                     "b": (self.times(4).to(dev), self.conds(4).to(dev))}
+            terms = residual_fn(model, batch)
+            sc = sum(terms[k][:n].detach().square() for k in self.KIN if k in terms)
+            scores.append(sc.view(-1).cpu())
+            del terms
+        score = torch.cat(scores)
+        score = torch.where(torch.isfinite(score), score, torch.full_like(score, -1.0))
+        top = torch.topk(score, min(c.rar_pool, score.numel())).indices
+        self.pool = (Y[top], T[top], Z[top])
+        med = float(score.median())
+        self.stats = {"pool_min": float(score[top].min()), "median": med,
+                      "ratio": float(score[top].min()) / med if med > 0 else float("nan")}
+
+    @staticmethod
+    def _reflect(x):
+        """Jittered coordinates back into (0, 1] by reflection at the ends (no pile-up at an end, never exactly 0)."""
+        x = 1.0 - torch.abs(1.0 - torch.abs(x))
+        return torch.clamp(x, 1e-6, 1.0)
+
+    def _from_pool(self, n):
+        c = self.cfg
+        Y, T, Z = self.pool
+        idx = torch.randint(0, Y.shape[0], (n,), generator=self.gen)
+        g = lambda: torch.randn(n, 1, generator=self.gen, dtype=self.dtype)          # noqa: E731
+        Yn = self._reflect(Y[idx] + c.rar_jitter_Y * g())
+        Tn = self._reflect(T[idx] + c.rar_jitter_T * g())         # T = 0 exactly gives non-finite time derivatives
+        Zn = Z[idx].clone()
+        Zn[:, :1] = torch.clamp(Zn[:, :1] * torch.exp(c.rar_jitter_lnr * g()), c.rate_min, c.rate_max)
+        k = Zn.shape[1] - 1
+        noise = torch.randn(n, k, generator=self.gen, dtype=self.dtype) * c.rar_jitter_theta * (self.hi_t - self.lo_t)
+        Zn[:, 1:] = torch.minimum(torch.maximum(Zn[:, 1:] + noise, self.lo_t), self.hi_t)
+        return Yn, Tn, Zn
+
+    def draw(self):
+        out = super().draw()
+        c, dev = self.cfg, self.device
+        if not c.rar or self.pool is None:
+            return out
+        n_r = int(round(c.rar_fraction * c.n_cathode))
+        if n_r <= 0:
+            return out
+        Yu, Tu, Zu = out["c"]
+        Yr, Tr, Zr = self._from_pool(n_r)
+        out["c"] = (torch.cat([Yu[n_r:], Yr.to(dev)]), torch.cat([Tu[n_r:], Tr.to(dev)]), torch.cat([Zu[n_r:], Zr.to(dev)]))
+        return out
+
+
+def cliff_metrics(x, V_ref, V_mod, slope=5.0, pad=0.01):
+    """Voltage errors split at the voltage cliffs of the reference (docs/PHASE3B_CHEM_PINN.md, "v1 results"):
+    x = t / FV cut-off time, voltages in V.  A cliff = where the reference falls faster than `slope` V per unit x;
+    points within `pad` of one are left out of rms_out.  shifts = x-shift [% of the discharge] of the mid-voltage
+    crossing of each cliff (model minus reference).  Returns (rms_all_mV, rms_out_mV, shifts, share_masked)."""
+    x, V_ref, V_mod = (np.asarray(a, float) for a in (x, V_ref, V_mod))
+    e = 1e3 * (V_mod - V_ref)
+    fast = np.nonzero(-np.gradient(V_ref, x) > slope)[0]
+    mask = np.zeros(len(x), bool)
+    for i in fast:
+        mask |= np.abs(x - x[i]) < pad
+    rms_all = float(np.sqrt(np.mean(e ** 2)))
+    rms_out = float(np.sqrt(np.mean(e[~mask] ** 2))) if (~mask).any() else rms_all
+    shifts = []
+    if fast.size:
+        for g in np.split(fast, np.nonzero(np.diff(fast) > 3)[0] + 1):
+            v_mid = 0.5 * (V_ref[g[0]] + V_ref[g[-1]])
+            lo_, hi_ = max(g[0] - 20, 0), min(g[-1] + 20, len(x) - 1)
+            xs = x[lo_:hi_ + 1]
+
+            def cross(v):
+                d = v[lo_:hi_ + 1] - v_mid
+                j = np.nonzero(np.sign(d[:-1]) != np.sign(d[1:]))[0]
+                if not j.size:
+                    return float("nan")
+                j = j[0]
+                return xs[j] - d[j] * (xs[j + 1] - xs[j]) / (d[j + 1] - d[j])
+
+            sft = 100.0 * (cross(V_mod) - cross(V_ref))
+            if np.isfinite(sft):
+                shifts.append(float(sft))
+    return rms_all, rms_out, shifts, float(mask.mean())
+
+
 def evaluate_chem(model: LiSPANChemPINN, cases: dict) -> dict:
     """cases = {id: {'rate', 'chem' (dict), 'ref' (FV result at the network's Z_CC), 'select' (bool)}} -> per-case
-    voltage errors ('V_rmse_mV@<id>', 'V_max_mV@<id>', 'coverage@<id>' = window end / FV cut-off) and their mean /
-    worst, 'V_rmse_select_mV' (mean over the select cases: best.pt) and 'V_rmse_test_mV' (the others)."""
+    voltage errors ('V_rmse_mV@<id>', 'V_max_mV@<id>', 'coverage@<id>' = window end / FV cut-off, and the cliff-aware
+    'V_rmse_out_mV@<id>' / 'cliff_shift_pct@<id>' of cliff_metrics) with their summaries: mean / worst, 'V_rmse_select_mV'
+    (mean over the select cases: best.pt) and 'V_rmse_test_mV' (the others), 'V_rmse_out_select_mV',
+    'V_rmse_out_test_mV', 'V_rmse_out_worst_test_mV', 'cliff_shift_max_pct'."""
     prm = next(model.parameters())
-    out, rms, mx, sel, test = {}, [], [], [], []
+    out, rms, mx, sel, test, sel_o, test_o, shifts = {}, [], [], [], [], [], [], []
     for cid in sorted(cases):
         c = cases[cid]
         vals = chem_vector(model.chem_inputs, c["chem"])
@@ -396,21 +547,33 @@ def evaluate_chem(model: LiSPANChemPINN, cases: dict) -> dict:
         m = t > 100.0
         r_ = 1e3 * float(np.sqrt(np.mean(e[m] ** 2)))
         x_ = 1e3 * float(np.abs(e[m]).max())
+        _, r_out, sh, _ = cliff_metrics(t[m] / t_all[-1], V_all[keep][m], V[m].astype(float))
         out[f"V_rmse_mV@{cid}"], out[f"V_max_mV@{cid}"] = r_, x_
+        out[f"V_rmse_out_mV@{cid}"] = r_out
+        out[f"cliff_shift_pct@{cid}"] = max((abs(v) for v in sh), default=0.0)
         out[f"coverage@{cid}"] = float(te / t_all[-1])
-        rms.append(r_); mx.append(x_)
+        rms.append(r_); mx.append(x_); shifts += [abs(v) for v in sh]
         (sel if c.get("select") else test).append(r_)
+        (sel_o if c.get("select") else test_o).append(r_out)
     if rms:
         out.update({"V_rmse_mean_mV": float(np.mean(rms)), "V_rmse_worst_mV": float(np.max(rms)),
                     "V_max_worst_mV": float(np.max(mx)),
                     "V_rmse_select_mV": float(np.mean(sel)) if sel else float(np.mean(rms)),
-                    "V_rmse_test_mV": float(np.mean(test)) if test else float("nan")})
+                    "V_rmse_test_mV": float(np.mean(test)) if test else float("nan"),
+                    "V_rmse_out_select_mV": float(np.mean(sel_o)) if sel_o else float("nan"),
+                    "V_rmse_out_test_mV": float(np.mean(test_o)) if test_o else float("nan"),
+                    "V_rmse_out_worst_test_mV": float(np.max(test_o)) if test_o else float("nan"),
+                    "cliff_shift_max_pct": float(max(shifts, default=0.0))})
     return out
 
 
 def chem_eval_summary(ev: dict) -> str:
-    return (f"V rmse [mV]: select {ev['V_rmse_select_mV']:.3g} test {ev['V_rmse_test_mV']:.3g} | mean "
-            f"{ev['V_rmse_mean_mV']:.3g} worst {ev['V_rmse_worst_mV']:.3g} | V max worst {ev['V_max_worst_mV']:.3g}")
+    out = (f"V rmse [mV]: select {ev['V_rmse_select_mV']:.3g} test {ev['V_rmse_test_mV']:.3g} | mean "
+           f"{ev['V_rmse_mean_mV']:.3g} worst {ev['V_rmse_worst_mV']:.3g} | V max worst {ev['V_max_worst_mV']:.3g}")
+    if "V_rmse_out_select_mV" in ev:
+        out += (f" | outside cliffs select {ev['V_rmse_out_select_mV']:.3g} test {ev['V_rmse_out_test_mV']:.3g} "
+                f"(worst test {ev['V_rmse_out_worst_test_mV']:.3g}) | cliff shift max {ev['cliff_shift_max_pct']:.2g} %")
+    return out
 
 
 def build_chem_model(cfg: ChemTrainConfig, params: LiSPANParams, window_coef) -> LiSPANChemPINN:

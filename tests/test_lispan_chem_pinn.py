@@ -30,12 +30,12 @@ def embed_rate_window(coef3, k=K):
     return c.tolist()
 
 
-def paired_models():
+def paired_models(spec=CHEM_INPUTS_V1):
     """A rate model and a chem model with the same weights (chemistry inputs disconnected)."""
     coef3, _ = fit_window(list(T_CUT), list(T_CUT.values()))
     rm = LiSPANRatePINN(PARAMS, coef3, 0.1, 1.0, width=16, depth=2, fourier_t=2, quad_order=8,
                         salt_sep_natural_scale=True).double()
-    cm = LiSPANChemPINN(PARAMS, embed_rate_window(coef3), CHEM_INPUTS_V1, 0.1, 1.0, width=16, depth=2, fourier_t=2,
+    cm = LiSPANChemPINN(PARAMS, embed_rate_window(coef3, len(spec)), spec, 0.1, 1.0, width=16, depth=2, fourier_t=2,
                         quad_order=8, salt_sep_natural_scale=True).double()
     with torch.no_grad():
         for name in ("net_R", "net_xi", "net_ce", "net_phie"):
@@ -203,3 +203,108 @@ def test_window_cache_and_vectorized_features():
     assert torch.equal(m.t_end(z1), m._t_end(z1)) and not torch.equal(m.t_end(z1), a1)
     zq = z2.reshape(-1, 1, z2.shape[1]).expand(-1, 3, -1).reshape(-1, z2.shape[1])
     assert torch.equal(m.t_end(zq), m._t_end(zq))
+
+
+# ---------------------------------------------------------------------------------------------------------------- v2
+def test_v2_spec_effects_and_kinetics():
+    """v2 inputs (dU0_3rel2, b_12, b_3): spec checks, the FV map apply_chem, and the per-point kinetics of the network
+    equal the rate model with the same parameters as scalar multipliers."""
+    from dfn_pinn.lispan.chem_pinn import CHEM_INPUTS_V2, chem_effects
+    spec2 = check_spec(CHEM_INPUTS_V2)
+    with pytest.raises(ValueError):
+        check_spec([{"name": "b_12", "lo": -1, "hi": 1}, {"name": "b_1", "lo": -1, "hi": 1}])
+    with pytest.raises(ValueError):
+        check_spec([{"name": "dU0_3", "lo": -1, "hi": 1}, {"name": "dU0_3rel2", "lo": -1, "hi": 1}])
+    vals = [0.05, -0.03, math.log(1.3), math.log(0.8), math.log(3.0)]
+    dU, lb, lk = chem_effects(spec2, vals)
+    assert np.allclose(dU, [0.0, 0.05, 0.02]) and np.allclose(np.exp(lb), [1.3, 1.3, 0.8]) and np.allclose(np.exp(lk), [3, 1, 1])
+    p2 = apply_chem(PARAMS, spec2, vals)
+    assert np.allclose(np.array(p2.U0) - np.array(PARAMS.U0), [0.0, 0.05, 0.02])
+    assert np.allclose(np.array(p2.b) / np.array(PARAMS.b), [1.3, 1.3, 0.8])
+    # the steps stay in order over the whole box: gap 1-2 >= 0.02 V, gap 2-3 >= 0.04 V
+    g12 = PARAMS.U0[0] - PARAMS.U0[1]; g23 = PARAMS.U0[1] - PARAMS.U0[2]
+    assert g12 - CHEM_INPUTS_V2[0]["hi"] >= 0.019 and g23 - CHEM_INPUTS_V2[1]["hi"] >= 0.039
+    rm, cm = paired_models(spec2)
+    rm.set_parameter_values({"U0_2": 0.05, "U0_3": 0.02, "b_1": 1.3, "b_2": 1.3, "b_3": 0.8, "k0_1": 3.0})
+    g = torch.Generator().manual_seed(9)
+    Yc, T = torch.rand(10, 1, generator=g, dtype=torch.float64), torch.rand(10, 1, generator=g, dtype=torch.float64)
+    Ys, Ts = torch.rand(6, 1, generator=g, dtype=torch.float64), torch.rand(6, 1, generator=g, dtype=torch.float64)
+    Tb = torch.rand(4, 1, generator=g, dtype=torch.float64)
+
+    def rr(x):
+        return torch.full_like(x, 0.5)
+
+    def zz(x):
+        return torch.cat([rr(x), torch.tensor([vals], dtype=x.dtype).expand(x.shape[0], -1)], dim=1)
+    out_r = rate_residuals(rm, {"c": (Yc, T, rr(T)), "s": (Ys, Ts, rr(Ts)), "b": (Tb, rr(Tb))})
+    out_c = rate_residuals(cm, {"c": (Yc, T, zz(T)), "s": (Ys, Ts, zz(Ts)), "b": (Tb, zz(Tb))})
+    for k in ("ode1", "ode2", "ode3", "charge_s"):
+        torch.testing.assert_close(out_c[k].detach(), out_r[k].detach(), rtol=1e-9, atol=1e-11)
+
+
+def test_cliff_metrics():
+    """A cliff moved by 0.3 % of the discharge: large rms, small rms outside the cliff, shift found."""
+    from dfn_pinn.lispan.chem_pinn import cliff_metrics
+    x = np.linspace(0.01, 0.97, 3000)
+
+    def curve(x0):
+        return 2.1 - 0.4 * x - 0.15 * (1 + np.tanh((x - x0) / 0.002)) / 2
+    r_all, r_out, shifts, share = cliff_metrics(x, curve(0.5), curve(0.503))
+    assert r_all > 3.0 and r_out < 1e-3 and len(shifts) == 1 and abs(shifts[0] - 0.3) < 0.02 and 0 < share < 0.05
+    r_all, r_out, shifts, _ = cliff_metrics(x, 2.1 - 0.4 * x, 2.1 - 0.4 * x + 1e-3)
+    assert shifts == [] and abs(r_all - 1.0) < 1e-9 and abs(r_out - 1.0) < 1e-9
+
+
+def test_rar_sampler_pool_and_mix():
+    """ChemRARSampler keeps the worst candidates and mixes rar_fraction of them into the cathode batch, inside the box;
+    with rar off it draws exactly what ChemSampler draws."""
+    from dfn_pinn.lispan.chem_pinn import CHEM_INPUTS_V2, ChemRARSampler
+    spec2 = check_spec(CHEM_INPUTS_V2)
+    cfg = ChemTrainConfig(chem_inputs=spec2, n_cathode=40, n_separator=8, n_boundary=4, rar=True, rar_every=10,
+                          rar_candidates=500, rar_pool=20, rar_fraction=0.25, rar_chunk=128, rar_jitter_T=1e-3)
+
+    def fake_residuals(model, batch):                  # "kinetics residual" large only where T > 0.9
+        T = batch["c"][1]
+        big = (T > 0.9).to(T.dtype)
+        return {"ode1": big * 10.0 + 1e-3, "salt_c": torch.zeros_like(T)}
+    s = ChemRARSampler(cfg, torch.float64, torch.Generator().manual_seed(3), "cpu")
+    s.before_step(1, None, fake_residuals)
+    assert s.pool[1].min() > 0.9 and s.pool[0].shape == (20, 1)
+    b = s.draw()
+    Y, T, Z = b["c"]
+    assert Y.shape == (40, 1) and Z.shape == (40, 1 + len(spec2))
+    assert (T[-10:] > 0.89).all()                                       # the last 25 % come from the pool
+    Yp, Tp, _ = s._from_pool(2000)
+    assert float(Tp.min()) > 0.0 and float(Yp.min()) > 0.0 and float(Tp.max()) <= 1.0   # reflected, never exactly 0
+    lo = torch.tensor([x["lo"] for x in spec2], dtype=torch.float64); hi = torch.tensor([x["hi"] for x in spec2], dtype=torch.float64)
+    assert torch.all(Z[:, 1:] >= lo) and torch.all(Z[:, 1:] <= hi) and torch.all(Z[:, 0] <= cfg.rate_max + 1e-12)
+    pool_before = s.pool
+    s.before_step(5, None, fake_residuals); assert s.pool is pool_before        # not yet rar_every steps later
+    s.before_step(11, None, fake_residuals); assert s.pool is not pool_before
+    cfg_off = ChemTrainConfig(chem_inputs=spec2, n_cathode=40, n_separator=8, n_boundary=4, rar=False)
+    a = ChemRARSampler(cfg_off, torch.float64, torch.Generator().manual_seed(4), "cpu")
+    c = ChemSampler(cfg_off, torch.float64, torch.Generator().manual_seed(4), "cpu")
+    a.before_step(1, None, fake_residuals)
+    for x_, y_ in zip(a.draw()["c"], c.draw()["c"]):
+        assert torch.equal(x_, y_)
+
+
+def test_train_with_rar_through_the_loop(tmp_path):
+    """A tiny v2 run with residual-based sampling through train_rate (the before_step hook and the cliff metrics)."""
+    from dfn_pinn.lispan.chem_pinn import CHEM_INPUTS_V2, ChemRARSampler
+    spec2 = check_spec(CHEM_INPUTS_V2)
+    coef3, _ = fit_window(list(T_CUT), list(T_CUT.values()))
+    cfg = ChemTrainConfig(chem_inputs=spec2, width=8, depth=1, fourier_t=1, quad_order=4, n_cathode=8, n_separator=4,
+                          n_boundary=4, adam_steps=6, log_every=1000, eval_every=3, latest_every=0, checkpoint_every=0,
+                          threads=1, rar=True, rar_every=2, rar_candidates=64, rar_pool=8, rar_chunk=32)
+    coef = embed_rate_window(coef3, len(spec2))
+    model = build_chem_model(cfg, PARAMS, coef)
+    t = np.linspace(0, 2800, 60)
+    cases = {"nominal_1C": {"rate": 1.0, "chem": {}, "ref": {"t": t, "V": 2.0 - 0.1 * (t > 1400)}, "select": True},
+             "other_1C": {"rate": 1.0, "chem": {"b_3": 0.5}, "ref": {"t": t, "V": np.full_like(t, 2.0)}, "select": False}}
+    logs = []
+    train_rate(cfg, PARAMS, coef, tmp_path, refs=cases, log=logs.append, model=model, sampler_factory=ChemRARSampler,
+               evaluate_fn=evaluate_chem, score_fn=lambda ev: ev["V_rmse_select_mV"], eval_summary_fn=chem_eval_summary,
+               kind="lispan_chem", extra_save={})
+    assert (tmp_path / "final.pt").exists()
+    assert any("outside cliffs" in m for m in logs) and any(m.startswith("  sampler:") for m in logs)
