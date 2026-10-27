@@ -261,3 +261,7 @@ Li-SPAN pass); ready to submit (`sbatch slurm/lispan_chem_array.slrm`, now the v
 2026-10-27: v2 trained and analysed (results above); chem_v2_norar_s0/final.pt chosen for the tool.  Next: the two-curve
 tool (fit with w_S on real data, uncertainty, validity flags) validated against FV fits of the literature datasets in
 the v2 parameterization.
+2026-10-27 (later): two-curve tool built and validated (docs/TWO_CURVE_TOOL.md).  On six published datasets the network
+fit matches an FV fit of the same points within 1 sd in 45 of 47 parameters (the two exceptions: b_3 at the box edge,
+flagged) and within 0.6 mV in misfit, at 12-60x lower cost.  Usable rate pairs are limited by the network's 0.1-1 C
+range (current ratio <= 10); the literature fast rates (2 C and above) need a wider-range network.
