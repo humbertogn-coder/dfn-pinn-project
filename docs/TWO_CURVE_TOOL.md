@@ -177,6 +177,46 @@ Limitations:
     extend b_3 to ~5.
   - For the Ma cells the edges reflect the model misfit, not the box.
 
+## Synthetic test with w_S free (known truth, 2026-10-27)
+
+The literature validation compares the network with FV but has no true answer.  This test has one
+(`scripts/lispan_two_curve_synthetic.py`, results `results/lispan/two_curve/synthetic_0.2+0.6.json`):
+1. FV discharges are generated for the 13 evaluation chemistries of the v2 design.  They include the box-corner test
+   chemistries p5-p7 and the three literature-like ones.
+2. The rates are 0.2 + 0.6 C.  Interior rates are needed so the rate range does not pin w_S; the evaluation
+   references at 0.1 / 1 C would put the true w_S exactly on a bound.
+3. The truth has w_S = 0.8 or 1.25 (alternating), d = +20 mV and Z_CC = 20 Ohm cm2.
+4. The curves are fitted exactly like measured data (capacity basis, 80 points to 0.90 of the end capacity, 8
+   starts), noise-free and with 5 mV noise (2 draws per chemistry).
+
+Noise-free errors come from the network alone.  The 10 chemistries without flags give:
+
+| parameter | median | max | note |
+|---|---|---|---|
+| w_S | 0.12 % | 0.26 % | |
+| dU0_2 | 0.4 mV | 1.4 mV | |
+| dU0_3rel2 | 1.5 mV | 4.1 mV | |
+| b_12 | 0.2 % | 0.3 % | |
+| b_3 | 0.6 % | 1.1 % | |
+| k0_1 | 2.2 % | 35 % | max at p1 (k0_1 x45: step 1 near equilibrium, weak sensitivity; sd at 5 mV ~40 %) |
+| d | 0.5 mV | 1.2 mV | |
+| Z_CC | 1.3 Ohm cm2 | 2.0 Ohm cm2 | |
+
+The three flagged chemistries (box_edge) are the worst cases:
+- **p6** (dU0_2 +0.26 V, dU0_3rel2 +0.18 V, b_3 x0.45): the fit runs to the dU0_3rel2 edge.  The errors are +20 mV in
+  dU0_3rel2, +9 % in b_3 and 0.8 % in w_S.
+- **p7** (k0_1 x93): k0_1 comes out -59 %, flagged through b_12 at its edge.
+- **p5**: small errors despite the flag.
+
+With 5 mV noise (26 fits), the error divided by the tool's linearized sd has a median of 0.55-0.98 for every
+parameter except w_S.  92-100 % of those values lie within 2 sd (95 % expected).  w_S is the exception: median 1.23,
+only 81 % within 2 sd.  Its noise sd is small (median 0.22 %), so the network's own error of ~0.15 % is not
+negligible against it.  In absolute terms all w_S errors of unflagged fits stay below 0.6 %.  Practical reading:
+treat the w_S uncertainty as at least ~0.3 %.
+
+The misfit flag fires in 14 of the 26 noisy fits, because rms 4.5-5.6 mV is just above its 5 mV threshold.  The
+threshold assumes measurement noise well below 5 mV.
+
 ## Files
 
 - `src/dfn_pinn/lispan/two_curve.py`: Curve, TwoCurveFit (mapping, fit, report with flags, prediction), FV
@@ -184,6 +224,9 @@ Limitations:
 - `scripts/lispan_two_curve_fit.py`: CLI (data loaders, JSON and figure).
 - `scripts/lispan_lit_v2form.py`: FV fit of the same points for the validation (checkpointed, `--resume`).
 - `report/phase3/make_two_curve_figure.py`: validation figure and table.
+- `scripts/lispan_two_curve_synthetic.py`: known-truth test (FV curves of the design's evaluation chemistries at
+  interior rates, w_S / d / Z_CC away from nominal, noise-free and noisy).  `--workers 2 --draws 2` took 52 min in
+  the sandbox.
 - `tests/test_lispan_two_curve.py`: 5 tests:
   - ramp inversion;
   - rate mapping and w_S bounds;
