@@ -203,6 +203,47 @@ Acceptance (revised gate, `scripts/lispan_chem_summary.py`): test chemistries ou
 then the parameter recovery of the best run (`scripts/lispan_chem_recovery.py --design configs/lispan_chem_design_v2.json`)
 compared with the 5 mV-noise standard deviation.
 
+## v2 results (Grace, array 20288770, finished 2026-10-27)
+
+34.8-37.9 h per run, MaxRSS 0.94-1.11 GB, ~181 SU.  Voltage rms error vs FV [mV] over the 5 select chemistries (15
+cases) and the 8 test chemistries (24 cases, 9 of them the literature-like ones); "out" = outside the voltage cliffs.
+
+| Run | final select / test / worst | out select / test / worst test | cliff shift max | rollbacks | frozen inventory / charge | revised gate |
+|---|---|---|---|---|---|---|
+| **chem_v2_norar_s0** | 2.00 / 1.78 / 7.13 | **1.02 / 1.15 / 2.41** | **0.32 %** | 2 | 0.21 / 776 | PASS |
+| chem_v2_s0 | 3.10 / 2.16 / 8.98 | 1.51 / 1.47 / 2.75 | 0.45 % | 2 | 0.21 / 726 | PASS |
+| chem_v2_warm_s0 | 2.12 / 2.32 / 7.08 | 1.48 / 1.59 / 4.70 | 0.39 % | 0 | 0.21 / 738 | PASS |
+| chem_v2_s1 | 204 / 153 / 334 (collapsed) | 206 / 153 | - | 8 | 817 / 2.3 | FAIL |
+| chem_v2_s2 | 315 / 239 / 442 (collapsed) | 318 / 239 | - | 15 | 469 / 5.3 | FAIL |
+
+Revised gate (voltage part): 3 of 5 runs pass -> PASS.  Strict gate: 0 of 5 (the cliffs).  Findings
+(`report/phase3/figures/p3b_v2_errors.png`, `p3b_v2_recovery.png`):
+
+1. **The wider box costs little.**  The best run (chem_v2_norar_s0) is at 1.02 / 1.15 mV outside the cliffs (v1, on a
+   much smaller box: 0.88 / 0.76), worst test case 2.41 mV, and places every cliff within 0.32 % of the capacity (v1:
+   0.61 %).  The three literature-like chemistries are at 0.4-1.4 mV outside the cliffs; the nominal one at 0.38 / 0.39
+   / 0.79 mV (0.1 / 0.3 / 1 C).
+2. **Residual-based sampling did not help.**  Same seed and initial weights: without it 1.02 / 1.15 mV and 0.32 %, with
+   it 1.51 / 1.47 mV and 0.45 %; two of the four runs with it collapsed, the run without it did not (one pair and five
+   runs, so no proof of harm, but no sign of benefit either).  Its pool was only ~4-5 times the median residual: the
+   kinetics residuals are not localized enough at the cliffs for it to concentrate points there.
+3. **Collapses are the Phase 3a mechanism again**: s1 and s2 froze with the charge weight at 2-5 and the inventory weight
+   at 470-820 (good runs: 0.21 / ~750).  Multi-start handled it (3 of 5 good).
+4. **Every run is at ~30-130 mV until the inventory term switches on at 40 000 steps**, then drops to ~5 mV within
+   5 000 steps (panel c): a fifth of the budget is spent before the term that makes the solution unique is active.
+5. **Parameter recovery** (`scripts/lispan_chem_recovery.py --design configs/lispan_chem_design_v2.json`, chem_v2_norar_s0,
+   0.1 + 1 C, 7 parameters, 13 chemistries, 10 noise draws; empirical / linearized sd: median 0.98).  Median
+   noise-free error over the chemistries: dU0_2 1.4 mV, dU0_3rel2 2.1 mV, b_12 0.3 %, b_3 0.5 %, k0_1 3.4 %, d 0.4 mV,
+   dZ 0.9 Ohm cm2.  Bias / sd at 5 mV noise: median 0.75 (by parameter 0.5-1.3), 90 % of the values below 3; the three
+   literature-like chemistries at most 1.5.  The exceptions: p5 (k0_1 x0.115 and dU0_3rel2 -0.255, both at the edge
+   of the box; 4-7 sd, k0_1 +83 %, d -31 mV, the k0_1 / d / dU0 valley) k0_1 at p1 / p7 (x45 / x93, near-equilibrium
+   step 1, -37 %, 2-2.5 sd) and dZ at p1 (-3.1 Ohm cm2, 4.9 sd).  Revised gate part 3: the median passes, "every chemistry < 3 sd" fails at the box corner.
+
+**Decision.**  chem_v2_norar_s0/final.pt is the network for the two-curve tool (v2).  Inside the realistic region its
+error is at or below that of a 5 mV measurement; fits that land near the box edge (k0_1 near x0.1 or x100, dU0_3rel2
+near -0.26) must be flagged.  For further training: no residual-based sampling; try the inventory term earlier
+(e.g. from 15 000-20 000 steps; in single-rate training it fought the extent ODEs when active from step 1).
+
 ## Status
 
 2026-10-22: code, tests (9 chem + 12 rate + 14 other Li-SPAN tests pass), design (644 FV runs) and the 24 references.
@@ -217,3 +258,6 @@ second warm start added.  Ready to submit (`sbatch slurm/lispan_chem_array.slrm`
 most literature cells; v2 proposed, waiting for the owner's decision.
 2026-10-25 (later): v2 built (code, 1612-run FV design, 39 references, configs, slurm, tests 13 chem + 12 rate + 14 other
 Li-SPAN pass); ready to submit (`sbatch slurm/lispan_chem_array.slrm`, now the v2 default).
+2026-10-27: v2 trained and analysed (results above); chem_v2_norar_s0/final.pt chosen for the tool.  Next: the two-curve
+tool (fit with w_S on real data, uncertainty, validity flags) validated against FV fits of the literature datasets in
+the v2 parameterization.
