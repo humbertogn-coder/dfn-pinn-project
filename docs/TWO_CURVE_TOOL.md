@@ -44,7 +44,8 @@ The fast curves of the literature datasets map above 1 C, so the pairs used in P
 | Ma 2026 SPAN / SPAN-A (w_S ~0.7-1.1) | 0.2 + 1 C | 0.2-0.36 / 1.2-1.8 C | 0.2 + 0.5 C (prediction 0.3 C) |
 | Simanjuntak 2024 Fig. 4b | 0.1 + 1 C | 0.1 / 1 C | 0.1 + 1 C (prediction 0.2 C) |
 
-Fitting the literature's fast rates (2 C and above) would need a network trained on a wider rate range.
+Fitting the literature's fast rates (2 C and above) needs a network trained on a wider rate range.  That network
+(v3, 0.08-3 C, current ratio up to 37.5) is built and ready to train (docs/PHASE3B_CHEM_PINN.md, "v3").
 
 ## Usage
 
@@ -68,7 +69,8 @@ Other options:
   is the error the network itself causes at this solution (the "network bias").
 
 Output: `results/lispan/two_curve/<name>.json`, plus `<name>.png` with `--plot`.  The JSON holds:
-- the parameters, with linearized sd (w_S, b, k0 in % of the value; dU0 and d in mV; Z_CC in Ohm cm2);
+- the parameters, with the statistical sd (`sd`) and the total sd (`sd_total`, which adds the network error floor in
+  quadrature).  w_S, b and k0 are in % of the value, dU0 and d in mV, Z_CC in Ohm cm2;
 - the correlation matrix;
 - the rms misfit per curve, the model rates, and T_max (the data end as a fraction of the network window);
 - the per-step U0 and b;
@@ -90,8 +92,18 @@ Output: `results/lispan/two_curve/<name>.json`, plus `<name>.png` with `--plot`.
 | correlated | info | Correlation above 0.95 between two parameters. |
 | Z_CC_zero, w_S_fixed_by_range | info | The parameter is at its physical bound, or is fixed by the rate span. |
 
-The linearized sd uses sigma from the residuals.  When the residuals are model error (smooth and correlated) rather
-than noise, it is a lower bound.
+The statistical sd is linearized, with sigma from the residuals.  When the residuals are model error (smooth and
+correlated) rather than noise, it is a lower bound.
+
+`sd_total` adds the network's own error in quadrature.  The floor comes from the known-truth test below: the rms of the
+noise-free errors over the 10 unflagged chemistries (`NETWORK_SD` in two_curve.py, chem_v2_norar_s0 only).  Values:
+
+| w_S | dU0_2 | dU0_3rel2 | b_12 | b_3 | k0_1 | d | Z_CC |
+|---|---|---|---|---|---|---|---|
+| 0.14 % | 0.64 mV | 2.1 mV | 0.22 % | 0.71 % | 11.6 % | 0.56 mV | 1.25 Ohm cm2 |
+
+The poorly_identified flag uses `sd_total`.  For another network the CLI warns that no floor is known, and `sd_total`
+equals the statistical sd.
 
 ## Validation against FV fits (2026-10-27)
 
@@ -211,8 +223,11 @@ The three flagged chemistries (box_edge) are the worst cases:
 With 5 mV noise (26 fits), the error divided by the tool's linearized sd has a median of 0.55-0.98 for every
 parameter except w_S.  92-100 % of those values lie within 2 sd (95 % expected).  w_S is the exception: median 1.23,
 only 81 % within 2 sd.  Its noise sd is small (median 0.22 %), so the network's own error of ~0.15 % is not
-negligible against it.  In absolute terms all w_S errors of unflagged fits stay below 0.6 %.  Practical reading:
-treat the w_S uncertainty as at least ~0.3 %.
+negligible against it.  In absolute terms all w_S errors of unflagged fits stay below 0.6 %.
+
+With the network floor added (`sd_total`, above), 92-100 % of the errors lie within 2 sd for every parameter.  w_S goes
+from 81 % to 96 % (unflagged fits: 76 % to 95 %).  The floor was set and checked on the same 26 fits, so this is a
+consistency check, not an independent test.
 
 The misfit flag fires in 14 of the 26 noisy fits, because rms 4.5-5.6 mV is just above its 5 mV threshold.  The
 threshold assumes measurement noise well below 5 mV.

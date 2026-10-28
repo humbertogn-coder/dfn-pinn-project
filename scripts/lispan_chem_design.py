@@ -22,6 +22,7 @@ import json
 import os
 from multiprocessing import Pool
 from pathlib import Path
+import signal
 import sys
 import time
 
@@ -38,6 +39,37 @@ def base_params(Z_CC, reversible=(True, False, False)):
     return replace(LiSPANParams(), c_DL=1e-6, Z_CC=Z_CC, reversible=tuple(reversible))
 
 
+class SolveTimeout(Exception):
+    pass
+
+
+def _alarm(*_):
+    raise SolveTimeout()
+
+
+# FV attempts in order: a few discharges stall at the default tolerance (seen 2026-10-27: the litHao chemistry at 1.5 C
+# hangs at rtol 1e-6 on 20/10 cells, but solves in 6 s at rtol 1e-5 with the same cut-off time to 0.01 %)
+ATTEMPTS = ({}, {"rtol": 1e-5}, {"rtol": 1e-6, "dN": (4, 2)})
+
+
+def solve_retry(p, prot, N_c, N_s, n_out, timeout=120):
+    """solve() with a time limit per attempt and the fallbacks of ATTEMPTS; returns (res, attempt index)."""
+    last = None
+    for k, att in enumerate(ATTEMPTS):
+        dn = att.get("dN", (0, 0))
+        old = signal.signal(signal.SIGALRM, _alarm)
+        signal.alarm(timeout)
+        try:
+            _, res = solve(p, prot, N_c=N_c + dn[0], N_s=N_s + dn[1], n_out=n_out, rtol=att.get("rtol", 1e-6))
+            return res, k
+        except Exception as exc:                               # noqa: BLE001 - try the next attempt
+            last = exc
+        finally:
+            signal.alarm(0)
+            signal.signal(signal.SIGALRM, old)
+    raise RuntimeError(f"all FV attempts failed (last: {last!r})")
+
+
 def cutoff_case(job):
     """One FV discharge -> cut-off time (coarse grid: the cut-off time is grid-insensitive, 2838 s vs 2838 s at 1 C)."""
     spec, values, rate, Z_CC = job
@@ -45,11 +77,11 @@ def cutoff_case(job):
     prot = LiSPANProtocol.from_crate(rate, ramp_s=30.0)
     t0 = time.perf_counter()
     try:
-        _, res = solve(p, prot, N_c=20, N_s=10, n_out=200)
+        res, att = solve_retry(p, prot, 20, 10, 200)
         V = np.asarray(res["V"])
         ok = bool(res["solver"]["success"]) and bool(V[-1] <= prot.V_min + 1e-3)
         return {"rate": rate, "chem": values, "t_cut": float(res["t"][-1]), "ok": ok, "V_end": float(V[-1]),
-                "wall_s": time.perf_counter() - t0, "message": res["solver"]["message"]}
+                "wall_s": time.perf_counter() - t0, "message": res["solver"]["message"], "attempt": att}
     except Exception as exc:                                   # noqa: BLE001 - record and go on
         return {"rate": rate, "chem": values, "t_cut": float("nan"), "ok": False, "V_end": float("nan"),
                 "wall_s": time.perf_counter() - t0, "message": repr(exc)}
@@ -63,11 +95,12 @@ def reference_case(job):
     p = apply_chem(base_params(Z_CC), spec, values)
     prot = LiSPANProtocol.from_crate(rate, ramp_s=30.0)
     t0 = time.perf_counter()
-    _, res = solve(p, prot, N_c=40, N_s=20, n_out=800)
+    res, att = solve_retry(p, prot, 40, 20, 800, timeout=600)
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_name(f"{path.stem}.tmp{os.getpid()}.npz")         # parallel jobs may build the same reference
     meta = {"purpose": "chem PINN evaluation reference (c_DL -> 0), voltage only", "rate": rate, "Z_CC": Z_CC,
-            "chem": dict(zip([s["name"] for s in spec], values)), "solver": res["solver"]["message"]}
+            "chem": dict(zip([s["name"] for s in spec], values)), "solver": res["solver"]["message"],
+            "fv_attempt": ATTEMPTS[att]}
     np.savez_compressed(tmp, t=np.asarray(res["t"]), V=np.asarray(res["V"]), meta=json.dumps(meta))
     tmp.replace(path)
     return str(path), res["solver"]["message"], time.perf_counter() - t0

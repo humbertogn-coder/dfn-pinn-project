@@ -244,6 +244,59 @@ error is at or below that of a 5 mV measurement; fits that land near the box edg
 near -0.26) must be flagged.  For further training: no residual-based sampling; try the inventory term earlier
 (e.g. from 15 000-20 000 steps; in single-rate training it fought the extent ODEs when active from step 1).
 
+## v3: wider rate range (built 2026-10-27, not trained yet)
+
+Purpose: the v2 network covers 0.1-1 C, so a two-curve fit can only use currents within a factor of 10.  The fast
+curves of the literature map above 1 C at their w_S (docs/TWO_CURVE_TOOL.md, "The rate range").  v3 keeps everything
+of v2 that worked and changes the rate range, plus three recipe items.
+
+| Item | v2 | v3 | Reason |
+|---|---|---|---|
+| Rate range | 0.1-1 C (x10) | **0.08-3 C** (x37.5) | the pairs in the table below become possible |
+| Chemistry inputs and box | dU0_2, dU0_3rel2, b_12, b_3, k0_1 | unchanged | change one thing at a time |
+| FV design | 403 chemistries x 0.1/0.2/0.5/1 C = 1612 runs | same 403 chemistries x **0.08/0.1/0.2/0.5/1/2/3 C = 2821 runs** (the 1612 reused), all reach the cut-off | |
+| Window | degree 4 (210 coef.), max 3.6 %, held-out 4.7 %, fraction 0.95 | **degree 6** (924 coef.), max 1.6 %, held-out 4.0 % (worst over-prediction 3.1 %), fraction **0.95**; evaluation cases covered 92.4-97.9 % | degree 4 over 0.1-3 C: max 6.3 %, held-out 8.8 %, which would have forced a fraction of ~0.91 |
+| Evaluation | 13 chemistries x 0.1/0.3/1 C | same chemistries x **0.1/0.3/1/3 C** (52 references; the 39 of v2 reused, identical) | the high end of the range |
+| Residual-based sampling | on (s0-s2, warm) | **off** | no benefit in v2 (same-seed pair) |
+| Inventory term start | 40 000 | **20 000** (one variant keeps 40 000) | v2 runs sat at 30-130 mV until it started |
+| Steps | 200 000 | **250 000** | wider range |
+| Warm start | from the 3a rate network rate_v4_s0 | from the **v2 tool network chem_v2_norar_s0** (same inputs; `warm_start_from_rate` now also copies chem checkpoints) | smoke: 18.3 mV mean after 60 steps vs ~280 mV from scratch |
+
+FV feasibility at high rates (60 chemistries of the box, 20/10 cells):
+- 1.5, 2 and 3 C all reach the cut-off.
+- The salt stays within 0.64-1.38 x c0 at 3 C, inside the network's +-50 % salt bound.
+- Capacity at 3 C is 811-1254 mAh/g (median 1001).
+- One case stalled at the default tolerance: the litHao chemistry at 1.5 C.  It solves in 6 s at rtol 1e-5.
+  `scripts/lispan_chem_design.py` therefore now retries with a time limit (rtol 1e-6, then 1e-5, then 24/12 cells);
+  one of the 1209 new design runs needed the retry (a 3 C case).
+
+Speed: with a degree-6 window, the per-condition window features (924) took 2 x 0.15 s per step on the quadrature-
+expanded conditions (18 432 rows).  `_t_end` now evaluates the window once per row when the condition tensor is a
+quadrature expansion (detected exactly; test added).  The sandbox now runs 0.39-0.43 s per step (v2: 0.56), so
+250 000 steps take ~30-35 h on one Grace core, five runs ~150-175 SU.
+
+Variants (`configs/lispan_chem_variants_v3.txt`):
+- chem_v3_s0, chem_v3_s1, chem_v3_s2;
+- chem_v3_ct40k_s0: seed 0 with the inventory term from 40 000;
+- chem_v3_warm_s0: from `results/lispan_chem_runs/chem_v2_norar_s0/final.pt`, lr 3e-4.
+
+Smoke tests (sandbox, final design): from scratch 100 steps, 0 skipped batches, 315 / 255 mV select / test.  Warm
+start 60 steps: 20.9 / 16.7 mV (mean 18.3, worst 55 mV), 0 skipped batches (a 120-step warm smoke on the 0.1-3 C
+design had one).  The salt bound is c0 (1 + 0.5 tanh) at the fast end (ce_scale capped at 0.5).
+
+Two-curve pairs that become possible (model rate = 0.767 i / w_S at the Phase 2 w_S):
+
+| Data | Pair | Model rates |
+|---|---|---|
+| Hao 2025 (w_S ~0.67) | 0.1 + 2 C | 0.081 / 1.62 C (the Phase 2 pair; 0.1 C sits near the lower limit) |
+| Chen 2019 (w_S ~1.2) | 0.4 + 2 or 4 A/g | 0.26 / 1.3 or 2.6 C (6 and 10 A/g stay outside) |
+| Ma 2026 SPAN / SPAN-A (w_S 0.7-1.1) | 0.2 + 1 C | 0.23-0.36 / 1.2-1.8 C (2 C only for SPAN-A) |
+| Simanjuntak 2024 | 0.1 + 1 C | w_S free (v2: fixed at 1 by the range) |
+
+Acceptance as v2 (revised gate, `scripts/lispan_chem_summary.py`), then the known-truth test of the tool
+(`scripts/lispan_two_curve_synthetic.py --network <v3 run> --design configs/lispan_chem_design_v3.json`) to set the new
+network's error floor (`NETWORK_SD` in two_curve.py) and the literature validation with the wider pairs.
+
 ## Status
 
 2026-10-22: code, tests (9 chem + 12 rate + 14 other Li-SPAN tests pass), design (644 FV runs) and the 24 references.
@@ -265,3 +318,6 @@ the v2 parameterization.
 fit matches an FV fit of the same points within 1 sd in 45 of 47 parameters (the two exceptions: b_3 at the box edge,
 flagged) and within 0.6 mV in misfit, at 12-60x lower cost.  Usable rate pairs are limited by the network's 0.1-1 C
 range (current ratio <= 10); the literature fast rates (2 C and above) need a wider-range network.
+2026-10-27 (night): v3 built (0.08-3 C; section above): FV design (2821 runs), degree-6 window, 52 references,
+configs, slurm default, warm start from chem checkpoints, window speed-up; 46 Li-SPAN tests pass.  Ready to submit
+(`sbatch slurm/lispan_chem_array.slrm`, array 0-4).

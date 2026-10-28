@@ -147,7 +147,7 @@ def n_window_features(k: int, degree: int = 2) -> int:
 
 
 def window_degree(n_coef: int, k: int) -> int:
-    for d in range(1, 6):
+    for d in range(1, 9):
         if n_window_features(k, d) == n_coef:
             return d
     raise ValueError(f"{n_coef} window coefficients fit no polynomial degree for k = {k}")
@@ -255,6 +255,18 @@ class LiSPANChemPINN(LiSPANRatePINN):
         return ONE_C * z[:, :1]
 
     def _t_end(self, z):
+        q = self.q_nodes.shape[0]
+        n, d = z.shape
+        if n >= 4 * q and n % q == 0 and not z.requires_grad:
+            # quadrature-expanded conditions (rate_pinn._a_rho_nodes and the inventory terms) repeat each row q times
+            # in a row: evaluate the window once per row (the degree-6 window of v3 has 924 features; 2 x 18 432
+            # rows cost ~0.3 s per step otherwise).  The check costs one comparison per element.
+            zq = z.view(n // q, q, d)
+            if torch.equal(zq, zq[:, :1].expand(n // q, q, d)):
+                return self._t_end_rows(zq[:, 0]).view(n // q, 1, 1).expand(n // q, q, 1).reshape(n, 1)
+        return self._t_end_rows(z)
+
+    def _t_end_rows(self, z):
         r = z[:, :1]
         feats = window_features_torch(torch.log(r), self.theta_hat(z), self.window_deg)
         return self.window_fraction * torch.exp(feats @ self.window_coef.to(z.dtype).view(-1, 1)) / r
@@ -374,7 +386,7 @@ class LiSPANChemPINN(LiSPANRatePINN):
 class ChemTrainConfig(RateTrainConfig):
     chem_inputs: tuple = CHEM_INPUTS_V1
     design_file: str = ""                 # window design + evaluation cases (scripts/lispan_chem_design.py)
-    init_from: str = ""                   # Phase 3a rate checkpoint to warm-start from (chemistry columns start at zero)
+    init_from: str = ""                   # rate (Phase 3a) or chem checkpoint to warm-start from (rate: chemistry columns 0)
     # residual-based sampling (v2; ChemRARSampler): every rar_every steps the kinetics residuals (ode1-3 + charge_s) are
     # evaluated on rar_candidates uniform cathode points; the rar_pool worst are kept and rar_fraction of every cathode
     # batch is drawn from them with a small jitter (the voltage cliffs of v1 sit where these residuals peak)
@@ -586,7 +598,9 @@ def warm_start_from_rate(model: LiSPANChemPINN, rate_checkpoint) -> dict:
     """Copy the networks of a Phase 3a rate checkpoint into a chem model: every layer as it is, the first layer into
     the columns shared with the rate model (space, time and rate features), the chemistry columns set to zero.  At the
     nominal chemistry the chem model then reproduces the rate network exactly where the two windows agree (equality
-    test); only the time window differs (window Z_CC and chemistry fit), which training absorbs."""
+    test); only the time window differs (window Z_CC and chemistry fit), which training absorbs.
+    A chem checkpoint with the same inputs (e.g. v2 -> a wider rate range) is copied as it is; the rate feature and the
+    window then refer to the new range, so the copy is a starting point, not the same function."""
     ck = torch.load(rate_checkpoint, map_location="cpu", weights_only=False)
     sd = ck["model"]
     copied = 0
@@ -596,7 +610,9 @@ def warm_start_from_rate(model: LiSPANChemPINN, rate_checkpoint) -> dict:
                 if not isinstance(layer, nn.Linear):
                     continue
                 w, b = sd[f"{name}.net.{i}.weight"], sd[f"{name}.net.{i}.bias"]
-                if i == 0:
+                if i == 0 and w.shape == layer.weight.shape:
+                    layer.weight.copy_(w.to(layer.weight.dtype))          # a chem checkpoint (same inputs): as it is
+                elif i == 0:
                     if w.shape[0] != layer.weight.shape[0] or w.shape[1] != layer.weight.shape[1] - model.k:
                         raise ValueError(f"{name}: rate layer {tuple(w.shape)} does not fit chem layer {tuple(layer.weight.shape)}")
                     layer.weight.zero_(); layer.weight[:, :w.shape[1]].copy_(w.to(layer.weight.dtype))

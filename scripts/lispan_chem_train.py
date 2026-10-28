@@ -83,7 +83,7 @@ def main():
     params = params_from_dict(pdict)
     cfg = ChemTrainConfig.from_dict(tcfg)
     if resume is None and cfg.init_from and not (ROOT / cfg.init_from).exists():
-        raise SystemExit(f"init_from {cfg.init_from} not found (a Phase 3a rate checkpoint, e.g. "
+        raise SystemExit(f"init_from {cfg.init_from} not found (a Phase 3a rate or a chem checkpoint, e.g. "
                          "results/lispan_rate_runs/rate_w96_120k_s0/final.pt)")
     window_coef = design["window"]["coef"]
     run_dir.mkdir(parents=True, exist_ok=True)

@@ -83,6 +83,12 @@ def test_fit_recovers_parameters_of_network_generated_curves():
     assert 1e3 * np.sqrt(np.mean(sol.fun ** 2)) < 1e-3                    # mV
     rep = fit.report([sol])
     assert rep["rms_mV"] < 1e-3 and set(rep["sd"]) == set(fit.names)
+    assert rep["sd_total"] == rep["sd"] and rep["sd_network"] is None             # no floor given
+    floor = {"w_S": 0.14, "k0_1": 11.6}
+    fit.network_sd = floor
+    rep2 = fit.report([sol])
+    for n in fit.names:
+        assert rep2["sd_total"][n] == pytest.approx(math.hypot(rep2["sd"][n], floor.get(n, 0.0)))
     # the analytic parameters are recovered exactly whatever the network
     assert rep["params"]["d"] == pytest.approx(0.03, abs=1e-4) and rep["params"]["Z_CC"] == pytest.approx(0.002, abs=1e-4)
     assert rep["params"]["w_S"] == pytest.approx(0.9, rel=1e-3)

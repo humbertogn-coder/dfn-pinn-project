@@ -38,7 +38,7 @@ import numpy as np  # noqa: E402
 import torch  # noqa: E402
 
 from dfn_pinn.lispan.chem_pinn import load_chem_model  # noqa: E402
-from dfn_pinn.lispan.two_curve import Curve, TwoCurveFit, fv_check, fv_curve, m_S_g  # noqa: E402
+from dfn_pinn.lispan.two_curve import Curve, TwoCurveFit, fv_check, fv_curve, m_S_g, network_sd_for  # noqa: E402
 
 NETWORK = ROOT / "results" / "lispan_chem_runs" / "chem_v2_norar_s0" / "final.pt"
 OUT = ROOT / "results" / "lispan" / "two_curve"
@@ -166,7 +166,10 @@ def main():
         loaded = [csv_curve(s, a.frac, a.n_points) for s in a.csv]
         name = a.name or "csv_" + "+".join(c.label for c, _ in loaded)
     curves, raw = [c for c, _ in loaded], [r for _, r in loaded]
-    fit = TwoCurveFit(model, curves, fixed=parse_fix(a.fix))
+    net_sd = network_sd_for(a.network)
+    if net_sd is None:
+        print(f"note: no network error floor known for {a.network}; sd_total = statistical sd")
+    fit = TwoCurveFit(model, curves, fixed=parse_fix(a.fix), network_sd=net_sd)
     print(f"{name}: {len(curves)} curves ({', '.join(f'{c.label} = {c.i_sp:.4g} A/g, {len(c.q)} pts' for c in curves)}); "
           f"network {a.network}; free {[fit.names[j] for j in fit.free]}; w_S range "
           f"[{np.exp(fit.lo[0]):.3f}, {np.exp(fit.hi[0]):.3f}]", flush=True)
@@ -177,7 +180,8 @@ def main():
           f"model rates {', '.join(f'{r:.3f}' for r in rep['model_rates'])} C, T_max "
           f"{', '.join(f'{t:.3f}' for t in rep['T_max'])}")
     for n, v in rep["params"].items():
-        print(f"  {n:10s} {v:12.5g}" + (f"   sd {rep['sd'][n]:.3g}" if n in rep["sd"] else "   (fixed)"))
+        print(f"  {n:10s} {v:12.5g}" + (f"   sd {rep['sd_total'][n]:.3g} (statistical {rep['sd'][n]:.3g})"
+                                         if n in rep["sd"] else "   (fixed)"))
     for f in rep["flags"]:
         print(f"  [{f['level']}] {f['flag']}: {f['msg']}")
 

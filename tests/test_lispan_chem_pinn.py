@@ -308,3 +308,33 @@ def test_train_with_rar_through_the_loop(tmp_path):
                kind="lispan_chem", extra_save={})
     assert (tmp_path / "final.pt").exists()
     assert any("outside cliffs" in m for m in logs) and any(m.startswith("  sampler:") for m in logs)
+
+
+def test_warm_start_from_a_chem_checkpoint(tmp_path):
+    """A chem checkpoint with the same inputs is copied as it is (e.g. v2 -> a wider rate range)."""
+    from dfn_pinn.lispan.chem_pinn import warm_start_from_rate
+    _, src = paired_models(CHEM_INPUTS_V1)
+    torch.manual_seed(3)
+    _, dst = paired_models(CHEM_INPUTS_V1)
+    with torch.no_grad():
+        for prm in dst.parameters():
+            prm.add_(torch.randn_like(prm))
+    torch.save({"model": src.state_dict(), "step": 7}, tmp_path / "ck.pt")
+    info = warm_start_from_rate(dst, tmp_path / "ck.pt")
+    assert info["layers"] > 0 and info["rate_step"] == 7
+    for name in ("net_R", "net_xi", "net_ce", "net_phie"):
+        for a, b in zip(getattr(src, name).net, getattr(dst, name).net):
+            if isinstance(a, torch.nn.Linear):
+                assert torch.equal(a.weight, b.weight) and torch.equal(a.bias, b.bias)
+
+
+def test_window_on_quadrature_expanded_conditions():
+    """_t_end evaluates the window once per row of a quadrature-expanded condition tensor; same values as row by row."""
+    _, cm = paired_models(CHEM_INPUTS_V1)
+    q = cm.q_nodes.shape[0]
+    z0 = torch.cat([torch.rand(40, 1, dtype=torch.float64) * 0.9 + 0.1,
+                    torch.rand(40, K, dtype=torch.float64) * 0.2 - 0.1], 1)
+    z = z0.reshape(40, 1, -1).expand(40, q, z0.shape[1]).reshape(40 * q, -1)
+    assert torch.equal(cm._t_end(z), cm._t_end_rows(z))
+    zr = z.clone(); zr[1, 0] += 1e-3                                  # not a repetition any more: plain path
+    assert torch.equal(cm._t_end(zr), cm._t_end_rows(zr))

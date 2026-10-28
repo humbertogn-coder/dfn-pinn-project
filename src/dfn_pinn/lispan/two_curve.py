@@ -46,6 +46,22 @@ MISFIT_WARN, MISFIT_BAD = 5.0, 15.0 # mV: above ~2x / ~6x the network error vs F
 CORR_WARN = 0.95
 POOR_SD = 0.25                      # sd > 25 % of the box width -> poorly identified
 
+# Network error floor per trained network, in the units of the reported sd (w_S, b, k0 %; dU0, d mV; Z_CC Ohm cm2):
+# rms of the noise-free parameter errors of the known-truth test (scripts/lispan_two_curve_synthetic.py, 0.2 + 0.6 C,
+# the 10 evaluation chemistries without box-edge flags; docs/TWO_CURVE_TOOL.md "Synthetic test").  Added in quadrature
+# to the statistical sd ("sd_total"); with it 92-100 % of the 5 mV-noise errors lie within 2 sd for every parameter
+# (w_S 81 % -> 96 % in that same test).
+NETWORK_SD = {
+    "chem_v2_norar_s0": {"w_S": 0.14, "dU0_2": 0.64, "dU0_3rel2": 2.1, "b_12": 0.22, "b_3": 0.71, "k0_1": 11.6,
+                         "d": 0.56, "Z_CC": 1.25},
+}
+
+
+def network_sd_for(checkpoint) -> dict | None:
+    """Network error floor of a checkpoint (by its run folder name), or None if the network has not been tested."""
+    from pathlib import Path
+    return NETWORK_SD.get(Path(checkpoint).parent.name)
+
 
 @dataclass
 class Curve:
@@ -93,8 +109,9 @@ class TwoCurveFit:
     """Least-squares fit of curves with the network.  Parameter order: w_S, the chemistry inputs, d, Z_CC; internally
     x = [ln w_S, theta..., d, Z_CC]."""
 
-    def __init__(self, model, curves, fixed: dict | None = None, w_limits=W_LIMITS):
+    def __init__(self, model, curves, fixed: dict | None = None, w_limits=W_LIMITS, network_sd: dict | None = None):
         self.model, self.curves = model, list(curves)
+        self.network_sd = network_sd
         self.p = model.p
         self.spec = model.chem_inputs
         self.k = len(self.spec)
@@ -267,18 +284,14 @@ class TwoCurveFit:
         corr = cov / np.outer(np.where(sd > 0, sd, 1), np.where(sd > 0, sd, 1))
         return cov, sd, corr, math.sqrt(s2)
 
+    def sd_scale(self, j):
+        """Factor from internal units to the sd units (% for log parameters, mV, Ohm cm2)."""
+        n = self.names[j]
+        return 1e3 if (n == "d" or n.startswith("dU0_")) else (1e4 if n == "Z_CC" else 100.0)
+
     def natural_sd(self, x, sd_free):
         """sd in natural units: w_S, b, k0 as % of the value (log sd x 100), dU0 / d in mV, Z_CC in Ohm cm2."""
-        out = {}
-        for j, s in zip(self.free, sd_free):
-            n = self.names[j]
-            if n in ("d",) or n.startswith("dU0_"):
-                out[n] = 1e3 * s
-            elif n == "Z_CC":
-                out[n] = 1e4 * s
-            else:
-                out[n] = 100.0 * s
-        return out
+        return {self.names[j]: self.sd_scale(j) * s for j, s in zip(self.free, sd_free)}
 
     def report(self, sols, sd_rel_unique=3.0):
         best = sols[0]
@@ -287,6 +300,10 @@ class TwoCurveFit:
         Vm = self.model_curves(x)
         T_max = list(self.last_T)
         cov, sd, corr, sigma = self.uncertainty(xf)
+        sd_nat = self.natural_sd(x, sd)
+        net = self.network_sd or {}
+        sd_total = {n: math.hypot(v, net.get(n, 0.0)) for n, v in sd_nat.items()}
+        sd_tot_int = np.array([sd_total[self.names[j]] / self.sd_scale(j) for j in self.free])
         flags = []
         # box edges (theta, w_S at the rate-range bounds, d)
         for col, j in enumerate(self.free):
@@ -309,9 +326,9 @@ class TwoCurveFit:
                 flags.append({"flag": "box_edge", "level": "warn", "param": n,
                               "msg": f"{n} at the {'lower' if at_lo else 'upper'} edge of the trained box: the optimum "
                                      f"may lie outside it, and the network error is larger near the box corners"})
-            if width > 0 and sd[col] > POOR_SD * width and n != "Z_CC":
+            if width > 0 and sd_tot_int[col] > POOR_SD * width and n != "Z_CC":
                 flags.append({"flag": "poorly_identified", "level": "warn", "param": n,
-                              "msg": f"sd of {n} is {100 * sd[col] / width:.0f} % of the box width"})
+                              "msg": f"sd of {n} is {100 * sd_tot_int[col] / width:.0f} % of the box width"})
         rms = [1e3 * float(np.sqrt(np.mean((v - c.V) ** 2))) for v, c in zip(Vm, self.curves)]
         rms_all = 1e3 * float(np.sqrt(np.mean(best.fun ** 2)))
         if rms_all > MISFIT_WARN:
@@ -355,8 +372,11 @@ class TwoCurveFit:
                           "rate range, so w_S is fixed at the value that maps them onto it"})
         return {
             "params": self.natural(x),
-            "sd": self.natural_sd(x, sd),
-            "sd_units": "w_S, b, k0: % of the value; dU0, d: mV; Z_CC: Ohm cm2",
+            "sd": sd_nat,
+            "sd_network": {n: net.get(n, 0.0) for n in sd_nat} if self.network_sd else None,
+            "sd_total": sd_total,
+            "sd_units": "w_S, b, k0: % of the value; dU0, d: mV; Z_CC: Ohm cm2.  sd: statistical (linearized, sigma "
+                        "from the residuals); sd_total: with the network error floor in quadrature",
             "fixed": [self.names[j] for j in self.fixed],
             "corr": {"names": [self.names[j] for j in self.free], "matrix": corr.round(4).tolist()},
             "sigma_mV": 1e3 * sigma,
