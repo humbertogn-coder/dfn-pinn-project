@@ -2,6 +2,7 @@
 
 Status 2026-10-27: built and validated against finite-volume (FV) fits on six published datasets.
 Network: `results/lispan_chem_runs/chem_v2_norar_s0/final.pt` (Phase 3b v2, docs/PHASE3B_CHEM_PINN.md).
+Applied to every SPAN-DB cell with two or more currents on 2026-10-30: docs/SPANDB_FITS.md.
 
 ## What it does
 

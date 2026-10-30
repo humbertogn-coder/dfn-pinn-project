@@ -1,0 +1,690 @@
+{
+ "db": {
+  "papers": 542,
+  "relevance": {
+   "D": 244,
+   "B": 160,
+   "C": 31,
+   "A": 107
+  },
+  "papers_extracted": 38,
+  "cells": 415,
+  "curves": 1670,
+  "curves_qc": {
+   "ok": 1252,
+   "flagged": 418
+  },
+  "info_levels": {
+   "2": 45,
+   "1": 94,
+   "4": 1,
+   "3": 2,
+   "NR": 273
+  }
+ },
+ "cells_two_or_more_currents": 47,
+ "fitted": 35,
+ "skipped": {
+  "fewer than two usable currents": 8,
+  "no pair inside the network's rate range": 4
+ },
+ "good": 22,
+ "misfit_median_good_mV": 13.882838266994552,
+ "misfit_all_mV": [
+  10.2,
+  10.6,
+  10.9,
+  11.0,
+  11.0,
+  11.2,
+  11.7,
+  11.9,
+  12.2,
+  12.3,
+  13.8,
+  14.0,
+  15.2,
+  15.7,
+  15.8,
+  17.5,
+  17.6,
+  17.9,
+  19.9,
+  21.4,
+  23.2,
+  24.7,
+  25.6,
+  33.9,
+  36.3,
+  38.2,
+  38.6,
+  47.1,
+  47.7,
+  52.1,
+  57.4,
+  60.0,
+  64.5,
+  72.5,
+  81.7
+ ],
+ "net_vs_fv_good_max_mV": 4.948891913646151,
+ "net_vs_fv_good_median_mV": 1.9374332028786747,
+ "by_class": {
+  "carbonate": {
+   "n": 12,
+   "good": 7,
+   "cells": {
+    "Chen 2019 C2": 14.0,
+    "Hu 2023 C3": 17.6,
+    "Wu 2023 C1": 23.2,
+    "Wu 2023 C2": 15.7,
+    "Shi 2024 C1": 33.9,
+    "Shi 2024 C2": 38.6,
+    "Simanjuntak 2024 C1": 19.9,
+    "Wang 2024 C1": 36.3,
+    "Wang 2024 C4": 11.9,
+    "Wang 2024 C7": 17.9,
+    "Ma 2026 C1": 25.6,
+    "Ma 2026 C2": 47.1
+   }
+  },
+  "ether (dilute)": {
+   "n": 6,
+   "good": 2,
+   "cells": {
+    "Chen 2019 C1": 15.2,
+    "Wang 2023 C1": 81.7,
+    "Jia 2024 C1": 47.7,
+    "Jia 2024 C2": 38.2,
+    "Qin 2024 C1": 11.0,
+    "Wu 2024 C3": 52.1
+   }
+  },
+  "LHCE": {
+   "n": 5,
+   "good": 5,
+   "cells": {
+    "Chen 2024 C1": 12.2,
+    "Qin 2024 C2": 11.2,
+    "Qin 2024 C3": 12.3,
+    "Wu 2024 C1": 10.9,
+    "Wu 2024 C2": 21.4
+   }
+  },
+  "HCE": {
+   "n": 2,
+   "good": 1,
+   "cells": {
+    "Chen 2024 C2": 10.2,
+    "Chen 2024 C3": 60.0
+   }
+  },
+  "fluorinated": {
+   "n": 3,
+   "good": 2,
+   "cells": {
+    "Zuo 2024 C4": 64.5,
+    "Zuo 2024 C5": 15.8,
+    "Zuo 2024 C6": 17.5
+   }
+  },
+  "other liquid": {
+   "n": 1,
+   "good": 1,
+   "cells": {
+    "Li 2023 C1": 10.6
+   }
+  },
+  "polymer / solid": {
+   "n": 6,
+   "good": 4,
+   "cells": {
+    "Huang 2023 C1": 13.8,
+    "Shi 2023a C2": 11.7,
+    "Shi 2023a C3": 24.7,
+    "Shi 2023b C4": 72.5,
+    "Jin 2024 C1": 57.4,
+    "You 2024 C1": 11.0
+   }
+  }
+ },
+ "predictions": [
+  {
+   "cell": "Huang 2023 C1",
+   "fit_mV": 13.8,
+   "pred_mV": 27.5,
+   "between": false
+  },
+  {
+   "cell": "Shi 2023a C2",
+   "fit_mV": 11.7,
+   "pred_mV": 20.5,
+   "between": true
+  },
+  {
+   "cell": "Shi 2023a C2",
+   "fit_mV": 11.7,
+   "pred_mV": 52.8,
+   "between": false
+  },
+  {
+   "cell": "Shi 2023b C4",
+   "fit_mV": 72.5,
+   "pred_mV": 382.2,
+   "between": false
+  },
+  {
+   "cell": "Shi 2023b C4",
+   "fit_mV": 72.5,
+   "pred_mV": 275.1,
+   "between": false
+  },
+  {
+   "cell": "Wu 2023 C2",
+   "fit_mV": 15.7,
+   "pred_mV": 14.4,
+   "between": true
+  },
+  {
+   "cell": "Jia 2024 C1",
+   "fit_mV": 47.7,
+   "pred_mV": 75.7,
+   "between": false
+  },
+  {
+   "cell": "Jia 2024 C1",
+   "fit_mV": 47.7,
+   "pred_mV": 40.7,
+   "between": true
+  },
+  {
+   "cell": "Jia 2024 C2",
+   "fit_mV": 38.2,
+   "pred_mV": 44.6,
+   "between": true
+  },
+  {
+   "cell": "Qin 2024 C1",
+   "fit_mV": 11.0,
+   "pred_mV": 11.5,
+   "between": true
+  },
+  {
+   "cell": "Qin 2024 C2",
+   "fit_mV": 11.2,
+   "pred_mV": 24.8,
+   "between": true
+  },
+  {
+   "cell": "Qin 2024 C3",
+   "fit_mV": 12.3,
+   "pred_mV": 12.1,
+   "between": true
+  },
+  {
+   "cell": "Shi 2024 C1",
+   "fit_mV": 33.9,
+   "pred_mV": 66.7,
+   "between": true
+  },
+  {
+   "cell": "Shi 2024 C2",
+   "fit_mV": 38.6,
+   "pred_mV": 132.7,
+   "between": false
+  },
+  {
+   "cell": "Shi 2024 C2",
+   "fit_mV": 38.6,
+   "pred_mV": 53.0,
+   "between": true
+  },
+  {
+   "cell": "Simanjuntak 2024 C1",
+   "fit_mV": 19.9,
+   "pred_mV": 35.8,
+   "between": false
+  },
+  {
+   "cell": "Wu 2024 C2",
+   "fit_mV": 21.4,
+   "pred_mV": 54.7,
+   "between": false
+  },
+  {
+   "cell": "You 2024 C1",
+   "fit_mV": 11.0,
+   "pred_mV": 16.3,
+   "between": false
+  },
+  {
+   "cell": "You 2024 C1",
+   "fit_mV": 11.0,
+   "pred_mV": 9.9,
+   "between": true
+  },
+  {
+   "cell": "Zuo 2024 C4",
+   "fit_mV": 64.5,
+   "pred_mV": 67.6,
+   "between": false
+  },
+  {
+   "cell": "Zuo 2024 C4",
+   "fit_mV": 64.5,
+   "pred_mV": 33.2,
+   "between": false
+  },
+  {
+   "cell": "Zuo 2024 C4",
+   "fit_mV": 64.5,
+   "pred_mV": 36.9,
+   "between": true
+  },
+  {
+   "cell": "Zuo 2024 C5",
+   "fit_mV": 15.8,
+   "pred_mV": 21.2,
+   "between": false
+  },
+  {
+   "cell": "Zuo 2024 C5",
+   "fit_mV": 15.8,
+   "pred_mV": 13.3,
+   "between": true
+  },
+  {
+   "cell": "Zuo 2024 C6",
+   "fit_mV": 17.5,
+   "pred_mV": 22.0,
+   "between": false
+  },
+  {
+   "cell": "Zuo 2024 C6",
+   "fit_mV": 17.5,
+   "pred_mV": 16.3,
+   "between": true
+  },
+  {
+   "cell": "Ma 2026 C1",
+   "fit_mV": 25.6,
+   "pred_mV": 50.4,
+   "between": true
+  },
+  {
+   "cell": "Ma 2026 C1",
+   "fit_mV": 25.6,
+   "pred_mV": 75.6,
+   "between": false
+  },
+  {
+   "cell": "Ma 2026 C2",
+   "fit_mV": 47.1,
+   "pred_mV": 87.4,
+   "between": false
+  }
+ ],
+ "params_good": {
+  "Chen 2019 C1": {
+   "w_S": 1.2449,
+   "dU0_2": 0.0511,
+   "dU0_3rel2": -0.1423,
+   "b_12": 0.9444,
+   "b_3": 3.1577,
+   "k0_1": 2.7912,
+   "d": 0.0081,
+   "Z_CC": 0.0002,
+   "rms_mV": 15.2,
+   "class": "ether (dilute)"
+  },
+  "Chen 2019 C2": {
+   "w_S": 1.1434,
+   "dU0_2": 0.0854,
+   "dU0_3rel2": -0.1182,
+   "b_12": 0.8239,
+   "b_3": 2.4167,
+   "k0_1": 4.3989,
+   "d": -0.031,
+   "Z_CC": 0.0,
+   "rms_mV": 14.0,
+   "class": "carbonate"
+  },
+  "Hu 2023 C3": {
+   "w_S": 1.256,
+   "dU0_2": -0.0672,
+   "dU0_3rel2": -0.26,
+   "b_12": 1.4822,
+   "b_3": 1.3968,
+   "k0_1": 25.045,
+   "d": 0.0932,
+   "Z_CC": 0.0,
+   "rms_mV": 17.6,
+   "class": "carbonate"
+  },
+  "Huang 2023 C1": {
+   "w_S": 1.4888,
+   "dU0_2": 0.0241,
+   "dU0_3rel2": -0.1754,
+   "b_12": 1.0357,
+   "b_3": 1.5301,
+   "k0_1": 2.7011,
+   "d": 0.0321,
+   "Z_CC": 0.0173,
+   "rms_mV": 13.8,
+   "class": "polymer / solid"
+  },
+  "Li 2023 C1": {
+   "w_S": 0.4995,
+   "dU0_2": 0.1259,
+   "dU0_3rel2": -0.0966,
+   "b_12": 0.8,
+   "b_3": 2.3077,
+   "k0_1": 3.5824,
+   "d": -0.0889,
+   "Z_CC": 0.0,
+   "rms_mV": 10.6,
+   "class": "other liquid"
+  },
+  "Shi 2023a C2": {
+   "w_S": 1.4332,
+   "dU0_2": -0.0031,
+   "dU0_3rel2": -0.2065,
+   "b_12": 1.0521,
+   "b_3": 1.9426,
+   "k0_1": 2.0105,
+   "d": -0.0146,
+   "Z_CC": 0.05,
+   "rms_mV": 11.7,
+   "class": "polymer / solid"
+  },
+  "Shi 2023a C3": {
+   "w_S": 0.9604,
+   "dU0_2": -0.0608,
+   "dU0_3rel2": 0.06,
+   "b_12": 0.6645,
+   "b_3": 0.4,
+   "k0_1": 0.1,
+   "d": 0.1598,
+   "Z_CC": 0.05,
+   "rms_mV": 24.7,
+   "class": "polymer / solid"
+  },
+  "Wu 2023 C1": {
+   "w_S": 0.3835,
+   "dU0_2": 0.1002,
+   "dU0_3rel2": -0.1358,
+   "b_12": 0.9189,
+   "b_3": 1.4799,
+   "k0_1": 2.3956,
+   "d": -0.0368,
+   "Z_CC": 0.0075,
+   "rms_mV": 23.2,
+   "class": "carbonate"
+  },
+  "Wu 2023 C2": {
+   "w_S": 0.6146,
+   "dU0_2": 0.0622,
+   "dU0_3rel2": -0.0668,
+   "b_12": 0.7977,
+   "b_3": 2.3075,
+   "k0_1": 1.1064,
+   "d": -0.0333,
+   "Z_CC": 0.0028,
+   "rms_mV": 15.7,
+   "class": "carbonate"
+  },
+  "Chen 2024 C1": {
+   "w_S": 0.5199,
+   "dU0_2": 0.0444,
+   "dU0_3rel2": -0.2361,
+   "b_12": 1.1937,
+   "b_3": 2.0029,
+   "k0_1": 7.4377,
+   "d": 0.019,
+   "Z_CC": 0.0,
+   "rms_mV": 12.2,
+   "class": "LHCE"
+  },
+  "Chen 2024 C2": {
+   "w_S": 0.4177,
+   "dU0_2": 0.0833,
+   "dU0_3rel2": -0.102,
+   "b_12": 0.8511,
+   "b_3": 1.2136,
+   "k0_1": 4.4828,
+   "d": -0.0314,
+   "Z_CC": 0.0095,
+   "rms_mV": 10.2,
+   "class": "HCE"
+  },
+  "Qin 2024 C1": {
+   "w_S": 0.6773,
+   "dU0_2": 0.0352,
+   "dU0_3rel2": -0.1201,
+   "b_12": 0.8532,
+   "b_3": 2.0265,
+   "k0_1": 1.1914,
+   "d": -0.0171,
+   "Z_CC": 0.0017,
+   "rms_mV": 11.0,
+   "class": "ether (dilute)"
+  },
+  "Qin 2024 C2": {
+   "w_S": 0.6849,
+   "dU0_2": 0.0359,
+   "dU0_3rel2": -0.1356,
+   "b_12": 0.8196,
+   "b_3": 2.5934,
+   "k0_1": 1.0865,
+   "d": -0.0328,
+   "Z_CC": 0.0038,
+   "rms_mV": 11.2,
+   "class": "LHCE"
+  },
+  "Qin 2024 C3": {
+   "w_S": 0.7055,
+   "dU0_2": 0.0348,
+   "dU0_3rel2": -0.2001,
+   "b_12": 1.0251,
+   "b_3": 2.0674,
+   "k0_1": 1.0421,
+   "d": -0.0079,
+   "Z_CC": 0.0007,
+   "rms_mV": 12.3,
+   "class": "LHCE"
+  },
+  "Simanjuntak 2024 C1": {
+   "w_S": 1.2541,
+   "dU0_2": 0.0072,
+   "dU0_3rel2": -0.2445,
+   "b_12": 1.2724,
+   "b_3": 0.9068,
+   "k0_1": 34.1963,
+   "d": 0.001,
+   "Z_CC": 0.0,
+   "rms_mV": 19.9,
+   "class": "carbonate"
+  },
+  "Wang 2024 C4": {
+   "w_S": 0.5423,
+   "dU0_2": 0.1945,
+   "dU0_3rel2": -0.26,
+   "b_12": 1.6,
+   "b_3": 2.4525,
+   "k0_1": 2.2998,
+   "d": 0.0356,
+   "Z_CC": 0.0,
+   "rms_mV": 11.9,
+   "class": "carbonate"
+  },
+  "Wang 2024 C7": {
+   "w_S": 0.602,
+   "dU0_2": 0.0549,
+   "dU0_3rel2": -0.1093,
+   "b_12": 0.8064,
+   "b_3": 2.9994,
+   "k0_1": 1.5435,
+   "d": -0.0311,
+   "Z_CC": 0.0,
+   "rms_mV": 17.9,
+   "class": "carbonate"
+  },
+  "Wu 2024 C1": {
+   "w_S": 1.2238,
+   "dU0_2": 0.0886,
+   "dU0_3rel2": -0.2093,
+   "b_12": 1.0803,
+   "b_3": 1.9437,
+   "k0_1": 7.6876,
+   "d": -0.0056,
+   "Z_CC": 0.0168,
+   "rms_mV": 10.9,
+   "class": "LHCE"
+  },
+  "Wu 2024 C2": {
+   "w_S": 1.1648,
+   "dU0_2": -0.0239,
+   "dU0_3rel2": -0.0527,
+   "b_12": 0.7009,
+   "b_3": 1.4223,
+   "k0_1": 0.1001,
+   "d": -0.0021,
+   "Z_CC": 0.0,
+   "rms_mV": 21.4,
+   "class": "LHCE"
+  },
+  "You 2024 C1": {
+   "w_S": 1.2682,
+   "dU0_2": 0.0643,
+   "dU0_3rel2": -0.0956,
+   "b_12": 0.8677,
+   "b_3": 2.2185,
+   "k0_1": 3.7482,
+   "d": -0.0012,
+   "Z_CC": 0.0073,
+   "rms_mV": 11.0,
+   "class": "polymer / solid"
+  },
+  "Zuo 2024 C5": {
+   "w_S": 0.4492,
+   "dU0_2": 0.1128,
+   "dU0_3rel2": 0.0579,
+   "b_12": 0.6053,
+   "b_3": 0.4,
+   "k0_1": 100.0,
+   "d": 0.0255,
+   "Z_CC": 0.05,
+   "rms_mV": 15.8,
+   "class": "fluorinated"
+  },
+  "Zuo 2024 C6": {
+   "w_S": 0.4738,
+   "dU0_2": 0.119,
+   "dU0_3rel2": 0.0782,
+   "b_12": 0.5759,
+   "b_3": 0.4,
+   "k0_1": 100.0,
+   "d": 0.0273,
+   "Z_CC": 0.0494,
+   "rms_mV": 17.5,
+   "class": "fluorinated"
+  }
+ },
+ "v3s1": {
+  "fitted": 8,
+  "good": 7,
+  "predictions": [
+   {
+    "cell": "Chen 2019 C1",
+    "fit_mV": 13.1,
+    "i": 1.0,
+    "pred_mV": 24.6,
+    "between": true
+   },
+   {
+    "cell": "Chen 2019 C1",
+    "fit_mV": 13.1,
+    "i": 4.0,
+    "pred_mV": 22.7,
+    "between": false
+   },
+   {
+    "cell": "Chen 2019 C2",
+    "fit_mV": 14.4,
+    "i": 1.0,
+    "pred_mV": 17.9,
+    "between": true
+   },
+   {
+    "cell": "Chen 2019 C2",
+    "fit_mV": 14.4,
+    "i": 4.0,
+    "pred_mV": 69.3,
+    "between": false
+   },
+   {
+    "cell": "Hu 2023 C3",
+    "fit_mV": 24.1,
+    "i": 0.8375,
+    "pred_mV": 35.3,
+    "between": true
+   },
+   {
+    "cell": "Hu 2023 C3",
+    "fit_mV": 24.1,
+    "i": 1.675,
+    "pred_mV": 27.2,
+    "between": true
+   },
+   {
+    "cell": "Huang 2023 C1",
+    "fit_mV": 12.1,
+    "i": 0.8375,
+    "pred_mV": 18.6,
+    "between": true
+   },
+   {
+    "cell": "Huang 2023 C1",
+    "fit_mV": 12.1,
+    "i": 1.675,
+    "pred_mV": 19.0,
+    "between": true
+   },
+   {
+    "cell": "Li 2023 C1",
+    "fit_mV": 16.0,
+    "i": 0.5,
+    "pred_mV": 15.2,
+    "between": true
+   },
+   {
+    "cell": "Shi 2023a C2",
+    "fit_mV": 17.4,
+    "i": 0.501,
+    "pred_mV": 16.9,
+    "between": true
+   },
+   {
+    "cell": "Shi 2023a C2",
+    "fit_mV": 17.4,
+    "i": 0.835,
+    "pred_mV": 24.4,
+    "between": true
+   },
+   {
+    "cell": "Shi 2023b C4",
+    "fit_mV": 36.1,
+    "i": 0.084,
+    "pred_mV": 201.7,
+    "between": false
+   },
+   {
+    "cell": "Shi 2023b C4",
+    "fit_mV": 36.1,
+    "i": 0.167,
+    "pred_mV": 132.2,
+    "between": false
+   }
+  ]
+ }
+}
