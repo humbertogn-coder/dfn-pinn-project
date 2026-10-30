@@ -105,6 +105,15 @@ noise-free errors over the 10 unflagged chemistries (`NETWORK_SD` in two_curve.p
 The poorly_identified flag uses `sd_total`.  For another network the CLI warns that no floor is known, and `sd_total`
 equals the statistical sd.
 
+For the wide-range network chem_v3_s1 (0.08-3 C; docs/PHASE3B_CHEM_PINN.md, "v3 results"), the same test at 0.2 + 2 C
+gives a floor 2-8x larger:
+
+| w_S | dU0_2 | dU0_3rel2 | b_12 | b_3 | k0_1 | d | Z_CC |
+|---|---|---|---|---|---|---|---|
+| 0.34 % | 5.4 mV | 5.1 mV | 2.4 % | 2.9 % | 24 % | 4.5 mV | 2.9 Ohm cm2 |
+
+Use it only for pairs that v2 cannot take, with `--network results/lispan_chem_runs/chem_v3_s1/final.pt`.
+
 ## Validation against FV fits (2026-10-27)
 
 Method:

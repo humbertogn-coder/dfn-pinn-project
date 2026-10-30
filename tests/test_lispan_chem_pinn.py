@@ -338,3 +338,26 @@ def test_window_on_quadrature_expanded_conditions():
     assert torch.equal(cm._t_end(z), cm._t_end_rows(z))
     zr = z.clone(); zr[1, 0] += 1e-3                                  # not a repetition any more: plain path
     assert torch.equal(cm._t_end(zr), cm._t_end_rows(zr))
+
+
+def test_initial_weights_and_freeze_floor(tmp_path):
+    """initial_weights set the group weights of a new run; freeze_weight_min bounds them at the freeze."""
+    from dfn_pinn.lispan.chem_pinn import CHEM_INPUTS_V2, ChemSampler
+    spec2 = check_spec(CHEM_INPUTS_V2)
+    coef3, _ = fit_window(list(T_CUT), list(T_CUT.values()))
+    coef = embed_rate_window(coef3, len(spec2))
+    for init, floor, stop in (({"inventory": 3.0, "ode": 7.0}, {}, 1), ({}, {"inventory": 5.0}, 3)):
+        cfg = ChemTrainConfig(chem_inputs=spec2, width=8, depth=1, fourier_t=1, quad_order=4, n_cathode=8, n_separator=4,
+                              n_boundary=4, adam_steps=4, log_every=1000, eval_every=0, latest_every=0, checkpoint_every=0,
+                              threads=1, initial_weights=init, freeze_weight_min=floor, adaptive_stop=stop,
+                              charge_total_start=0)
+        model = build_chem_model(cfg, PARAMS, coef)
+        d = tmp_path / f"run{stop}"
+        train_rate(cfg, PARAMS, coef, d, refs={}, log=lambda m: None, model=model, sampler_factory=ChemSampler,
+                   evaluate_fn=evaluate_chem, score_fn=lambda ev: 0.0, eval_summary_fn=chem_eval_summary,
+                   kind="lispan_chem", extra_save={})
+        w = torch.load(d / "final.pt", map_location="cpu", weights_only=False)["group_weights"]
+        if init:
+            assert w["inventory"] == 3.0 and w["ode"] == 7.0          # frozen from step 1: never adapted
+        else:
+            assert w["inventory"] >= 5.0

@@ -603,7 +603,7 @@ def warm_start_from_rate(model: LiSPANChemPINN, rate_checkpoint) -> dict:
     window then refer to the new range, so the copy is a starting point, not the same function."""
     ck = torch.load(rate_checkpoint, map_location="cpu", weights_only=False)
     sd = ck["model"]
-    copied = 0
+    copied, whole = 0, False
     with torch.no_grad():
         for name in ("net_R", "net_xi", "net_ce", "net_phie"):
             for i, layer in enumerate(getattr(model, name).net):
@@ -612,6 +612,7 @@ def warm_start_from_rate(model: LiSPANChemPINN, rate_checkpoint) -> dict:
                 w, b = sd[f"{name}.net.{i}.weight"], sd[f"{name}.net.{i}.bias"]
                 if i == 0 and w.shape == layer.weight.shape:
                     layer.weight.copy_(w.to(layer.weight.dtype))          # a chem checkpoint (same inputs): as it is
+                    whole = True
                 elif i == 0:
                     if w.shape[0] != layer.weight.shape[0] or w.shape[1] != layer.weight.shape[1] - model.k:
                         raise ValueError(f"{name}: rate layer {tuple(w.shape)} does not fit chem layer {tuple(layer.weight.shape)}")
@@ -622,7 +623,8 @@ def warm_start_from_rate(model: LiSPANChemPINN, rate_checkpoint) -> dict:
                     layer.weight.copy_(w.to(layer.weight.dtype))
                 layer.bias.copy_(b.to(layer.bias.dtype))
                 copied += 1
-    return {"layers": copied, "rate_step": ck.get("step"), "group_weights": ck.get("group_weights", {})}
+    return {"layers": copied, "rate_step": ck.get("step"), "group_weights": ck.get("group_weights", {}),
+            "source": "chem" if whole else "rate"}
 
 
 def load_chem_model(checkpoint, device="cpu"):

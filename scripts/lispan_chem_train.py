@@ -117,8 +117,8 @@ def main():
     if resume is None and cfg.init_from:
         src = Path(cfg.init_from)
         info = warm_start_from_rate(model, src if src.is_absolute() else ROOT / src)
-        log(f"warm start from {cfg.init_from}: {info['layers']} layers (rate network at step {info['rate_step']}); "
-            f"chemistry columns zero")
+        log(f"warm start from {cfg.init_from}: {info['layers']} layers ({info['source']} network at step "
+            f"{info['rate_step']}); " + ("chemistry columns zero" if info["source"] == "rate" else "copied as it is"))
     _, history, evals = train_rate(cfg, params, window_coef, run_dir, refs=cases, log=log, resume=resume, model=model,
                                    sampler_factory=ChemRARSampler if cfg.rar else ChemSampler, evaluate_fn=evaluate_chem,
                                    score_fn=lambda ev: ev["V_rmse_select_mV"], eval_summary_fn=chem_eval_summary,

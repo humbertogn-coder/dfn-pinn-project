@@ -54,6 +54,10 @@ POOR_SD = 0.25                      # sd > 25 % of the box width -> poorly ident
 NETWORK_SD = {
     "chem_v2_norar_s0": {"w_S": 0.14, "dU0_2": 0.64, "dU0_3rel2": 2.1, "b_12": 0.22, "b_3": 0.71, "k0_1": 11.6,
                          "d": 0.56, "Z_CC": 1.25},
+    # v3 (0.08-3 C), same test at 0.2 + 2 C over the 9 unflagged chemistries (results/lispan/two_curve/
+    # synthetic_v3s1_0.2+2.json): 2-8x the v2 floor; with it 88-100 % of the 5 mV-noise errors lie within 2 sd
+    "chem_v3_s1": {"w_S": 0.34, "dU0_2": 5.35, "dU0_3rel2": 5.10, "b_12": 2.41, "b_3": 2.87, "k0_1": 23.85,
+                   "d": 4.52, "Z_CC": 2.89},
 }
 
 

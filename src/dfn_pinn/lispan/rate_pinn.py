@@ -68,6 +68,11 @@ class RateTrainConfig(LiSPANTrainConfig):
     rollback_start: int = 0               # rollbacks only from this step on (the monitor observes from the start); wave 3:
                                           #   the bursts before ~30 000 steps recover by themselves, rolling them back
                                           #   looped and used up the budget
+    initial_weights: dict = field(default_factory=dict)   # group weights at the start of a new run (not on resume),
+                                          #   e.g. a continuation with the weights of the run it starts from
+    freeze_weight_min: dict = field(default_factory=dict)  # lower bounds applied to the weights at the freeze
+                                          #   (adaptive_stop), e.g. {"inventory": 2.0}: v3 froze the inventory weight at
+                                          #   ~0.22 while its residual stayed 5-9x above v2's (late-discharge drift)
     charge_weight_floor: float = 0.0      # > 0: after every adaptive update the charge-group weight is at least this
                                           #   fraction of the ode-group weight (wave 3: every excursion started with the
                                           #   charge weight falling from ~100-800 to ~0.2 while ode stayed at 300-1000)
@@ -670,6 +675,11 @@ def train_rate(cfg: RateTrainConfig, params: LiSPANParams, window_coef, out_dir:
         aw = AdaptiveWeights(dict(GROUPS), cfg.adaptive_alpha)
     history, evals, start_step = [], [], 1
     guard = {"lr_scale": 1.0, "n_rollbacks": 0, "cooldown_until": 0}
+    if resume is None and cfg.initial_weights:
+        unknown = set(cfg.initial_weights) - set(aw.w)
+        if unknown:
+            raise ValueError(f"initial_weights: unknown groups {sorted(unknown)} (groups: {sorted(aw.w)})")
+        aw.w.update({g: float(v) for g, v in cfg.initial_weights.items()})
     if resume is not None:
         ck = torch.load(resume, map_location=device, weights_only=False)
         model.load_state_dict(ck["model"])
@@ -785,6 +795,10 @@ def train_rate(cfg: RateTrainConfig, params: LiSPANParams, window_coef, out_dir:
                 recs = [r["w"] for r in history if "w" in r and r["step"] > step - cfg.adaptive_freeze_window]
                 if recs:
                     aw.w.update({g: float(np.median([r[g] for r in recs if g in r])) for g in aw.w if any(g in r for r in recs)})
+                for g, v in cfg.freeze_weight_min.items():
+                    if g not in aw.w:
+                        raise ValueError(f"freeze_weight_min: unknown group {g!r} (groups: {sorted(aw.w)})")
+                    aw.w[g] = max(aw.w[g], float(v))
                 log(f"step {step}: adaptive weights frozen at " + ", ".join(f"{g} {v:.3g}" for g, v in aw.w.items()))
             adaptive_on = cfg.adaptive and not (cfg.adaptive_stop and step >= cfg.adaptive_stop)
             if adaptive_on and (step == start_step or step % cfg.adaptive_every == 0):

@@ -297,6 +297,64 @@ Acceptance as v2 (revised gate, `scripts/lispan_chem_summary.py`), then the know
 (`scripts/lispan_two_curve_synthetic.py --network <v3 run> --design configs/lispan_chem_design_v3.json`) to set the new
 network's error floor (`NETWORK_SD` in two_curve.py) and the literature validation with the wider pairs.
 
+## v3 results (Grace, array 20311464, finished 2026-10-29)
+
+Five runs, 37.8-46.8 h each (s0 ran on a slower node), MaxRSS ~1.0-1.1 GB.  Run folders and logs:
+`phase3b_chem_runs_v3.tgz` in the owner's folder; figure `report/phase3/figures/p3b_v3_errors.png`.
+
+| Run | final out-of-cliff select / test [mV] | worst test | cliff shift max | note |
+|---|---|---|---|---|
+| chem_v3_s1 | 4.76 / 4.69 | 13.6 | 1.23 % | best |
+| chem_v3_s0 | 4.93 / 4.77 | 13.3 | 1.25 % | |
+| chem_v3_s2 | 5.14 / 7.95 | 26.5 | 2.18 % | |
+| chem_v3_warm_s0 | 7.12 / 7.81 | 42.1 | 1.55 % | from v2: fast start (8 mV at 40k), then the same plateau |
+| chem_v3_ct40k_s0 | 157 / 148 | 256 | 3.75 % | collapsed at ~115k (inventory residual 81 -> 5e4) |
+
+Revised gate: 0 of 5 pass (v2: 3 of 5 at 1.02 / 1.15 mV).
+
+Where the error is:
+1. **By rate** (chem_v3_s1, mean over the 13 chemistries outside cliffs): 0.1 C 5.6, 0.3 C 3.6, 1 C 1.9 and
+   3 C 7.9 mV.  The v2 network gives 1.1, 0.9 and 1.3 mV at 0.1, 0.3 and 1 C.  The ends of the range suffer, the
+   middle much less.
+2. **Along the discharge:** a smooth drift that grows in the last ~30 % (step 3), not at the cliffs.  At 0.1 C it is
+   +30 mV for p2, -20 mV for p1 and -33 mV for p8 in the last 20 %.  At 3 C there is an offset growing from ~2 to
+   ~11 mV.
+3. **Cause:** the charge stored in the extents drifts away from the charge passed.  The inventory error of
+   chem_v3_s1 is 1-25 mol/m3 (worst at 0.08-0.1 C for a chemistry with dU0_2 +0.2 V and b_3 x2.7, and at 3 C).  For the v2 network it is
+   0.5-2 mol/m3.  The point-wise extent-ODE residuals are of similar size (1.5e-3 vs 0.9e-3 in v2), but now
+   systematic, so they integrate into a drift.
+4. **The plateau is systematic.**  All seeds and the warm start level off at ~4.7-8 mV after ~150k steps.
+   Sandbox continuations of chem_v3_s1 (3000 steps, lr 1e-4, frozen weights) did not change it:
+   - with the v3 weights: test 4.46 mV;
+   - with the inventory weight raised 18x: test 4.64 mV, and the inventory residual did not move (its gradient is
+     present and large).
+   So more steps or more inventory weight alone will not fix it.  What remains is network capacity or sampling
+   density for the 37.5x range, or a structural fix: a hard charge-inventory constraint, the analogue of the
+   current projection.
+5. **Inventory switch-on:** the start at 20 000 steps worked in 4 of 4 runs.  The paired 40 000 run collapsed late,
+   which is weak evidence (n = 1) for the earlier start.
+
+Usability (known-truth test of the tool with chem_v3_s1, 0.2 + 2 C, w_S free; `results/lispan/two_curve/
+synthetic_v3s1_0.2+2.json`).  Noise-free rms errors over the 9 unflagged chemistries:
+
+| network | w_S | dU0_2 | dU0_3rel2 | b_12 | b_3 | k0_1 | d | Z_CC |
+|---|---|---|---|---|---|---|---|---|
+| chem_v3_s1 | 0.34 % | 5.4 mV | 5.1 mV | 2.4 % | 2.9 % | 24 % | 4.5 mV | 2.9 Ohm cm2 |
+| v2 | 0.14 % | 0.6 mV | 2.1 mV | 0.2 % | 0.7 % | 12 % | 0.6 mV | 1.3 Ohm cm2 |
+
+The v3 errors are 2-8x the v2 floor, but comparable to or below the statistical sd of real two-curve fits (Chen,
+Hao: w_S 0.5-1 %, dU0_2 5-9 mV, d 4-8 mV, dU0_3rel2 23-35 mV, k0_1 16-27 %, Z_CC 5-9 Ohm cm2).  Added as the v3 floor
+(`NETWORK_SD["chem_v3_s1"]`): with it 88-100 % of the 5 mV-noise errors lie within 2 sd (without it 58-92 %).
+
+Decision:
+- chem_v3_s1/final.pt is a usable, lower-accuracy network for the fast literature pairs that v2 cannot take, with
+  its floor in `sd_total`.
+- v2 stays the tool network whenever the currents fit in 0.1-1 C.
+- A better wide-range network needs a change of method (see the options in the status line), not more of the same.
+
+New training options (rate_pinn.RateTrainConfig): `initial_weights` (group weights of a new run) and
+`freeze_weight_min` (lower bounds at the freeze), used by the continuation probes; tested.
+
 ## Status
 
 2026-10-22: code, tests (9 chem + 12 rate + 14 other Li-SPAN tests pass), design (644 FV runs) and the 24 references.
@@ -321,3 +379,8 @@ range (current ratio <= 10); the literature fast rates (2 C and above) need a wi
 2026-10-27 (night): v3 built (0.08-3 C; section above): FV design (2821 runs), degree-6 window, 52 references,
 configs, slurm default, warm start from chem checkpoints, window speed-up; 46 Li-SPAN tests pass.  Ready to submit
 (`sbatch slurm/lispan_chem_array.slrm`, array 0-4).
+2026-10-29: v3 trained (results above): 0 of 5 pass; best chem_v3_s1 4.8 / 4.7 mV outside cliffs, a late-discharge drift
+from the charge inventory; usable for wide pairs with its floor (2-8x v2's).  Options for a better wide-range network:
+(a) hard charge-inventory constraint in the extents (structural, analogous to the current projection), (b) width 128
+and/or 2x collocation points (capacity / density), (c) two overlapping networks (e.g. 0.08-1 C = v2 extended, and
+0.3-3 C).  Waiting for the owner's choice.
