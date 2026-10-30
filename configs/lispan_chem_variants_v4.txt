@@ -1,0 +1,12 @@
+# Phase 3b v4 (configs/lispan_chem_v4.json: v3 + hard charge inventory, 0.08-3 C) for slurm/lispan_chem_array.slrm.
+# ~1.2-1.3 s per step on Grace: submit with --time=120:00:00 (partition long; 250 000 steps ~ 85-95 h).
+# Two seeds from scratch; the v3 network chem_v3_s1 as warm start (in the sandbox it reached 2.3 mV outside cliffs
+# after 1000 steps with the hard inventory; 150 000 steps, starting from chem_v3_s1's frozen group weights so that the
+# first adaptive updates do not disturb it); and the salt-group weight floor (the remaining error is
+# the salt polarization at 3 C: the network's salt gradient is ~10 % too shallow) once from scratch, once warm.
+# One line per array index; <run name> key=value ... (JSON values, no spaces).
+chem_v4_s0  seed=0
+chem_v4_s1  seed=1
+chem_v4_salt_s0  seed=0 freeze_weight_min={"salt":50.0}
+chem_v4_warm_s0  seed=0 init_from="results/lispan_chem_runs/chem_v3_s1/final.pt" lr=0.0003 adam_steps=150000 initial_weights={"ode":706.3,"inventory":0.2233,"charge":904.9,"salt":8.82,"bc":1000.0}
+chem_v4_warm_salt_s0  seed=0 init_from="results/lispan_chem_runs/chem_v3_s1/final.pt" lr=0.0003 adam_steps=150000 initial_weights={"ode":706.3,"inventory":0.2233,"charge":904.9,"salt":50.0,"bc":1000.0} freeze_weight_min={"salt":50.0}

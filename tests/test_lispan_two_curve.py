@@ -116,3 +116,46 @@ def test_fv_params_mapping():
     assert p.U0 == pytest.approx(tuple(u + 0.03 for u in q.U0)) and p.Z_CC == 0.002 and p.c_DL == 1e-6
     assert p.U0[2] - p.U0[1] == pytest.approx(PARAMS.U0[2] - PARAMS.U0[1] - 0.08)   # dU0_3rel2: relative to step 2
     assert p.b == pytest.approx((PARAMS.b[0] * 1.2, PARAMS.b[1] * 1.2, PARAMS.b[2] * 1.5))
+
+
+def test_hard_charge_inventory_is_exact_and_differentiable():
+    """inventory_hard: c_S4,0 int sum xi dy = Q / (2 F L_cat) at every (t, condition), with exact first and mixed second
+    derivatives of the extents (the extent ODE residuals need d xi / dT and its parameter gradient)."""
+    m = small_model()
+    m.inventory_hard = True
+    n = 5
+    T = torch.tensor([1e-3, 0.05, 0.3, 0.7, 1.0], dtype=torch.float64).view(-1, 1)
+    z = torch.cat([torch.tensor([[0.1], [0.3], [0.5], [0.9], [1.0]], dtype=torch.float64),
+                   torch.rand(n, len(SPEC), dtype=torch.float64, generator=torch.Generator().manual_seed(1)) * 0.1], 1)
+    q = m.q_nodes.shape[0]
+    Yq = m.q_nodes.view(1, q).expand(n, q).reshape(-1, 1).double()
+    Tq = T.view(n, 1).expand(n, q).reshape(-1, 1)
+    zq = z.reshape(n, 1, -1).expand(n, q, z.shape[1]).reshape(n * q, -1)
+    with torch.no_grad():
+        x1, x2, x3 = m.extents(Yq, Tq, zq)
+        inv = ((x1 + x2 + x3).view(n, q) * m.q_weights.view(1, q)).sum(1, keepdim=True)
+        assert torch.allclose(inv, m.inventory_target(T, z), rtol=1e-10, atol=0)
+    Y = torch.full((n, 1), 0.3, dtype=torch.float64)
+    Tg = T.clone().requires_grad_(True)
+    g = torch.autograd.grad(m.extents(Y, Tg, z)[2].sum(), Tg, create_graph=True)[0]
+    h = 1e-6
+    with torch.no_grad():
+        fd = (m.extents(Y, T + h, z)[2] - m.extents(Y, T - h, z)[2]) / (2 * h)
+    assert torch.allclose(g.detach(), fd, rtol=1e-7)
+    W = m.net_xi.net[0].weight
+    gt = torch.autograd.grad(g.sum(), W)[0]
+
+    def dxdT(eps):
+        with torch.no_grad():
+            W[3, 2] += eps
+        Tg2 = T.clone().requires_grad_(True)
+        out = torch.autograd.grad(m.extents(Y, Tg2, z)[2].sum(), Tg2)[0].sum().item()
+        with torch.no_grad():
+            W[3, 2] -= eps
+        return out
+    fd2 = (dxdT(1e-5) - dxdT(-1e-5)) / 2e-5
+    assert gt[3, 2].item() == pytest.approx(fd2, rel=1e-6)
+    m.inventory_hard = False                                          # the soft model is unchanged
+    with torch.no_grad():
+        e1 = m._remaining(Y, T, z)[0]
+        assert torch.allclose(e1, torch.exp(-torch.clamp(T * m._P(Y, T, z)[:, :1], max=60.0)))

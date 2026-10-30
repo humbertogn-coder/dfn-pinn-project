@@ -355,6 +355,66 @@ Decision:
 New training options (rate_pinn.RateTrainConfig): `initial_weights` (group weights of a new run) and
 `freeze_weight_min` (lower bounds at the freeze), used by the continuation probes; tested.
 
+## v4: hard charge inventory (built 2026-10-30, not trained yet)
+
+The v3 diagnosis was that the extents' stored charge drifts away from the charge passed, which produces the
+late-discharge error.  v4 makes that inventory exact by construction, the same idea as the current projection.
+
+**Method** (`rate_pinn.LiSPANRatePINN.inventory_scale`, `RateTrainConfig.inventory_hard`):
+- The remaining fractions become e_m = exp(-lam(t, z) T P_m(y, t, z)), with one scale lam per time and condition.
+- lam solves c_S4,0 int sum_m xi_m dy = Q(t) / (2 F L_cat) on the 12-node Gauss quadrature that the current projection
+  already uses.
+- The sum is monotone in lam, so lam is found by bisection in ln lam on the detached problem.  Two Newton steps with the
+  graph follow on the solvable rows.  This makes the first and mixed second derivatives exact at the root: the extent
+  ODE residuals need d xi/dT and its parameter gradient.
+- Ordering, bounds and xi(0) = 0 stay exact; lam -> 0 as t -> 0, because the ramped current makes Q ~ t^2.
+- The charge_total residual becomes ~1e-9 and is kept as a diagnostic.
+- Results are cached per (t, condition) set until the extent network's parameters change (their in-place version).
+  Quadrature-expanded rows are solved once per row, so each step solves 2 sets: the cathode points and the boundary
+  points.
+
+Two numerical fixes came with it:
+- The extents are now 1 - e computed as -expm1(-x).
+- Q(t) uses ln cosh x = log1p(2 sinh^2(x/2)) for small t/tau.
+- Reason: at the earliest times float32 gave exactly zero extents and Q, and with them non-finite residuals in 10 % of
+  the batches.
+- Effect: 0 of 40 test batches non-finite after the fixes.  The v2 network's evaluation is unchanged to 4 decimals.
+
+**Checks** (`tests/test_lispan_two_curve.py::test_hard_charge_inventory_is_exact_and_differentiable`):
+- The inventory holds to 1e-10 relative.
+- d xi/dT matches finite differences to 1e-10.
+- The mixed derivative d/dW (d xi/dT) matches to 1e-9.
+
+**Sandbox probes** (continuations of chem_v3_s1, frozen v3 weights, lr 1e-4), outside-cliff mean per rate [mV]:
+
+| probe | step | 0.1 C | 0.3 C | 1 C | 3 C | test mean | worst test | cliff shift max |
+|---|---|---|---|---|---|---|---|---|
+| soft (v3 as is) | 3000 | 5.55 | 3.70 | 1.96 | 7.11 | 4.46 | 12.3 | 1.4 % |
+| **hard inventory** | 1000 | 0.98 | 0.51 | 0.60 | 7.33 | 2.39 | 9.4 | 0.35 % |
+| **hard inventory** | 3000 | 0.95 | 0.44 | 0.51 | 6.92 | 2.27 | 9.4 | 0.15 % |
+| v2 network (0.1-1 C) | final | 1.11 | 0.94 | 1.25 | - | - | - | - |
+
+What the probes show:
+- With the hard inventory the drift disappears within 1000 steps.
+- At 0.1-1 C the wide-range network becomes better than v2.
+- The remaining error is at 3 C, a positive offset that builds up over the first ~30 % of the discharge.  A field check
+  at p0, 3 C (network vs FV at 100-900 s) shows that the network's salt polarization is ~10 % too shallow:
+  - collector 673 vs 642 mol/m3, anode 1357 vs 1392 mol/m3;
+  - the electrolyte potential drop is 5-6 mV too small, which is the voltage error.
+- A salt-group weight x5.7 for 750 steps did not change it (3 C 7.2 mV).  Longer training is the open question: in v3
+  the 3 C error kept falling (12.4 -> 8.1 mV from 100k to 250k).
+
+Cost: ~1.1-1.2 s per step in the sandbox, 2x v3, from the second-order graph through the extent network at the
+quadrature nodes.  250 000 steps take ~85-95 h on one Grace core: submit with `--time=120:00:00` (partition long).
+
+Configs: `configs/lispan_chem_v4.json` (v3 + inventory_hard) and `configs/lispan_chem_variants_v4.txt`:
+- chem_v4_s0, chem_v4_s1: from scratch;
+- chem_v4_salt_s0: salt weight floor 50 at the freeze;
+- chem_v4_warm_s0: from chem_v3_s1 with its frozen weights, lr 3e-4, 150 000 steps;
+- chem_v4_warm_salt_s0: as chem_v4_warm_s0, plus the salt floor.
+
+slurm default is now v4; five runs ~350-400 SU.
+
 ## Status
 
 2026-10-22: code, tests (9 chem + 12 rate + 14 other Li-SPAN tests pass), design (644 FV runs) and the 24 references.
@@ -384,3 +444,6 @@ from the charge inventory; usable for wide pairs with its floor (2-8x v2's).  Op
 (a) hard charge-inventory constraint in the extents (structural, analogous to the current projection), (b) width 128
 and/or 2x collocation points (capacity / density), (c) two overlapping networks (e.g. 0.08-1 C = v2 extended, and
 0.3-3 C).  Waiting for the owner's choice.
+2026-10-30: v4 built (hard charge inventory; section above): exact inventory, derivatives checked, early-time float32
+fixes; sandbox probes: the drift is gone (0.1-1 C 0.4-1.0 mV, better than v2), 3 C still ~7 mV (salt polarization
+too shallow).  Ready to submit (`sbatch --time=120:00:00 slurm/lispan_chem_array.slrm`).

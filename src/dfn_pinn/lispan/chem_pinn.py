@@ -589,9 +589,11 @@ def chem_eval_summary(ev: dict) -> str:
 
 
 def build_chem_model(cfg: ChemTrainConfig, params: LiSPANParams, window_coef) -> LiSPANChemPINN:
-    return LiSPANChemPINN(params, window_coef, cfg.chem_inputs, cfg.rate_min, cfg.rate_max, cfg.ramp_s,
-                          cfg.window_fraction, cfg.width, cfg.depth, cfg.act, cfg.fourier_t, cfg.fourier_period,
-                          tuple(cfg.short_t), cfg.ic_tau_s, cfg.quad_order, cfg.salt_sep_natural_scale)
+    m = LiSPANChemPINN(params, window_coef, cfg.chem_inputs, cfg.rate_min, cfg.rate_max, cfg.ramp_s,
+                       cfg.window_fraction, cfg.width, cfg.depth, cfg.act, cfg.fourier_t, cfg.fourier_period,
+                       tuple(cfg.short_t), cfg.ic_tau_s, cfg.quad_order, cfg.salt_sep_natural_scale)
+    m.inventory_hard = bool(getattr(cfg, "inventory_hard", False))
+    return m
 
 
 def warm_start_from_rate(model: LiSPANChemPINN, rate_checkpoint) -> dict:

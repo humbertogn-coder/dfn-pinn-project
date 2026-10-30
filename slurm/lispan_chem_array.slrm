@@ -17,15 +17,16 @@
 # Submit from the repository root (the FV evaluation references are built by the first job that needs them, ~1 min
 # each, or beforehand with: python scripts/lispan_chem_design.py --refs-only --out configs/lispan_chem_design_v3.json):
 #     mkdir -p slurm_logs
-#     sbatch slurm/lispan_chem_array.slrm                  # v3 (default): configs/lispan_chem_variants_v3.txt, 5 runs
-#     sbatch --array=1 slurm/lispan_chem_array.slrm        # one variant
-#     sbatch --export=ALL,CONFIG=configs/lispan_chem_v2.json,VARIANTS=configs/lispan_chem_variants_v2.txt \
-#            slurm/lispan_chem_array.slrm                 # v2 (finished 2026-10-27; would only skip)
+#     sbatch --time=120:00:00 slurm/lispan_chem_array.slrm # v4 (default): configs/lispan_chem_variants_v4.txt, 5 runs
+#     sbatch --array=1 --time=120:00:00 slurm/lispan_chem_array.slrm      # one variant
+#     sbatch --export=ALL,CONFIG=configs/lispan_chem_v3.json,VARIANTS=configs/lispan_chem_variants_v3.txt \
+#            slurm/lispan_chem_array.slrm                 # v3 (finished 2026-10-29; would only skip)
 #
-# Cost: about 1 SU per hour per job.  v3 / v2: 200 000 steps at ~0.6-0.7 s per step = ~33-39 h per variant (48 h
-# limit; if a job does hit it, resubmit: it resumes from latest.pt); five runs ~175-200 SU.  v1: 150 000 steps.
-# The warm-start variant of v3 needs results/lispan_chem_runs/chem_v2_norar_s0/final.pt (the v2 tool network) in this
-# repository; v2's needed results/lispan_rate_runs/rate_v4_s0/final.pt.
+# Cost: about 1 SU per hour per job.  v4 (hard charge inventory): ~1.2-1.3 s per step, 250 000 steps ~85-95 h, so
+# pass --time=120:00:00 (partition long allows 7 days); five runs ~350-400 SU.  v3: 250 000 steps at ~0.55 s per step
+# (~38 h); v2: 200 000 steps (~35 h).  A job that hits its limit saves latest.pt: resubmit and it resumes.
+# The warm-start variants of v4 need results/lispan_chem_runs/chem_v3_s1/final.pt (on Grace from the v3 array); v3's
+# needed chem_v2_norar_s0/final.pt, v2's results/lispan_rate_runs/rate_v4_s0/final.pt.
 #
 # Clean shutdown: --signal=B:USR1@300 sends USR1 to this shell 5 min before the time limit; the trap forwards
 # SIGTERM to python, which saves latest.pt and exits; the wait loop keeps the shell alive until python has exited.
@@ -41,8 +42,8 @@ fi
 export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1
 cd "$SLURM_SUBMIT_DIR"
 
-CONFIG=${CONFIG:-configs/lispan_chem_v3.json}
-VARIANTS=${VARIANTS:-configs/lispan_chem_variants_v3.txt}
+CONFIG=${CONFIG:-configs/lispan_chem_v4.json}
+VARIANTS=${VARIANTS:-configs/lispan_chem_variants_v4.txt}
 LINE=$(grep -v '^[[:space:]]*#' "$VARIANTS" | grep -v '^[[:space:]]*$' | sed -n "$((SLURM_ARRAY_TASK_ID + 1))p")
 if [ -z "$LINE" ]; then
     echo "no variant line for array index $SLURM_ARRAY_TASK_ID in $VARIANTS"; exit 1

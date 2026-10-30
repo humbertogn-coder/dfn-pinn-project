@@ -68,6 +68,9 @@ class RateTrainConfig(LiSPANTrainConfig):
     rollback_start: int = 0               # rollbacks only from this step on (the monitor observes from the start); wave 3:
                                           #   the bursts before ~30 000 steps recover by themselves, rolling them back
                                           #   looped and used up the budget
+    inventory_hard: bool = False          # hard charge inventory: the extents' time argument is scaled per (t, condition)
+                                          #   so that c_S4,0 int sum xi dy = Q(t) / (2 F L_cat) exactly (Phase 3b v4;
+                                          #   v3 showed a late-discharge drift from this inventory)
     initial_weights: dict = field(default_factory=dict)   # group weights at the start of a new run (not on resume),
                                           #   e.g. a continuation with the weights of the run it starts from
     freeze_weight_min: dict = field(default_factory=dict)  # lower bounds applied to the weights at the freeze
@@ -125,6 +128,9 @@ def window_t_end(coef, rate, fraction=0.98):
 
 class LiSPANRatePINN(LiSPANPINN):
     """LiSPANPINN with the C-rate r (tensor, same shape as T) as an extra argument of every field."""
+
+    inventory_hard = False                 # set by build_model / build_chem_model from the config
+    INV_BRACKET = (-40.0, 10.0)            # ln of the inventory scale searched by bisection
 
     def __init__(self, params: LiSPANParams, window_coef, rate_min=0.1, rate_max=1.0, ramp_s=30.0, window_fraction=0.98,
                  width=96, depth=4, act="tanh", fourier_t=8, fourier_period=1.0, short_t=(60.0, 600.0), ic_tau_s=60.0,
@@ -198,10 +204,15 @@ class LiSPANRatePINN(LiSPANPINN):
         return self.I0(r) * self.g(T, r)
 
     def charge_passed(self, T, r):
-        """Q(t) = int_0^t I dt = I0 tau ln cosh(t/tau) [C/m2], overflow-free, t = T t_end(r)."""
+        """Q(t) = int_0^t I dt = I0 tau ln cosh(t/tau) [C/m2], t = T t_end(r); overflow-free for large t/tau and
+        without cancellation for small t/tau (ln cosh x = log1p(2 sinh^2(x/2)) there; the plain form gives 0 for
+        t/tau < ~1e-3 in float32, which the hard charge inventory needs at the earliest times)."""
         te = self.t_end(r)
         tau = self.ramp_s / te
-        return self.I0(r) * te * (T + tau * (torch.log1p(torch.exp(-2.0 * T / tau)) - math.log(2.0)))
+        x = T / tau
+        small = torch.log1p(2.0 * torch.sinh(0.5 * torch.clamp(x, max=20.0)) ** 2)
+        large = x + torch.log1p(torch.exp(-2.0 * x)) - math.log(2.0)
+        return self.I0(r) * te * tau * torch.where(x < 20.0, small, large)
 
     def ic_factor(self, T, r):
         return 1 - torch.exp(-T * self.t_end(r) / self.ic_tau_s)
@@ -218,24 +229,120 @@ class LiSPANRatePINN(LiSPANPINN):
         return torch.cat(feats, dim=1)
 
     # ------------------------------------------------------------------ cathode fields
+    def _P(self, Yc, T, r):
+        return torch.exp(torch.clamp(self.net_xi(torch.cat([2 * Yc - 1, self.tf(T, r)], dim=1)), -16.0, 6.0))
+
+    def _exponents(self, Yc, T, r):
+        P = self._P(Yc, T, r)
+        s = self.inventory_scale(T, r) * T if self.inventory_hard else T
+        return tuple(torch.clamp(s * P[:, m:m + 1], max=60.0) for m in range(3))
+
     def _remaining(self, Yc, T, r):
-        P = torch.exp(torch.clamp(self.net_xi(torch.cat([2 * Yc - 1, self.tf(T, r)], dim=1)), -16.0, 6.0))
-        return tuple(torch.exp(-torch.clamp(T * P[:, m:m + 1], max=60.0)) for m in range(3))
+        return tuple(torch.exp(-x) for x in self._exponents(Yc, T, r))
+
+    # ------------------------------------------------------------------ hard charge inventory (Phase 3b v4)
+    def inventory_target(self, T, r):
+        """Electrode-averaged sum of the extents that the charge passed requires: Q(t) / (2 F L_cat c_S4,0)."""
+        return self.charge_passed(T, r) / (2.0 * F * self.p.L_cat * self.p.c_init[0])
+
+    @staticmethod
+    def _inv_sum(lam, TP, w):
+        """int sum_m xi_m dY (quadrature) for extents with time argument lam T: lam (n, 1), TP (n, q, 3), w (1, q)."""
+        x = torch.clamp(lam.view(-1, 1, 1) * TP, max=60.0)
+        a1, a2, a3 = (-torch.expm1(-x[..., m]) for m in range(3))      # 1 - e_m without cancellation at small x
+        xi1 = a1
+        xi2 = xi1 * a2
+        xi3 = xi2 * a3
+        return ((xi1 + xi2 + xi3) * w).sum(1, keepdim=True)
+
+    @staticmethod
+    def _inv_sum_dlam(lam, TP, w):
+        x = torch.clamp(lam.view(-1, 1, 1) * TP, max=60.0)
+        live = (lam.view(-1, 1, 1) * TP < 60.0).to(TP.dtype)
+        e = torch.exp(-x)
+        a = -torch.expm1(-x)
+        da = TP * e * live                                              # d(1 - e_m)/d lam
+        xi1, d1 = a[..., 0], da[..., 0]
+        xi2, d2 = xi1 * a[..., 1], d1 * a[..., 1] + xi1 * da[..., 1]
+        d3 = d2 * a[..., 2] + xi2 * da[..., 2]
+        return ((d1 + d2 + d3) * w).sum(1, keepdim=True)
+
+    def _inventory_scale_rows(self, T, r):
+        """Scale lam(t, condition) of the extents' time argument with int sum xi dY = target exactly: bisection in ln lam
+        on the detached problem, then two Newton steps with the graph (exact first and second derivatives at the root,
+        which the extent ODE residuals d xi / dT need)."""
+        n, q = T.shape[0], self.q_nodes.shape[0]
+        nodes = self.q_nodes.to(T.dtype).view(1, q)
+        w = self.q_weights.to(T.dtype).view(1, q)
+        Yq = nodes.expand(n, q).reshape(-1, 1)
+        Tq = T.view(n, 1).expand(n, q).reshape(-1, 1)
+        rq = r.reshape(n, 1, -1).expand(n, q, r.shape[-1]).reshape(n * q, -1)
+        TP = T.view(n, 1, 1) * self._P(Yq, Tq, rq).view(n, q, 3)
+        target = self.inventory_target(T, r)
+        with torch.no_grad():
+            TPd, tgt = TP.detach(), target.detach()
+            lo = torch.full_like(tgt, self.INV_BRACKET[0]); hi = torch.full_like(tgt, self.INV_BRACKET[1])
+            for _ in range(60):
+                mid = 0.5 * (lo + hi)
+                below = self._inv_sum(torch.exp(mid), TPd, w) < tgt
+                lo = torch.where(below, mid, lo); hi = torch.where(below, hi, mid)
+            lam0 = torch.exp(0.5 * (lo + hi))
+            ok = (tgt > 0) & (self._inv_sum(torch.exp(torch.full_like(tgt, self.INV_BRACKET[1])), TPd, w) >= tgt)
+            self.inventory_unbracketed = int(((tgt > 0) & ~ok).sum())
+            ok = ok & (self._inv_sum_dlam(lam0, TPd, w) > 1e-20)
+        lam = torch.where(tgt > 0, lam0, torch.zeros_like(lam0))
+        if torch.is_grad_enabled() and bool(ok.any()):
+            # Newton steps with the graph on the solvable rows only (rows at T = 0 or outside the bracket keep a constant
+            # scale: a masked division there would still send inf / NaN into the gradients)
+            idx = ok.view(-1).nonzero().view(-1)
+            TPv, tv, lv = TP[idx], target[idx], lam0[idx]
+            for _ in range(2):
+                lv = lv - (self._inv_sum(lv, TPv, w) - tv) / self._inv_sum_dlam(lv, TPv, w)
+            lam = lam.index_put((idx,), lv)
+        return lam
+
+    def inventory_scale(self, T, r):
+        """lam per row; rows that repeat a (t, condition) q times in a row (quadrature expansions) are solved once, and
+        the result is kept until the extent network changes (its parameters' in-place version)."""
+        q = self.q_nodes.shape[0]
+        n = T.shape[0]
+        Tr, rr, rep = T, r, 1
+        if n >= 4 * q and n % q == 0:
+            Tv, rv = T.detach().view(n // q, q, 1), r.detach().reshape(n // q, q, -1)
+            if torch.equal(Tv, Tv[:, :1].expand_as(Tv)) and torch.equal(rv, rv[:, :1].expand_as(rv)):
+                Tr, rr, rep = T.view(n // q, q, 1)[:, 0], r.reshape(n // q, q, -1)[:, 0], q
+        ver = (sum(p_._version for p_ in self.net_xi.parameters()), torch.is_grad_enabled())
+        cache = getattr(self, "_inv_cache", None)
+        if cache is None or cache[0] != ver:
+            cache = self._inv_cache = (ver, {})
+        Td = Tr.detach().contiguous().view(-1)                     # contiguous: identical sums for equal contents
+        key = (Tr.shape[0], Tr.requires_grad, float(Td.sum()), float((Td * torch.arange(1, Td.shape[0] + 1, dtype=Td.dtype)).sum()),
+               float(rr.detach().contiguous().sum()), Tr.dtype)
+        lam = cache[1].get(key)
+        if lam is None:
+            lam = self._inventory_scale_rows(Tr, rr)
+            if len(cache[1]) > 16:
+                cache[1].clear()
+            cache[1][key] = lam
+        if rep > 1:
+            lam = lam.view(-1, 1, 1).expand(-1, rep, 1).reshape(-1, 1)
+        return lam
 
     def extents(self, Yc, T, r):
-        e1, e2, e3 = self._remaining(Yc, T, r)
-        xi1 = 1 - e1
-        xi2 = xi1 * (1 - e2)
-        xi3 = xi2 * (1 - e3)
+        x1, x2, x3 = self._exponents(Yc, T, r)
+        xi1 = -torch.expm1(-x1)                     # 1 - e without cancellation at small arguments (early times)
+        xi2 = xi1 * -torch.expm1(-x2)
+        xi3 = xi2 * -torch.expm1(-x3)
         return xi1, xi2, xi3
 
     def species(self, Yc, T, r):
         p = self.p
         c40 = p.c_init[0]
-        e1, e2, e3 = self._remaining(Yc, T, r)
-        xi1 = 1 - e1
-        xi2 = xi1 * (1 - e2)
-        xi3 = xi2 * (1 - e3)
+        x1, x2, x3 = self._exponents(Yc, T, r)
+        e1, e2, e3 = torch.exp(-x1), torch.exp(-x2), torch.exp(-x3)
+        xi1 = -torch.expm1(-x1)
+        xi2 = xi1 * -torch.expm1(-x2)
+        xi3 = xi2 * -torch.expm1(-x3)
         c_S4 = c40 * e1
         c_S3 = c40 * xi1 * e2
         c_S2 = c40 * xi2 * e3
@@ -610,9 +717,11 @@ class HealthMonitor:
 
 # ====================================================================== model I/O
 def build_model(cfg: RateTrainConfig, params: LiSPANParams, window_coef) -> LiSPANRatePINN:
-    return LiSPANRatePINN(params, window_coef, cfg.rate_min, cfg.rate_max, cfg.ramp_s, cfg.window_fraction, cfg.width,
-                          cfg.depth, cfg.act, cfg.fourier_t, cfg.fourier_period, tuple(cfg.short_t), cfg.ic_tau_s,
-                          cfg.quad_order, cfg.salt_sep_natural_scale)
+    m = LiSPANRatePINN(params, window_coef, cfg.rate_min, cfg.rate_max, cfg.ramp_s, cfg.window_fraction, cfg.width,
+                       cfg.depth, cfg.act, cfg.fourier_t, cfg.fourier_period, tuple(cfg.short_t), cfg.ic_tau_s,
+                       cfg.quad_order, cfg.salt_sep_natural_scale)
+    m.inventory_hard = bool(getattr(cfg, "inventory_hard", False))
+    return m
 
 
 def params_from_dict(d: dict) -> LiSPANParams:
