@@ -415,6 +415,72 @@ Configs: `configs/lispan_chem_v4.json` (v3 + inventory_hard) and `configs/lispan
 
 slurm default is now v4; five runs ~350-400 SU.
 
+## v4 results (Grace, array 20342362, finished 2026-11-02)
+
+Five runs, no rollbacks, 11-30 skipped batches, MaxRSS 1.6-1.7 GB.  Wall time: 80-85 h for the scratch runs (250 000
+steps), 50 h for the warm starts (150 000 steps), ~1.2 s per step.  Run folders and logs: `phase3b_chem_runs_v4.tgz`
+in the owner's folder (copied into `results/lispan_chem_runs/chem_v4_*`, summary `summary_chem_v4.json`); figure
+`report/phase3/figures/p3b_v4_errors.png`.
+
+    python scripts/lispan_chem_summary.py results/lispan_chem_runs/chem_v4_*
+    python scripts/lispan_run_progress.py                       # progress / status of the array while it runs
+    python report/phase3/make_phase3b_figures.py --runs results/lispan_chem_runs --best chem_v4_warm_salt_s0 \
+        --design configs/lispan_chem_design_v3.json --tag v4
+
+Outside-cliff mean over the 13 chemistries, per rate, and the test chemistries split into 0.1-1 C and 3 C [mV]:
+
+| Run | 0.1 C | 0.3 C | 1 C | 3 C | test 0.1-1 C (worst) | test 3 C (worst) | all rates select / test | cliff shift max |
+|---|---|---|---|---|---|---|---|---|
+| chem_v4_s0 | 0.69 | 0.35 | 0.93 | 6.70 | 0.68 (3.3) | 6.86 (11.3) | 2.08 / 2.22 | 0.16 % |
+| chem_v4_s1 | 0.74 | 0.39 | 1.36 | 4.22 | 0.87 (3.5) | **4.37** (8.5) | 1.57 / 1.74 | 0.15 % |
+| chem_v4_salt_s0 | 0.75 | 0.43 | 0.50 | 6.79 | 0.60 (3.4) | 6.96 (10.7) | 2.00 / 2.19 | 0.23 % |
+| chem_v4_warm_s0 | 0.78 | 0.38 | **0.35** | 5.56 | **0.55** (4.2) | 5.70 (8.9) | 1.66 / 1.84 | 0.15 % |
+| **chem_v4_warm_salt_s0** | 0.83 | 0.42 | 0.44 | 5.08 | 0.63 (4.3) | 5.20 (8.3) | 1.57 / 1.77 | 0.16 % |
+| chem_v3_s1 (reference) | 5.6 | 3.6 | 1.9 | 7.9 | | | 4.76 / 4.69 | 1.23 % |
+| chem_v2_norar_s0 (0.1-1 C) | 1.1 | 0.9 | 1.3 | - | | | | |
+
+Revised gate over the full 0.08-3 C range: 0 of 5 (every run has 3 C cases above 5 mV).  Restricted to 0.1-1 C:
+5 of 5 pass (test mean 0.55-0.87 mV, every case < 5 mV, cliff shift <= 0.23 %, test <= 1.5x select).
+
+What the results show:
+1. **The hard inventory removed the v3 drift.**  At 0.1 and 0.3 C every v4 run is 1.3-2.6x better than v2 and
+   7-10x better than v3; at 1 C 0.35-0.93 mV (s1: 1.36, as v2).  The cliffs sit within 0.23 % of the FV position
+   (v3: 1.2-2.2 %).
+2. **3 C remains the limit** (test mean 4.4-7.0 mV).  The worst case of every run is p6_3C, a corner of the box
+   (dU0_2 +0.26 V, b_3 x0.45, k0_1 x0.39).  The error is smooth, not at the cliffs (rms 8.3 mV with and without the
+   cliffs), positive and growing late: for chem_v4_warm_salt_s0 3, 6, 6, 8 and 15 mV rms over the five fifths of the
+   discharge, +24 mV at the cut-off.  The network's voltage is too high, consistent with the too-shallow salt
+   polarization found in the sandbox probe (not re-checked on the final networks).
+3. **The salt-weight floor had no clear effect** (salt_s0 vs s0: 6.96 vs 6.86 mV at 3 C; warm_salt vs warm: 5.20 vs
+   5.70 mV).
+4. **The warm starts** (from chem_v3_s1) get there in fewer steps.  Test outside cliffs, all rates: warm_salt
+   2.35 / 1.91 / 1.77 mV at 50k / 100k / 150k steps; s1 5.33 / 3.07 / 2.25 / 1.89 / 1.74 mV at 50k-250k.  The scratch
+   runs were still improving at 250k (-0.15 mV over the last 50k for s1, -0.2 to -0.35 for s0 and salt_s0), so a
+   continuation of s1 could lower 3 C further.
+5. **Remaining 0.1-1 C worst case:** p7_0.1C (3.3-4.3 mV), another corner (k0_1 x93, b_12 x1.6, b_3 x0.51), a smooth
+   error in the middle-late discharge (up to ~8 mV rms between 60 and 80 %).
+
+Usability (known-truth test of the tool with chem_v4_warm_salt_s0, 0.2 + 2 C, w_S free, 13 chemistries x (noise-free +
+2 draws at 5 mV); `results/lispan/two_curve/synthetic_v4ws_0.2+2.json`).  Noise-free rms errors over the 10 unflagged
+chemistries:
+
+| network | w_S | dU0_2 | dU0_3rel2 | b_12 | b_3 | k0_1 | d | Z_CC |
+|---|---|---|---|---|---|---|---|---|
+| chem_v4_warm_salt_s0 | 0.18 % | 1.1 mV | 3.3 mV | 0.42 % | 1.0 % | 3.5 % | 0.95 mV | 0.40 Ohm cm2 |
+| chem_v3_s1 | 0.34 % | 5.4 mV | 5.1 mV | 2.4 % | 2.9 % | 24 % | 4.5 mV | 2.9 Ohm cm2 |
+| v2 (0.2 + 0.6 C) | 0.14 % | 0.6 mV | 2.1 mV | 0.2 % | 0.7 % | 12 % | 0.6 mV | 1.3 Ohm cm2 |
+
+Added as `NETWORK_SD["chem_v4_warm_salt_s0"]`; with it 85-100 % of the 5 mV-noise errors lie within 2 sd.  Flagged:
+p5, p7 (box edges) and p6, whose noise-free fit misses by 4.4 mV and is far from the truth (the 3 C corner of item 2);
+the flags (box_edge, poorly_identified) mark it.
+
+Choice:
+- **chem_v4_warm_salt_s0/final.pt** is the tool network for 0.08-3 C: best balance (0.1-1 C test 0.63 mV, 3 C test
+  5.2 mV, all rates 1.57 / 1.77 mV).
+- **chem_v4_s1/final.pt** is the cross-check for fits that use 3 C data (best at 3 C, 4.4 mV; 1 C 1.36 mV).  The
+  difference between the two fits is a direct indicator of the network error for that dataset.
+- v2 stays valid for 0.1-1 C pairs and is the reference for the comparisons below.
+
 ## Status
 
 2026-10-22: code, tests (9 chem + 12 rate + 14 other Li-SPAN tests pass), design (644 FV runs) and the 24 references.
@@ -447,3 +513,8 @@ and/or 2x collocation points (capacity / density), (c) two overlapping networks 
 2026-10-30: v4 built (hard charge inventory; section above): exact inventory, derivatives checked, early-time float32
 fixes; sandbox probes: the drift is gone (0.1-1 C 0.4-1.0 mV, better than v2), 3 C still ~7 mV (salt polarization
 too shallow).  Ready to submit (`sbatch --time=120:00:00 slurm/lispan_chem_array.slrm`).
+2026-11-02: v4 trained (array 20342362; results above).  0.1-1 C: 5 of 5 pass (test 0.55-0.87 mV, better than v2);
+3 C: 4.4-7.0 mV, a smooth late offset at the box corner p6.  chem_v4_warm_salt_s0 chosen as the wide-range tool network
+(floor close to v2's, NETWORK_SD added), chem_v4_s1 as the 3 C cross-check.  SPAN-DB refit with v4
+(`results/lispan/spandb_v4ws/`, docs/SPANDB_FITS.md "Network v4"): 38 cells fitted, 26 within 25 mV (v2 35 / 22),
+network vs FV median 0.74 mV (v2 1.9).

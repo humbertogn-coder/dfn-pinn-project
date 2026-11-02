@@ -58,6 +58,11 @@ NETWORK_SD = {
     # synthetic_v3s1_0.2+2.json): 2-8x the v2 floor; with it 88-100 % of the 5 mV-noise errors lie within 2 sd
     "chem_v3_s1": {"w_S": 0.34, "dU0_2": 5.35, "dU0_3rel2": 5.10, "b_12": 2.41, "b_3": 2.87, "k0_1": 23.85,
                    "d": 4.52, "Z_CC": 2.89},
+    # v4 (0.08-3 C, hard charge inventory), same test at 0.2 + 2 C over the 10 unflagged chemistries
+    # (results/lispan/two_curve/synthetic_v4ws_0.2+2.json): close to v2, 2-7x below v3; with it 85-100 % of the
+    # 5 mV-noise errors lie within 2 sd
+    "chem_v4_warm_salt_s0": {"w_S": 0.18, "dU0_2": 1.10, "dU0_3rel2": 3.27, "b_12": 0.42, "b_3": 1.03, "k0_1": 3.48,
+                             "d": 0.95, "Z_CC": 0.40},
 }
 
 

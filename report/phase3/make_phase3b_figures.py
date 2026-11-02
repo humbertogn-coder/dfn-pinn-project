@@ -7,8 +7,9 @@ p3b_v1_errors.png
   a  voltage rms error vs FV for the 24 evaluation cases (8 chemistries x 0.1 / 0.3 / 1 C), every run (final.pt); the
      best run also outside the voltage cliffs (where the FV curve falls faster than 5 V per discharge, +-1 % of the
      capacity around them);
-  b  the worst case of the best run (p7 at 1 C): FV and network curves and the error, which sits at the two cliffs
-     at the end of a plateau.
+  b  the worst case of the best run: FV and network curves and the error; the title says whether the error sits at
+     the cliffs (v1: p7 at 1 C, the two cliffs at the end of a plateau) or is a smooth drift (v4: p6 at 3 C, growing
+     late in the discharge).
 p3b_v1_recovery.png
   noise-free parameter error of the two-curve fit (0.1 + 1 C; scripts/lispan_chem_recovery.py) for the 8 chemistries
   against the scatter of the same fit with 2 and 5 mV noise (linearized standard deviation).
@@ -124,8 +125,16 @@ def main():
     ax2b.plot(x, 1e3 * (V - Vr), color=ORANGE, lw=1.2)
     ax2b.set_title("error [mV]", fontsize=9, color=INK2); ax2b.tick_params(labelsize=8); ax2b.grid(True, color=GRID)
     ch = ", ".join(f"{k} {v:+.3f}" for k, v in worst["chem"].items())
-    ax2.set_title(f"b  Worst case {worst['id']} ({ch}): the error sits at the cliffs", loc="left", fontweight="bold",
-                  color=INK, fontsize=10.5)
+    r_all, r_out = rms_split(x, Vr, V)
+    e = 1e3 * (V - Vr)
+    if r_out < 0.5 * r_all:
+        where = "the error sits at the cliffs"
+    else:
+        late = x > 0.8
+        where = ("smooth error growing late in the discharge" if np.sqrt(np.mean(e[late] ** 2)) > 1.5 * r_all
+                 else "smooth error along the discharge")
+    ax2.set_title(f"b  Worst case {worst['id']} ({ch}): {where} (rms {r_all:.1f} mV, outside cliffs {r_out:.1f})",
+                  loc="left", fontweight="bold", color=INK, fontsize=10.5)
     ax2.legend(frameon=False, loc="lower left")
     if with_curves:
         cols = [BLUE, ORANGE, INK, GREY, "#7A4FB5", "#2E8B57"]

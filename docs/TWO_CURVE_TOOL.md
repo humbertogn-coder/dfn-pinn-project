@@ -1,7 +1,8 @@
 # Two-curve tool: fitting measured Li-SPAN discharge curves with the chemistry network
 
 Status 2026-10-27: built and validated against finite-volume (FV) fits on six published datasets.
-Network: `results/lispan_chem_runs/chem_v2_norar_s0/final.pt` (Phase 3b v2, docs/PHASE3B_CHEM_PINN.md).
+Network: `results/lispan_chem_runs/chem_v2_norar_s0/final.pt` (Phase 3b v2, docs/PHASE3B_CHEM_PINN.md), 0.1-1 C.
+Wide-range network since 2026-11-02: `results/lispan_chem_runs/chem_v4_warm_salt_s0/final.pt` (v4, 0.08-3 C).
 Applied to every SPAN-DB cell with two or more currents on 2026-10-30: docs/SPANDB_FITS.md.
 
 ## What it does
@@ -45,8 +46,9 @@ The fast curves of the literature datasets map above 1 C, so the pairs used in P
 | Ma 2026 SPAN / SPAN-A (w_S ~0.7-1.1) | 0.2 + 1 C | 0.2-0.36 / 1.2-1.8 C | 0.2 + 0.5 C (prediction 0.3 C) |
 | Simanjuntak 2024 Fig. 4b | 0.1 + 1 C | 0.1 / 1 C | 0.1 + 1 C (prediction 0.2 C) |
 
-Fitting the literature's fast rates (2 C and above) needs a network trained on a wider rate range.  That network
-(v3, 0.08-3 C, current ratio up to 37.5) is built and ready to train (docs/PHASE3B_CHEM_PINN.md, "v3").
+Fitting the literature's fast rates (2 C and above) needs a network trained on a wider rate range: v3 (0.08-3 C,
+current ratio up to 37.5) and, since 2026-11-02, v4 (chem_v4_warm_salt_s0, same range, error floor close to v2's; floor under
+"Validity flags" below).  With v4 the Phase 2 pairs fit inside the range.
 
 ## Usage
 
@@ -114,6 +116,26 @@ gives a floor 2-8x larger:
 | 0.34 % | 5.4 mV | 5.1 mV | 2.4 % | 2.9 % | 24 % | 4.5 mV | 2.9 Ohm cm2 |
 
 Use it only for pairs that v2 cannot take, with `--network results/lispan_chem_runs/chem_v3_s1/final.pt`.
+
+**v4 (2026-11-02), the wide-range tool network:** chem_v4_warm_salt_s0 (0.08-3 C, hard charge inventory;
+docs/PHASE3B_CHEM_PINN.md, "v4 results").  Same test at 0.2 + 2 C (`results/lispan/two_curve/synthetic_v4ws_0.2+2.json`,
+46 min on 2 cores), rms of the noise-free errors over the 10 unflagged chemistries:
+
+| network | w_S | dU0_2 | dU0_3rel2 | b_12 | b_3 | k0_1 | d | Z_CC |
+|---|---|---|---|---|---|---|---|---|
+| chem_v4_warm_salt_s0 | 0.18 % | 1.1 mV | 3.3 mV | 0.42 % | 1.0 % | 3.5 % | 0.95 mV | 0.40 Ohm cm2 |
+| chem_v3_s1 | 0.34 % | 5.4 mV | 5.1 mV | 2.4 % | 2.9 % | 24 % | 4.5 mV | 2.9 Ohm cm2 |
+| chem_v2_norar_s0 (0.2 + 0.6 C) | 0.14 % | 0.64 mV | 2.1 mV | 0.22 % | 0.71 % | 11.6 % | 0.56 mV | 1.25 Ohm cm2 |
+
+- The v4 floor is 1.3-1.9x the v2 floor (k0_1 and Z_CC lower) over a current ratio of 10 instead of 3, and 2-7x below
+  v3.  With it in `sd_total`, 85-100 % of the 5 mV-noise errors lie within 2 sd (statistical sd alone: 70-100 %).
+- Flagged chemistries: p5 (box_edge dU0_3rel2), p7 (box_edge b_12) and p6 (box_edge dU0_2, poorly_identified
+  dU0_3rel2 and b_3).  p6 is the corner where the network is worst at 3 C (docs/PHASE3B_CHEM_PINN.md): its noise-free
+  fit misses by 4.4 mV and lands far from the truth (w_S +40 %, dU0_3rel2 -0.24 V).  The flags catch it; a fit with
+  these flags should not be interpreted.
+- Use v4 for any pair inside 0.08-3 C; v2 remains valid for 0.1-1 C.  For fits with 3 C data, repeat the fit with
+  chem_v4_s1 (`--network results/lispan_chem_runs/chem_v4_s1/final.pt`, best at 3 C) as a cross-check of the
+  network error; its floor has not been measured (the CLI warns and sd_total = statistical sd).
 
 ## Validation against FV fits (2026-10-27)
 

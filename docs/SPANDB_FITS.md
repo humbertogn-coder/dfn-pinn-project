@@ -2,7 +2,7 @@
 
 First run of the two-curve tool (docs/TWO_CURVE_TOOL.md) over every SPAN-DB cell with discharge curves at two or more
 currents.  Network: `chem_v2_norar_s0` (0.1-1 C).  SPAN-DB snapshot: after batch 10 (38 articles, 415 cells, 1670
-curves).
+curves).  Refit with the wide-range network v4 on 2026-11-02: section "Network v4" below.
 
     python scripts/lispan_spandb_fit.py --spandb <span_db folder> --workers 2 --fv-check
     python scripts/lispan_spandb_fit.py --spandb <span_db> --network results/lispan_chem_runs/chem_v3_s1/final.pt \
@@ -79,16 +79,67 @@ geometry inputs in the network.
 
 ## Network v3 (0.08-3 C)
 
-Run started 2026-10-30 into `results/lispan/spandb_v3s1/` (same rules, ~3-4 min per cell).  It adds the fast
-currents (Chen 2019 up to 3 C-equivalent, Wu 2023b 2-3 C) and more blind predictions, at the larger v3 error floor
-(NETWORK_SD).  Results to be summarized when complete.
+Run started 2026-10-30 into `results/lispan/spandb_v3s1/` (same rules, ~3-4 min per cell).  Interrupted twice by
+container restarts; superseded by v4 (below) before it completed, so it is kept as a partial run and not summarized.
+
+## Network v4 (0.08-3 C), 2026-11-02
+
+Same rules and SPAN-DB snapshot, network `chem_v4_warm_salt_s0` (docs/PHASE3B_CHEM_PINN.md, "v4 results"; floor in
+`NETWORK_SD`).  45 min on 2 workers (2-3.5 min per cell; v2 46 min, v3 3-4 min per cell).
+
+    python scripts/lispan_spandb_fit.py --spandb <span_db> --network results/lispan_chem_runs/chem_v4_warm_salt_s0/final.pt \
+        --out results/lispan/spandb_v4ws --workers 2 --fv-check
+    python report/spandb/compare_networks.py            # v2 vs v4 -> report/spandb/figures/sdb_v2_v4.png, compare_v2_v4.json
+
+With the wider range the pair rule picks the slowest and fastest currents inside 0.08-3 C, so 32 of the 35 cells
+fitted by both networks are calibrated on a wider pair (only Shi 2023a C3, Shi 2023b C4 and Wang 2023 keep theirs).
+
+| | v2 (0.1-1 C) | v4 (0.08-3 C) |
+|---|---|---|
+| fitted cells | 35 | 38 (+ Wu 2023b C1/C2 at 2 + 3 C, + Shao 2024 C2) |
+| misfit <= 25 mV | 22 | 26 (+ Wu 2023b C1/C2 10.0/10.1, Chen 2024 C3 16.7, Shi 2024 C2 24.4; none lost) |
+| median misfit, all fitted | 17.9 mV | 18.4 mV |
+| network vs FV at the fitted parameters (cells <= 25 mV) | median 1.9, max 4.9 mV | median 0.74, max 3.4 mV |
+| blind predictions scored (cells <= 25 mV) | 15 | 51 |
+| between the calibration currents | 8, median 13.9 mV, 8 within 25 | 39, median 19.3 mV, 30 within 25 |
+| extrapolated (up to 2.5x) | 7, median 27.5 mV, 3 within 25 | 12, median 25.4 mV, 6 within 25 |
+
+What changes with v4:
+1. **More cells and the fast currents.**  Wu 2023b (2-3 C only) is now reachable; most cells are calibrated on their
+   slowest and fastest currents (e.g. Chen 2019 0.4 + 2 A/g, Chen 2024 0.5 + 2-2.5 C, Wu 2024 0.25-0.5 + 2.5 A/g), as the
+   Phase 2 protocol recommends, and the other currents become blind interpolation tests.
+2. **The misfit is the model's, even more clearly.**  The network is 2.5x closer to FV than v2 at the fitted
+   parameters.  Cells whose misfit grows with the wider pair (Li 2023 10.6 -> 16.0, Shi 2023a C2 11.7 -> 18.1, You
+   2024 11.0 -> 16.3, Ma 2026 C1 25.6 -> 53.2, Jia 2024 C2 38 -> 59 mV) are cells whose rate dependence the model does
+   not follow over the wider span (the Phase 2 finding: real cells lose capacity with rate faster than the model).
+3. **A low misfit needs a blind prediction to back it.**  Six of the 26 cells within 25 mV miss an in-between current
+   by more than 25 mV: Chen 2024 C3 (THF HCE; the 1.5 C curve covers only 32 % of the window, the 1.0 C prediction misses
+   by 99 mV), Shi 2024 C2 (42 and 74 mV; 102 mV extrapolated), Wu 2024 C2 (34-52), Hu 2023 (27-42), Wu 2023 C1 (34) and Simanjuntak (26.9,
+   marginal).  Proposed reading rule: a cell is described when the misfit is <= 25 mV AND every in-between prediction is
+   <= 25 mV: 20 cells (17 with at least one such prediction, 3 without one).
+4. **Parameters depend on the rate span.**  For the 22 cells described by both networks (21 on a wider pair with v4),
+   the v4 - v2 shift in units of the combined sd_total has a median of 0.4-1.5; within 2 sd: k0_1 88 %, dU0_2 82 %,
+   dU0_3rel2 79 %, w_S 73 %, b_12 70 %, b_3 68 %, d 64 %, Z_CC 61 %.  With the network error small (item 2), these
+   shifts are model-form error: d, Z_CC and the OCV slopes absorb the rate dependence the model lacks, so they are
+   effective values for the rate span used.  Compare cells only on comparable pairs.
+5. **The same-electrode comparisons hold** (v4 values, sd_total):
+   - Chen 2019 (Se0.06SPAN): d = +24 +- 7 mV (ether) vs -18 +- 7 mV (carbonate), a shift of -42 +- 9 mV (v2: -39 +- 9).
+   - Chen 2024: Z = 93 +- 3 Ohm cm2 for the HCE cell vs 27 +- 2 for the LHCE cell (v2: 95 +- 5 vs 0 +- 7): the
+     difference holds, the LHCE value moves with the 2.5 C curve.
+   - Qin 2024: dU0_2 = 34 / 37 / 35 +- 6-7 mV (v2 35-36); Z = 39 / 47 / 9 Ohm cm2 (+-3; v2 17 / 38 / 7): LHCE + IL
+     lowest in both.
+6. **Data issue:** Shao 2024 C2 (now inside the range) pairs a curve labelled "CIHP-SPAN" with a "2nd" cycle and
+   fits at 227 mV (both curves beyond the window).  The two curves are probably not one cell's rate test; to check in
+   SPAN-DB.
 
 ## Files
 
 - `scripts/lispan_spandb_fit.py` - the fits (rules above), `--summary-only` rebuilds the summary.
 - `results/lispan/spandb/` - run 2 (this document): per-cell JSON, summary.csv/json, run.log.
 - `results/lispan/spandb_run1/` - run 1 (before the rules above), kept for reference.
-- `results/lispan/spandb_v3s1/` - network v3.
+- `results/lispan/spandb_v3s1/` - network v3 (partial).
+- `results/lispan/spandb_v4ws/` - network v4 (chem_v4_warm_salt_s0); `report/spandb/compare_networks.py` -> 
+  `report/spandb/figures/sdb_v2_v4.png`, `report/spandb/compare_v2_v4.json`.
 - `report/spandb/make_spandb_figures.py` -> `report/spandb/figures/sdb_{funnel,misfit,examples,predictions,controlled}.png`,
   `report/spandb/numbers.json`.
 - `report/seminar/make_seminar_figures.py` -> `report/seminar/figures/` (network accuracy v2/v3, two-curve crops) for
