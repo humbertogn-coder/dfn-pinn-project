@@ -63,6 +63,20 @@ Rules in the script header.  The ones that came from failures of the first run (
   converted from the electrode basis: 1.25-1.49) does not mean more than the theoretical capacity.  Parameters are
   effective; comparisons within a paper are more reliable than absolute values across papers.
 
+## w_S and the sulfur content
+
+The tool does not measure the S content; w_S is the capacity (and current) scale between the data basis and the model's
+sulfur.  Check on the described cells (misfit <= 25 mV):
+- capacity per g SPAN (8 cells with a reported S content 37.8-47.6 wt%): w_S follows the S content (r = 0.89) with
+  w_S / S fraction = 1.02-1.48 (median ~1.35);
+- capacity per g S (9 cells): w_S = 1.14-1.43 in eight, the same factor (Shi 2023a C3: 0.96, at the 25 mV limit with box-edge
+  parameters).
+So real coin cells deliver ~1.2-1.4x the model cell's capacity at the same normalized rate: a geometry/transport factor
+(the network's cell has a 618 um glass-fibre separator), not chemistry.  w_S / S fraction is a relative utilization,
+meaningful within a paper (Qin 2024: 1.42/1.44/1.48; Chen 2024 LHCE 1.27 vs HCE 1.02); as an S-content estimator it
+would be good to ~+-15 % only.  The S content must come from elemental analysis; a blind test of w_S against it needs
+geometry inputs in the network.
+
 ## Network v3 (0.08-3 C)
 
 Run started 2026-10-30 into `results/lispan/spandb_v3s1/` (same rules, ~3-4 min per cell).  It adds the fast
