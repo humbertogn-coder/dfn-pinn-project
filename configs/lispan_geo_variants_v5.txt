@@ -1,0 +1,8 @@
+# Network v5 (configs/lispan_geo_v5.json) for slurm/lispan_geo_array.slrm.  One line per array index:
+# <run name> key=value ... (JSON values, no spaces).  ~1.3-1.5 s per step: submit with --time=168:00:00 (300 000 steps).
+# Two seeds from scratch and two warm starts from the v4 tool network (geometry columns zero; NOT the same function:
+# separator, electrolyte coordinate and salt form differ, so the warm start is only a better initialization).
+geo_v5_s0  seed=0
+geo_v5_s1  seed=1
+geo_v5_warm_s0  seed=0 init_from="results/lispan_chem_runs/chem_v4_warm_salt_s0/final.pt" lr=0.0003
+geo_v5_warm_s1  seed=1 init_from="results/lispan_chem_runs/chem_v4_warm_salt_s0/final.pt" lr=0.0003

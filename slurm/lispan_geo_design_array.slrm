@@ -1,0 +1,36 @@
+#!/bin/bash
+#SBATCH --job-name=lispan_geo_design
+#SBATCH --time=04:00:00
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=2G
+#SBATCH --array=0-39
+#SBATCH --output=slurm_logs/lispan_geo_design.%A_%a.out
+#SBATCH --error=slurm_logs/lispan_geo_design.%A_%a.err
+# ---------------------------------------------------------------------------
+# Network v5 (geometry), step 2: FV design of scripts/lispan_geo_design.py, one single-core job per shard.
+# 6569 discharges (986 chemistry x geometry conditions x up to 7 rates inside the transport domain), ~6 s each on the
+# sandbox -> ~11 CPU h in total, ~17 min per shard with 40 shards; about 15 SU for the array.
+# Each shard appends to results/lispan/geo_design/samples_<shard>_of_040.jsonl and skips what it already has, so a
+# resubmission only completes the missing discharges.
+#
+# Submit from the repository root:
+#     mkdir -p slurm_logs
+#     sbatch slurm/lispan_geo_design_array.slrm                       # samples (40 shards)
+#     (the 96 evaluation references are already in the repository, data/lispan_geo_refs/lispan_geo_design_v5/; only if
+#     some are missing: sbatch --export=ALL,STEP=refs --array=0-7 slurm/lispan_geo_design_array.slrm, after "fit")
+# After the array, on a login node (seconds):
+#     module load GCC/12.3.0 OpenMPI/4.1.5 PyTorch/2.1.2-CUDA-12.1.1
+#     python scripts/lispan_geo_design.py fit --out configs/lispan_geo_design_v5.json
+# Then copy back results/lispan/geo_design/ (small JSONL) and configs/lispan_geo_design_v5.json (commit the JSON).
+# ---------------------------------------------------------------------------
+module purge
+module load GCC/12.3.0 OpenMPI/4.1.5 PyTorch/2.1.2-CUDA-12.1.1
+export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1
+cd "$SLURM_SUBMIT_DIR"
+STEP=${STEP:-samples}
+N=$((SLURM_ARRAY_TASK_MAX + 1))
+echo "step=$STEP shard=$SLURM_ARRAY_TASK_ID of $N host=$(hostname) start=$(date)"
+python -u scripts/lispan_geo_design.py "$STEP" --shard "$SLURM_ARRAY_TASK_ID" --nshards "$N" --workers 1 \
+    --out configs/lispan_geo_design_v5.json
+echo "finished with status $? at $(date)"
