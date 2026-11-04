@@ -1,0 +1,2758 @@
+{
+ "results": "spandb_v4ws_120",
+ "range": "0.08-3 C",
+ "described": 44,
+ "described_cells": {
+  "An 2016 C1": 23.9,
+  "Li 2017 C3": 10.7,
+  "Li 2017 C4": 16.0,
+  "Li 2018 C1": 20.1,
+  "2018 t1687pdf C1": 17.9,
+  "Yang 2018 C3": 22.7,
+  "Chen 2019 C1": 13.3,
+  "Chen 2019 C2": 14.7,
+  "Li 2019 C1": 16.0,
+  "Chen 2020 C1": 21.9,
+  "Chen 2020 C2": 23.4,
+  "Chen 2020 C3": 13.4,
+  "Jingwei 2020 C1": 10.8,
+  "Lu 2020 C1": 18.8,
+  "Zhang 2020b C1": 17.3,
+  "Zhang 2020c C6": 13.6,
+  "Li 2021 C1": 11.0,
+  "Ma 2021 C1": 13.9,
+  "Song 2021 C1": 13.4,
+  "Wang 2021 C1": 22.5,
+  "Wei 2021 C1": 14.0,
+  "Wei 2021 C2": 19.2,
+  "He 2022 C1": 10.4,
+  "He 2022 C2": 15.0,
+  "He 2022 C3": 15.2,
+  "Liu 2022 C1": 13.5,
+  "Liu 2022 C2": 13.8,
+  "Shi 2022 C2": 24.0,
+  "Huang 2023 C1": 12.0,
+  "Li 2023 C1": 16.0,
+  "Shi 2023a C2": 18.1,
+  "Shi 2023a C3": 24.5,
+  "Wu 2023 C2": 18.0,
+  "Chen 2024 C1": 12.3,
+  "Chen 2024 C2": 12.5,
+  "Qin 2024 C1": 11.2,
+  "Qin 2024 C2": 11.1,
+  "Qin 2024 C3": 12.8,
+  "Wang 2024 C4": 8.4,
+  "Wang 2024 C7": 18.3,
+  "Wu 2024 C1": 10.8,
+  "You 2024 C1": 16.3,
+  "Zuo 2024 C5": 17.3,
+  "Zuo 2024 C6": 18.5
+ },
+ "good_not_described": {
+  "Wang 2013 C1": [
+   34.7
+  ],
+  "2014 20140515 C1": [],
+  "2014 20140515 C2": [
+   13.0
+  ],
+  "Kuo 2018 C1": [
+   23.1,
+   35.7,
+   49.8
+  ],
+  "Li 2018b C1": [
+   32.6
+  ],
+  "Wu 2018 C1": [
+   24.3,
+   25.7
+  ],
+  "Li 2019 C2": [
+   25.6,
+   24.3
+  ],
+  "Wang 2019 C15": [
+   39.9,
+   35.8
+  ],
+  "Chen 2020 C4": [],
+  "Jiang 2020 C6": [
+   32.1,
+   43.5
+  ],
+  "Lu 2020 C2": [
+   23.9
+  ],
+  "Zhang 2020c C2": [
+   25.8,
+   23.7,
+   21.5
+  ],
+  "Jerez 2021 C1": [],
+  "Song 2021 C2": [
+   31.4,
+   25.2
+  ],
+  "Wang 2021b C1": [
+   25.6,
+   56.5
+  ],
+  "Wang 2021c C1": [
+   51.9
+  ],
+  "Wang 2021c C2": [
+   59.6
+  ],
+  "Kong 2022 C2": [
+   28.5
+  ],
+  "Kong 2022 C3": [
+   57.1,
+   103.2
+  ],
+  "Kong 2022 C4": [
+   28.6
+  ],
+  "Shi 2022 C1": [
+   27.6,
+   51.1
+  ],
+  "Weret 2022 C1": [
+   22.4,
+   30.6
+  ],
+  "Hu 2023 C3": [
+   41.8,
+   27.2
+  ],
+  "Wu 2023b C1": [],
+  "Wu 2023b C2": [],
+  "Wu 2023 C1": [
+   33.8
+  ],
+  "Xu 2023 C3": [
+   167.9,
+   101.3
+  ],
+  "Chen 2024 C3": [
+   99.2
+  ],
+  "Shi 2024 C2": [
+   73.9,
+   41.8
+  ],
+  "Simanjuntak 2024 C1": [
+   26.9
+  ],
+  "Wu 2024 C2": [
+   51.7,
+   33.8
+  ]
+ },
+ "z_cell_described": {
+  "An 2016 C1": {
+   "basis": "S",
+   "loading_mg_cm2": 0.66,
+   "Z_fit_ohm_cm2": 7.251457884748113e-25,
+   "Z_cell_ohm_cm2": 6.382895372201863e-25
+  },
+  "Li 2018 C1": {
+   "basis": "S",
+   "loading_mg_cm2": 0.413,
+   "Z_fit_ohm_cm2": 1.9037321596597543e-09,
+   "Z_cell_ohm_cm2": 2.8067828207617418e-09
+  },
+  "Chen 2019 C1": {
+   "basis": "S",
+   "loading_mg_cm2": 0.866,
+   "Z_fit_ohm_cm2": 28.44267233686313,
+   "Z_cell_ohm_cm2": 20.39994039971529
+  },
+  "Chen 2019 C2": {
+   "basis": "S",
+   "loading_mg_cm2": 0.866,
+   "Z_fit_ohm_cm2": 2.455641547798618e-12,
+   "Z_cell_ohm_cm2": 1.919074989120971e-12
+  },
+  "Chen 2020 C1": {
+   "basis": "S",
+   "loading_mg_cm2": 1.5,
+   "Z_fit_ohm_cm2": 309.2073519859713,
+   "Z_cell_ohm_cm2": 208.36141003562054
+  },
+  "Chen 2020 C2": {
+   "basis": "S",
+   "loading_mg_cm2": 1.5,
+   "Z_fit_ohm_cm2": 401.77963952887904,
+   "Z_cell_ohm_cm2": 174.88326751171678
+  },
+  "Chen 2020 C3": {
+   "basis": "S",
+   "loading_mg_cm2": 1.5,
+   "Z_fit_ohm_cm2": 189.85514515331704,
+   "Z_cell_ohm_cm2": 92.7756337315253
+  },
+  "Jingwei 2020 C1": {
+   "basis": "S",
+   "loading_mg_cm2": 0.5,
+   "Z_fit_ohm_cm2": 7.379307852257538e-09,
+   "Z_cell_ohm_cm2": 1.0657715885906246e-08
+  },
+  "Zhang 2020b C1": {
+   "basis": "S",
+   "loading_mg_cm2": 0.88,
+   "Z_fit_ohm_cm2": 2.700940984323126e-11,
+   "Z_cell_ohm_cm2": 1.6043957740380577e-11
+  },
+  "Li 2021 C1": {
+   "basis": "S",
+   "loading_mg_cm2": 2.0,
+   "Z_fit_ohm_cm2": 77.26217430208453,
+   "Z_cell_ohm_cm2": 28.57534141762743
+  },
+  "Ma 2021 C1": {
+   "basis": "S",
+   "loading_mg_cm2": 0.977,
+   "Z_fit_ohm_cm2": 38.5296875485248,
+   "Z_cell_ohm_cm2": 19.85396544693322
+  },
+  "Wang 2021 C1": {
+   "basis": "SPAN",
+   "loading_mg_cm2": 2.5,
+   "Z_fit_ohm_cm2": 24.416175506097304,
+   "Z_cell_ohm_cm2": 9.242405818982816
+  },
+  "Wei 2021 C1": {
+   "basis": "S",
+   "loading_mg_cm2": 0.626,
+   "Z_fit_ohm_cm2": 27.73698089524539,
+   "Z_cell_ohm_cm2": 27.816698653268276
+  },
+  "Wei 2021 C2": {
+   "basis": "S",
+   "loading_mg_cm2": 0.626,
+   "Z_fit_ohm_cm2": 5.68896005278029e-70,
+   "Z_cell_ohm_cm2": 5.825663859781237e-70
+  },
+  "He 2022 C1": {
+   "basis": "SPAN",
+   "loading_mg_cm2": 1.0,
+   "Z_fit_ohm_cm2": 125.1732690719316,
+   "Z_cell_ohm_cm2": 214.59681494423006
+  },
+  "He 2022 C2": {
+   "basis": "SPAN",
+   "loading_mg_cm2": 1.0,
+   "Z_fit_ohm_cm2": 144.73923967268257,
+   "Z_cell_ohm_cm2": 353.96878731160183
+  },
+  "He 2022 C3": {
+   "basis": "SPAN",
+   "loading_mg_cm2": 1.0,
+   "Z_fit_ohm_cm2": 158.4386064585195,
+   "Z_cell_ohm_cm2": 352.1352373752849
+  },
+  "Liu 2022 C1": {
+   "basis": "SPAN",
+   "loading_mg_cm2": 2.7,
+   "Z_fit_ohm_cm2": 98.08644142149242,
+   "Z_cell_ohm_cm2": 46.07383508770516
+  },
+  "Liu 2022 C2": {
+   "basis": "SPAN",
+   "loading_mg_cm2": 2.7,
+   "Z_fit_ohm_cm2": 107.73268960078954,
+   "Z_cell_ohm_cm2": 50.010631338512134
+  },
+  "Shi 2022 C2": {
+   "basis": "SPAN",
+   "loading_mg_cm2": 4.0,
+   "Z_fit_ohm_cm2": 171.13942625251119,
+   "Z_cell_ohm_cm2": 120.61300770419751
+  },
+  "Li 2023 C1": {
+   "basis": "SPAN",
+   "loading_mg_cm2": 2.25,
+   "Z_fit_ohm_cm2": 6.813524894355565,
+   "Z_cell_ohm_cm2": 4.680011430081142
+  },
+  "Shi 2023a C2": {
+   "basis": "S",
+   "loading_mg_cm2": 5.2,
+   "Z_fit_ohm_cm2": 370.4862642595268,
+   "Z_cell_ohm_cm2": 55.31217413773363
+  },
+  "Shi 2023a C3": {
+   "basis": "S",
+   "loading_mg_cm2": 5.2,
+   "Z_fit_ohm_cm2": 499.99999999999994,
+   "Z_cell_ohm_cm2": 77.20370793640046
+  },
+  "Chen 2024 C1": {
+   "basis": "SPAN",
+   "loading_mg_cm2": 0.7,
+   "Z_fit_ohm_cm2": 27.013185318411434,
+   "Z_cell_ohm_cm2": 57.47345049462497
+  },
+  "Chen 2024 C2": {
+   "basis": "SPAN",
+   "loading_mg_cm2": 0.7,
+   "Z_fit_ohm_cm2": 93.02636558472754,
+   "Z_cell_ohm_cm2": 242.51427300060178
+  },
+  "Qin 2024 C1": {
+   "basis": "SPAN",
+   "loading_mg_cm2": 2.0,
+   "Z_fit_ohm_cm2": 39.35874991623234,
+   "Z_cell_ohm_cm2": 22.05654388801373
+  },
+  "Qin 2024 C2": {
+   "basis": "SPAN",
+   "loading_mg_cm2": 2.0,
+   "Z_fit_ohm_cm2": 47.358617653918266,
+   "Z_cell_ohm_cm2": 26.450297775905774
+  },
+  "Qin 2024 C3": {
+   "basis": "SPAN",
+   "loading_mg_cm2": 2.0,
+   "Z_fit_ohm_cm2": 9.37297020099012,
+   "Z_cell_ohm_cm2": 5.0984538220061575
+  },
+  "Wang 2024 C4": {
+   "basis": "SPAN",
+   "loading_mg_cm2": 2.1,
+   "Z_fit_ohm_cm2": 1.8063510821052779e-22,
+   "Z_cell_ohm_cm2": 1.2324511904592361e-22
+  },
+  "Wang 2024 C7": {
+   "basis": "SPAN",
+   "loading_mg_cm2": 2.1,
+   "Z_fit_ohm_cm2": 6.949160245620206e-14,
+   "Z_cell_ohm_cm2": 4.2595679336285306e-14
+  },
+  "Wu 2024 C1": {
+   "basis": "S",
+   "loading_mg_cm2": 1.49,
+   "Z_fit_ohm_cm2": 125.22386895831889,
+   "Z_cell_ohm_cm2": 52.69836020807456
+  },
+  "You 2024 C1": {
+   "basis": "S",
+   "loading_mg_cm2": 0.55,
+   "Z_fit_ohm_cm2": 70.39640334839707,
+   "Z_cell_ohm_cm2": 82.64425128679969
+  },
+  "Zuo 2024 C5": {
+   "basis": "SPAN",
+   "loading_mg_cm2": 8.4,
+   "Z_fit_ohm_cm2": 464.1639752653847,
+   "Z_cell_ohm_cm2": 94.01218622246166
+  },
+  "Zuo 2024 C6": {
+   "basis": "SPAN",
+   "loading_mg_cm2": 8.4,
+   "Z_fit_ohm_cm2": 456.06724422834696,
+   "Z_cell_ohm_cm2": 87.55454199499906
+  }
+ },
+ "db": {
+  "papers": 542,
+  "relevance": {
+   "D": 244,
+   "B": 169,
+   "C": 32,
+   "A": 97
+  },
+  "papers_extracted": 120,
+  "cells": 1185,
+  "curves": 4513,
+  "curves_qc": {
+   "ok": 3447,
+   "flagged": 1066
+  },
+  "info_levels": {
+   "2": 152,
+   "1": 219,
+   "4": 1,
+   "3": 2,
+   "NR": 811
+  }
+ },
+ "cells_two_or_more_currents": 131,
+ "fitted": 113,
+ "skipped": {
+  "fewer than two usable currents": 17,
+  "no pair inside the network's rate range": 1
+ },
+ "good": 75,
+ "misfit_median_good_mV": 15.227901557360981,
+ "misfit_all_mV": [
+  8.4,
+  9.6,
+  9.7,
+  10.0,
+  10.1,
+  10.4,
+  10.5,
+  10.6,
+  10.7,
+  10.8,
+  10.8,
+  11.0,
+  11.1,
+  11.1,
+  11.2,
+  12.0,
+  12.3,
+  12.5,
+  12.8,
+  12.8,
+  12.8,
+  13.1,
+  13.3,
+  13.4,
+  13.4,
+  13.5,
+  13.6,
+  13.6,
+  13.8,
+  13.9,
+  14.0,
+  14.0,
+  14.1,
+  14.3,
+  14.3,
+  14.7,
+  15.0,
+  15.2,
+  15.9,
+  16.0,
+  16.0,
+  16.0,
+  16.0,
+  16.3,
+  16.4,
+  16.7,
+  17.3,
+  17.3,
+  17.9,
+  18.0,
+  18.1,
+  18.3,
+  18.5,
+  18.8,
+  19.2,
+  19.3,
+  19.6,
+  20.1,
+  20.4,
+  20.9,
+  21.2,
+  21.5,
+  21.9,
+  22.0,
+  22.5,
+  22.7,
+  22.9,
+  23.4,
+  23.7,
+  23.8,
+  23.9,
+  24.0,
+  24.4,
+  24.5,
+  24.8,
+  26.3,
+  26.7,
+  26.8,
+  29.3,
+  29.4,
+  30.6,
+  34.5,
+  34.5,
+  35.1,
+  36.7,
+  36.8,
+  39.3,
+  40.8,
+  42.8,
+  44.8,
+  46.3,
+  47.1,
+  53.2,
+  53.7,
+  55.3,
+  58.5,
+  61.0,
+  62.1,
+  68.8,
+  69.4,
+  71.6,
+  80.9,
+  87.1,
+  95.9,
+  98.4,
+  104.7,
+  121.8,
+  148.6,
+  152.3,
+  154.6,
+  155.7,
+  227.4,
+  316.6
+ ],
+ "net_vs_fv_good_max_mV": 13.597463615685653,
+ "net_vs_fv_good_median_mV": 1.0627755530568537,
+ "by_class": {
+  "carbonate": {
+   "n": 45,
+   "good": 37,
+   "described": 19,
+   "cells": {
+    "He 2007 C1": 42.8,
+    "Wang 2013 C1": 16.0,
+    "2014 20140515 C1": 10.5,
+    "2014 20140515 C2": 9.6,
+    "An 2016 C1": 23.9,
+    "An 2016 C2": 26.3,
+    "Li 2017 C3": 10.7,
+    "Li 2017 C4": 16.0,
+    "Kuo 2018 C1": 19.3,
+    "Li 2018 C1": 20.1,
+    "Li 2018 C8": 26.7,
+    "2018 t1687pdf C1": 17.9,
+    "Yang 2018 C3": 22.7,
+    "Chen 2019 C2": 14.7,
+    "Li 2019 C1": 16.0,
+    "Cai 2020 C2": 30.6,
+    "Chen 2020 C3": 13.4,
+    "Chen 2020 C4": 11.1,
+    "Jingwei 2020 C1": 10.8,
+    "Lu 2020 C1": 18.8,
+    "Lu 2020 C2": 12.8,
+    "Zhang 2020b C1": 17.3,
+    "Zhang 2020c C2": 14.3,
+    "Jerez 2021 C1": 14.0,
+    "Ma 2021 C1": 13.9,
+    "Song 2021 C1": 13.4,
+    "Song 2021 C2": 22.9,
+    "Wang 2021c C1": 21.5,
+    "Wang 2021c C2": 15.9,
+    "He 2022 C3": 15.2,
+    "Shi 2022 C1": 10.6,
+    "Shi 2022 C2": 24.0,
+    "Weret 2022 C1": 19.6,
+    "Hu 2023 C3": 23.7,
+    "Wu 2023 C1": 23.8,
+    "Wu 2023 C2": 18.0,
+    "Xu 2023 C3": 20.4,
+    "Shi 2024 C1": 35.1,
+    "Shi 2024 C2": 24.4,
+    "Simanjuntak 2024 C1": 22.0,
+    "Wang 2024 C1": 34.5,
+    "Wang 2024 C4": 8.4,
+    "Wang 2024 C7": 18.3,
+    "Ma 2026 C1": 53.2,
+    "Ma 2026 C2": 46.3
+   }
+  },
+  "ether (dilute)": {
+   "n": 25,
+   "good": 14,
+   "described": 9,
+   "cells": {
+    "Li 2017 C1": 29.3,
+    "Li 2017 C2": 55.3,
+    "Chen 2019 C1": 13.3,
+    "Heo 2019 C1": 62.1,
+    "Huang 2019 C1": 29.4,
+    "Li 2019 C2": 12.8,
+    "Wang 2019 C15": 24.8,
+    "Chen 2020 C1": 21.9,
+    "Chen 2020 C2": 23.4,
+    "Jiang 2020 C4": 121.8,
+    "Zhang 2020c C6": 13.6,
+    "Li 2021 C1": 11.0,
+    "Wang 2021 C1": 22.5,
+    "Wang 2021b C1": 14.1,
+    "Wei 2021 C1": 14.0,
+    "Wei 2021 C2": 19.2,
+    "Kong 2022 C1": 104.7,
+    "Wang 2023 C1": 80.9,
+    "Wu 2023b C1": 10.0,
+    "Wu 2023b C2": 10.1,
+    "Jia 2024 C1": 53.7,
+    "Jia 2024 C2": 58.5,
+    "Qin 2024 C1": 11.2,
+    "Shao 2024 C2": 227.4,
+    "Wu 2024 C3": 61.0
+   }
+  },
+  "LHCE": {
+   "n": 10,
+   "good": 9,
+   "described": 7,
+   "cells": {
+    "Jiang 2020 C6": 14.3,
+    "He 2022 C1": 10.4,
+    "He 2022 C2": 15.0,
+    "Liu 2022 C2": 13.8,
+    "Liu 2022 C4": 47.1,
+    "Chen 2024 C1": 12.3,
+    "Qin 2024 C2": 11.1,
+    "Qin 2024 C3": 12.8,
+    "Wu 2024 C1": 10.8,
+    "Wu 2024 C2": 20.9
+   }
+  },
+  "HCE": {
+   "n": 3,
+   "good": 2,
+   "described": 1,
+   "cells": {
+    "Jiang 2020 C5": 71.6,
+    "Chen 2024 C2": 12.5,
+    "Chen 2024 C3": 16.7
+   }
+  },
+  "fluorinated": {
+   "n": 5,
+   "good": 2,
+   "described": 2,
+   "cells": {
+    "Frey 2017 C1": 36.8,
+    "Yang 2018 C1": 34.5,
+    "Zuo 2024 C4": 69.4,
+    "Zuo 2024 C5": 17.3,
+    "Zuo 2024 C6": 18.5
+   }
+  },
+  "other liquid": {
+   "n": 9,
+   "good": 5,
+   "described": 2,
+   "cells": {
+    "Warneke 2017 C1": 316.6,
+    "Cai 2020 C1": 36.7,
+    "Yang 2021 C5": 98.4,
+    "Kong 2022 C2": 13.1,
+    "Kong 2022 C3": 9.7,
+    "Kong 2022 C4": 13.6,
+    "Liu 2022 C1": 13.5,
+    "Liu 2022 C3": 39.3,
+    "Li 2023 C1": 16.0
+   }
+  },
+  "polymer / solid": {
+   "n": 15,
+   "good": 5,
+   "described": 4,
+   "cells": {
+    "Weret 2012 C1": 40.8,
+    "Weret 2012 C2": 87.1,
+    "Li 2018b C1": 16.4,
+    "Zhang 2018 C1": 95.9,
+    "Zhang 2018 C2": 154.6,
+    "Liu 2019 C5": 26.8,
+    "Zhang 2020 C1": 148.6,
+    "Zhang 2020 C2": 155.7,
+    "Zhang 2020 C3": 152.3,
+    "Huang 2023 C1": 12.0,
+    "Shi 2023a C2": 18.1,
+    "Shi 2023a C3": 24.5,
+    "Shi 2023b C4": 44.8,
+    "Jin 2024 C1": 68.8,
+    "You 2024 C1": 16.3
+   }
+  },
+  "not reported": {
+   "n": 1,
+   "good": 1,
+   "described": 0,
+   "cells": {
+    "Wu 2018 C1": 21.2
+   }
+  }
+ },
+ "predictions": [
+  {
+   "cell": "He 2007 C1",
+   "fit_mV": 42.8,
+   "pred_mV": 26.4,
+   "between": true
+  },
+  {
+   "cell": "Weret 2012 C1",
+   "fit_mV": 40.8,
+   "pred_mV": 54.0,
+   "between": true
+  },
+  {
+   "cell": "Weret 2012 C2",
+   "fit_mV": 87.1,
+   "pred_mV": 84.6,
+   "between": false
+  },
+  {
+   "cell": "Weret 2012 C2",
+   "fit_mV": 87.1,
+   "pred_mV": 124.4,
+   "between": true
+  },
+  {
+   "cell": "Wang 2013 C1",
+   "fit_mV": 16.0,
+   "pred_mV": 34.7,
+   "between": true
+  },
+  {
+   "cell": "2014 20140515 C1",
+   "fit_mV": 10.5,
+   "pred_mV": 47.6,
+   "between": false
+  },
+  {
+   "cell": "2014 20140515 C1",
+   "fit_mV": 10.5,
+   "pred_mV": 71.6,
+   "between": false
+  },
+  {
+   "cell": "2014 20140515 C1",
+   "fit_mV": 10.5,
+   "pred_mV": 46.1,
+   "between": false
+  },
+  {
+   "cell": "2014 20140515 C2",
+   "fit_mV": 9.6,
+   "pred_mV": 13.0,
+   "between": true
+  },
+  {
+   "cell": "2014 20140515 C2",
+   "fit_mV": 9.6,
+   "pred_mV": 36.8,
+   "between": false
+  },
+  {
+   "cell": "2014 20140515 C2",
+   "fit_mV": 9.6,
+   "pred_mV": 92.1,
+   "between": false
+  },
+  {
+   "cell": "An 2016 C1",
+   "fit_mV": 23.9,
+   "pred_mV": 23.2,
+   "between": false
+  },
+  {
+   "cell": "Li 2017 C1",
+   "fit_mV": 29.3,
+   "pred_mV": 36.8,
+   "between": false
+  },
+  {
+   "cell": "Li 2017 C3",
+   "fit_mV": 10.7,
+   "pred_mV": 36.5,
+   "between": false
+  },
+  {
+   "cell": "Warneke 2017 C1",
+   "fit_mV": 316.6,
+   "pred_mV": 117.3,
+   "between": true
+  },
+  {
+   "cell": "Warneke 2017 C1",
+   "fit_mV": 316.6,
+   "pred_mV": 198.5,
+   "between": true
+  },
+  {
+   "cell": "Kuo 2018 C1",
+   "fit_mV": 19.3,
+   "pred_mV": 23.1,
+   "between": true
+  },
+  {
+   "cell": "Kuo 2018 C1",
+   "fit_mV": 19.3,
+   "pred_mV": 35.7,
+   "between": true
+  },
+  {
+   "cell": "Kuo 2018 C1",
+   "fit_mV": 19.3,
+   "pred_mV": 49.8,
+   "between": true
+  },
+  {
+   "cell": "Li 2018 C8",
+   "fit_mV": 26.7,
+   "pred_mV": 93.2,
+   "between": false
+  },
+  {
+   "cell": "Li 2018b C1",
+   "fit_mV": 16.4,
+   "pred_mV": 32.6,
+   "between": true
+  },
+  {
+   "cell": "Li 2018b C1",
+   "fit_mV": 16.4,
+   "pred_mV": 46.2,
+   "between": false
+  },
+  {
+   "cell": "2018 t1687pdf C1",
+   "fit_mV": 17.9,
+   "pred_mV": 22.8,
+   "between": true
+  },
+  {
+   "cell": "2018 t1687pdf C1",
+   "fit_mV": 17.9,
+   "pred_mV": 22.7,
+   "between": true
+  },
+  {
+   "cell": "2018 t1687pdf C1",
+   "fit_mV": 17.9,
+   "pred_mV": 41.6,
+   "between": false
+  },
+  {
+   "cell": "Wu 2018 C1",
+   "fit_mV": 21.2,
+   "pred_mV": 24.3,
+   "between": true
+  },
+  {
+   "cell": "Wu 2018 C1",
+   "fit_mV": 21.2,
+   "pred_mV": 25.7,
+   "between": true
+  },
+  {
+   "cell": "Wu 2018 C1",
+   "fit_mV": 21.2,
+   "pred_mV": 51.5,
+   "between": false
+  },
+  {
+   "cell": "Yang 2018 C1",
+   "fit_mV": 34.5,
+   "pred_mV": 37.9,
+   "between": true
+  },
+  {
+   "cell": "Yang 2018 C3",
+   "fit_mV": 22.7,
+   "pred_mV": 14.6,
+   "between": true
+  },
+  {
+   "cell": "Zhang 2018 C2",
+   "fit_mV": 154.6,
+   "pred_mV": 169.3,
+   "between": true
+  },
+  {
+   "cell": "Zhang 2018 C2",
+   "fit_mV": 154.6,
+   "pred_mV": 133.4,
+   "between": true
+  },
+  {
+   "cell": "Chen 2019 C1",
+   "fit_mV": 13.3,
+   "pred_mV": 23.9,
+   "between": true
+  },
+  {
+   "cell": "Chen 2019 C1",
+   "fit_mV": 13.3,
+   "pred_mV": 21.3,
+   "between": false
+  },
+  {
+   "cell": "Chen 2019 C2",
+   "fit_mV": 14.7,
+   "pred_mV": 18.5,
+   "between": true
+  },
+  {
+   "cell": "Chen 2019 C2",
+   "fit_mV": 14.7,
+   "pred_mV": 67.6,
+   "between": false
+  },
+  {
+   "cell": "Huang 2019 C1",
+   "fit_mV": 29.4,
+   "pred_mV": 38.7,
+   "between": true
+  },
+  {
+   "cell": "Huang 2019 C1",
+   "fit_mV": 29.4,
+   "pred_mV": 87.3,
+   "between": true
+  },
+  {
+   "cell": "Li 2019 C1",
+   "fit_mV": 16.0,
+   "pred_mV": 14.2,
+   "between": true
+  },
+  {
+   "cell": "Li 2019 C1",
+   "fit_mV": 16.0,
+   "pred_mV": 20.7,
+   "between": true
+  },
+  {
+   "cell": "Li 2019 C1",
+   "fit_mV": 16.0,
+   "pred_mV": 16.9,
+   "between": false
+  },
+  {
+   "cell": "Li 2019 C1",
+   "fit_mV": 16.0,
+   "pred_mV": 21.1,
+   "between": false
+  },
+  {
+   "cell": "Li 2019 C2",
+   "fit_mV": 12.8,
+   "pred_mV": 25.6,
+   "between": true
+  },
+  {
+   "cell": "Li 2019 C2",
+   "fit_mV": 12.8,
+   "pred_mV": 24.3,
+   "between": true
+  },
+  {
+   "cell": "Li 2019 C2",
+   "fit_mV": 12.8,
+   "pred_mV": 32.0,
+   "between": false
+  },
+  {
+   "cell": "Liu 2019 C5",
+   "fit_mV": 26.8,
+   "pred_mV": 44.6,
+   "between": true
+  },
+  {
+   "cell": "Liu 2019 C5",
+   "fit_mV": 26.8,
+   "pred_mV": 39.0,
+   "between": true
+  },
+  {
+   "cell": "Liu 2019 C5",
+   "fit_mV": 26.8,
+   "pred_mV": 30.1,
+   "between": false
+  },
+  {
+   "cell": "Wang 2019 C15",
+   "fit_mV": 24.8,
+   "pred_mV": 39.9,
+   "between": true
+  },
+  {
+   "cell": "Wang 2019 C15",
+   "fit_mV": 24.8,
+   "pred_mV": 35.8,
+   "between": true
+  },
+  {
+   "cell": "Jiang 2020 C4",
+   "fit_mV": 121.8,
+   "pred_mV": 140.8,
+   "between": true
+  },
+  {
+   "cell": "Jiang 2020 C5",
+   "fit_mV": 71.6,
+   "pred_mV": 148.6,
+   "between": true
+  },
+  {
+   "cell": "Jiang 2020 C6",
+   "fit_mV": 14.3,
+   "pred_mV": 32.1,
+   "between": true
+  },
+  {
+   "cell": "Jiang 2020 C6",
+   "fit_mV": 14.3,
+   "pred_mV": 43.5,
+   "between": true
+  },
+  {
+   "cell": "Jingwei 2020 C1",
+   "fit_mV": 10.8,
+   "pred_mV": 18.9,
+   "between": true
+  },
+  {
+   "cell": "Jingwei 2020 C1",
+   "fit_mV": 10.8,
+   "pred_mV": 18.2,
+   "between": true
+  },
+  {
+   "cell": "Lu 2020 C1",
+   "fit_mV": 18.8,
+   "pred_mV": 16.9,
+   "between": true
+  },
+  {
+   "cell": "Lu 2020 C1",
+   "fit_mV": 18.8,
+   "pred_mV": 15.5,
+   "between": true
+  },
+  {
+   "cell": "Lu 2020 C1",
+   "fit_mV": 18.8,
+   "pred_mV": 26.5,
+   "between": false
+  },
+  {
+   "cell": "Lu 2020 C2",
+   "fit_mV": 12.8,
+   "pred_mV": 23.9,
+   "between": true
+  },
+  {
+   "cell": "Lu 2020 C2",
+   "fit_mV": 12.8,
+   "pred_mV": 33.7,
+   "between": false
+  },
+  {
+   "cell": "Lu 2020 C2",
+   "fit_mV": 12.8,
+   "pred_mV": 62.1,
+   "between": false
+  },
+  {
+   "cell": "Zhang 2020 C1",
+   "fit_mV": 148.6,
+   "pred_mV": 238.3,
+   "between": true
+  },
+  {
+   "cell": "Zhang 2020 C1",
+   "fit_mV": 148.6,
+   "pred_mV": 201.1,
+   "between": true
+  },
+  {
+   "cell": "Zhang 2020 C2",
+   "fit_mV": 155.7,
+   "pred_mV": 164.5,
+   "between": true
+  },
+  {
+   "cell": "Zhang 2020 C2",
+   "fit_mV": 155.7,
+   "pred_mV": 124.9,
+   "between": true
+  },
+  {
+   "cell": "Zhang 2020 C3",
+   "fit_mV": 152.3,
+   "pred_mV": 150.4,
+   "between": true
+  },
+  {
+   "cell": "Zhang 2020 C3",
+   "fit_mV": 152.3,
+   "pred_mV": 95.4,
+   "between": true
+  },
+  {
+   "cell": "Zhang 2020b C1",
+   "fit_mV": 17.3,
+   "pred_mV": 19.6,
+   "between": true
+  },
+  {
+   "cell": "Zhang 2020b C1",
+   "fit_mV": 17.3,
+   "pred_mV": 18.8,
+   "between": true
+  },
+  {
+   "cell": "Zhang 2020b C1",
+   "fit_mV": 17.3,
+   "pred_mV": 15.9,
+   "between": true
+  },
+  {
+   "cell": "Zhang 2020b C1",
+   "fit_mV": 17.3,
+   "pred_mV": 17.6,
+   "between": false
+  },
+  {
+   "cell": "Zhang 2020c C2",
+   "fit_mV": 14.3,
+   "pred_mV": 25.8,
+   "between": true
+  },
+  {
+   "cell": "Zhang 2020c C2",
+   "fit_mV": 14.3,
+   "pred_mV": 23.7,
+   "between": true
+  },
+  {
+   "cell": "Zhang 2020c C2",
+   "fit_mV": 14.3,
+   "pred_mV": 21.5,
+   "between": true
+  },
+  {
+   "cell": "Zhang 2020c C2",
+   "fit_mV": 14.3,
+   "pred_mV": 23.6,
+   "between": false
+  },
+  {
+   "cell": "Zhang 2020c C6",
+   "fit_mV": 13.6,
+   "pred_mV": 17.1,
+   "between": true
+  },
+  {
+   "cell": "Zhang 2020c C6",
+   "fit_mV": 13.6,
+   "pred_mV": 34.6,
+   "between": false
+  },
+  {
+   "cell": "Jerez 2021 C1",
+   "fit_mV": 14.0,
+   "pred_mV": 131.0,
+   "between": false
+  },
+  {
+   "cell": "Ma 2021 C1",
+   "fit_mV": 13.9,
+   "pred_mV": 97.6,
+   "between": false
+  },
+  {
+   "cell": "Ma 2021 C1",
+   "fit_mV": 13.9,
+   "pred_mV": 17.4,
+   "between": true
+  },
+  {
+   "cell": "Ma 2021 C1",
+   "fit_mV": 13.9,
+   "pred_mV": 15.4,
+   "between": true
+  },
+  {
+   "cell": "Song 2021 C1",
+   "fit_mV": 13.4,
+   "pred_mV": 20.8,
+   "between": true
+  },
+  {
+   "cell": "Song 2021 C1",
+   "fit_mV": 13.4,
+   "pred_mV": 20.3,
+   "between": true
+  },
+  {
+   "cell": "Song 2021 C2",
+   "fit_mV": 22.9,
+   "pred_mV": 60.9,
+   "between": false
+  },
+  {
+   "cell": "Song 2021 C2",
+   "fit_mV": 22.9,
+   "pred_mV": 31.4,
+   "between": true
+  },
+  {
+   "cell": "Song 2021 C2",
+   "fit_mV": 22.9,
+   "pred_mV": 25.2,
+   "between": true
+  },
+  {
+   "cell": "Wang 2021b C1",
+   "fit_mV": 14.1,
+   "pred_mV": 25.6,
+   "between": true
+  },
+  {
+   "cell": "Wang 2021b C1",
+   "fit_mV": 14.1,
+   "pred_mV": 56.5,
+   "between": true
+  },
+  {
+   "cell": "Wang 2021b C1",
+   "fit_mV": 14.1,
+   "pred_mV": 261.3,
+   "between": false
+  },
+  {
+   "cell": "Wang 2021c C1",
+   "fit_mV": 21.5,
+   "pred_mV": 51.9,
+   "between": true
+  },
+  {
+   "cell": "Wang 2021c C1",
+   "fit_mV": 21.5,
+   "pred_mV": 29.8,
+   "between": false
+  },
+  {
+   "cell": "Wang 2021c C2",
+   "fit_mV": 15.9,
+   "pred_mV": 59.6,
+   "between": true
+  },
+  {
+   "cell": "Wang 2021c C2",
+   "fit_mV": 15.9,
+   "pred_mV": 74.9,
+   "between": false
+  },
+  {
+   "cell": "Wei 2021 C1",
+   "fit_mV": 14.0,
+   "pred_mV": 15.0,
+   "between": true
+  },
+  {
+   "cell": "Wei 2021 C1",
+   "fit_mV": 14.0,
+   "pred_mV": 34.9,
+   "between": false
+  },
+  {
+   "cell": "Wei 2021 C2",
+   "fit_mV": 19.2,
+   "pred_mV": 18.5,
+   "between": true
+  },
+  {
+   "cell": "Wei 2021 C2",
+   "fit_mV": 19.2,
+   "pred_mV": 17.4,
+   "between": true
+  },
+  {
+   "cell": "Wei 2021 C2",
+   "fit_mV": 19.2,
+   "pred_mV": 18.0,
+   "between": true
+  },
+  {
+   "cell": "Yang 2021 C5",
+   "fit_mV": 98.4,
+   "pred_mV": 102.9,
+   "between": true
+  },
+  {
+   "cell": "Yang 2021 C5",
+   "fit_mV": 98.4,
+   "pred_mV": 101.3,
+   "between": true
+  },
+  {
+   "cell": "He 2022 C1",
+   "fit_mV": 10.4,
+   "pred_mV": 15.2,
+   "between": true
+  },
+  {
+   "cell": "He 2022 C1",
+   "fit_mV": 10.4,
+   "pred_mV": 14.9,
+   "between": false
+  },
+  {
+   "cell": "He 2022 C2",
+   "fit_mV": 15.0,
+   "pred_mV": 21.2,
+   "between": true
+  },
+  {
+   "cell": "He 2022 C3",
+   "fit_mV": 15.2,
+   "pred_mV": 20.6,
+   "between": true
+  },
+  {
+   "cell": "Kong 2022 C1",
+   "fit_mV": 104.7,
+   "pred_mV": 159.3,
+   "between": true
+  },
+  {
+   "cell": "Kong 2022 C2",
+   "fit_mV": 13.1,
+   "pred_mV": 28.5,
+   "between": true
+  },
+  {
+   "cell": "Kong 2022 C2",
+   "fit_mV": 13.1,
+   "pred_mV": 78.1,
+   "between": false
+  },
+  {
+   "cell": "Kong 2022 C3",
+   "fit_mV": 9.7,
+   "pred_mV": 57.1,
+   "between": true
+  },
+  {
+   "cell": "Kong 2022 C3",
+   "fit_mV": 9.7,
+   "pred_mV": 103.2,
+   "between": true
+  },
+  {
+   "cell": "Kong 2022 C3",
+   "fit_mV": 9.7,
+   "pred_mV": 141.7,
+   "between": false
+  },
+  {
+   "cell": "Kong 2022 C4",
+   "fit_mV": 13.6,
+   "pred_mV": 28.6,
+   "between": true
+  },
+  {
+   "cell": "Kong 2022 C4",
+   "fit_mV": 13.6,
+   "pred_mV": 94.3,
+   "between": false
+  },
+  {
+   "cell": "Liu 2022 C1",
+   "fit_mV": 13.5,
+   "pred_mV": 15.3,
+   "between": true
+  },
+  {
+   "cell": "Liu 2022 C1",
+   "fit_mV": 13.5,
+   "pred_mV": 14.1,
+   "between": true
+  },
+  {
+   "cell": "Liu 2022 C2",
+   "fit_mV": 13.8,
+   "pred_mV": 16.2,
+   "between": true
+  },
+  {
+   "cell": "Liu 2022 C2",
+   "fit_mV": 13.8,
+   "pred_mV": 16.6,
+   "between": true
+  },
+  {
+   "cell": "Shi 2022 C1",
+   "fit_mV": 10.6,
+   "pred_mV": 27.6,
+   "between": true
+  },
+  {
+   "cell": "Shi 2022 C1",
+   "fit_mV": 10.6,
+   "pred_mV": 51.1,
+   "between": true
+  },
+  {
+   "cell": "Shi 2022 C2",
+   "fit_mV": 24.0,
+   "pred_mV": 54.2,
+   "between": false
+  },
+  {
+   "cell": "Weret 2022 C1",
+   "fit_mV": 19.6,
+   "pred_mV": 22.4,
+   "between": true
+  },
+  {
+   "cell": "Weret 2022 C1",
+   "fit_mV": 19.6,
+   "pred_mV": 30.6,
+   "between": true
+  },
+  {
+   "cell": "Weret 2022 C1",
+   "fit_mV": 19.6,
+   "pred_mV": 59.5,
+   "between": false
+  },
+  {
+   "cell": "Hu 2023 C3",
+   "fit_mV": 23.7,
+   "pred_mV": 41.8,
+   "between": true
+  },
+  {
+   "cell": "Hu 2023 C3",
+   "fit_mV": 23.7,
+   "pred_mV": 27.2,
+   "between": true
+  },
+  {
+   "cell": "Huang 2023 C1",
+   "fit_mV": 12.0,
+   "pred_mV": 18.7,
+   "between": true
+  },
+  {
+   "cell": "Huang 2023 C1",
+   "fit_mV": 12.0,
+   "pred_mV": 18.1,
+   "between": true
+  },
+  {
+   "cell": "Li 2023 C1",
+   "fit_mV": 16.0,
+   "pred_mV": 15.5,
+   "between": true
+  },
+  {
+   "cell": "Shi 2023a C2",
+   "fit_mV": 18.1,
+   "pred_mV": 17.0,
+   "between": true
+  },
+  {
+   "cell": "Shi 2023a C2",
+   "fit_mV": 18.1,
+   "pred_mV": 24.6,
+   "between": true
+  },
+  {
+   "cell": "Shi 2023b C4",
+   "fit_mV": 44.8,
+   "pred_mV": 250.1,
+   "between": false
+  },
+  {
+   "cell": "Shi 2023b C4",
+   "fit_mV": 44.8,
+   "pred_mV": 168.8,
+   "between": false
+  },
+  {
+   "cell": "Wu 2023 C1",
+   "fit_mV": 23.8,
+   "pred_mV": 33.8,
+   "between": true
+  },
+  {
+   "cell": "Wu 2023 C2",
+   "fit_mV": 18.0,
+   "pred_mV": 16.7,
+   "between": true
+  },
+  {
+   "cell": "Wu 2023 C2",
+   "fit_mV": 18.0,
+   "pred_mV": 24.4,
+   "between": true
+  },
+  {
+   "cell": "Wu 2023 C2",
+   "fit_mV": 18.0,
+   "pred_mV": 36.5,
+   "between": false
+  },
+  {
+   "cell": "Xu 2023 C3",
+   "fit_mV": 20.4,
+   "pred_mV": 167.9,
+   "between": true
+  },
+  {
+   "cell": "Xu 2023 C3",
+   "fit_mV": 20.4,
+   "pred_mV": 101.3,
+   "between": true
+  },
+  {
+   "cell": "Xu 2023 C3",
+   "fit_mV": 20.4,
+   "pred_mV": 707.0,
+   "between": false
+  },
+  {
+   "cell": "Chen 2024 C1",
+   "fit_mV": 12.3,
+   "pred_mV": 19.0,
+   "between": true
+  },
+  {
+   "cell": "Chen 2024 C1",
+   "fit_mV": 12.3,
+   "pred_mV": 17.7,
+   "between": true
+  },
+  {
+   "cell": "Chen 2024 C1",
+   "fit_mV": 12.3,
+   "pred_mV": 15.3,
+   "between": true
+  },
+  {
+   "cell": "Chen 2024 C1",
+   "fit_mV": 12.3,
+   "pred_mV": 17.7,
+   "between": false
+  },
+  {
+   "cell": "Chen 2024 C2",
+   "fit_mV": 12.5,
+   "pred_mV": 14.3,
+   "between": true
+  },
+  {
+   "cell": "Chen 2024 C2",
+   "fit_mV": 12.5,
+   "pred_mV": 13.8,
+   "between": true
+  },
+  {
+   "cell": "Chen 2024 C2",
+   "fit_mV": 12.5,
+   "pred_mV": 19.2,
+   "between": false
+  },
+  {
+   "cell": "Chen 2024 C2",
+   "fit_mV": 12.5,
+   "pred_mV": 29.6,
+   "between": false
+  },
+  {
+   "cell": "Chen 2024 C3",
+   "fit_mV": 16.7,
+   "pred_mV": 99.2,
+   "between": true
+  },
+  {
+   "cell": "Jia 2024 C1",
+   "fit_mV": 53.7,
+   "pred_mV": 63.2,
+   "between": true
+  },
+  {
+   "cell": "Jia 2024 C1",
+   "fit_mV": 53.7,
+   "pred_mV": 26.6,
+   "between": true
+  },
+  {
+   "cell": "Jia 2024 C1",
+   "fit_mV": 53.7,
+   "pred_mV": 50.6,
+   "between": true
+  },
+  {
+   "cell": "Jia 2024 C1",
+   "fit_mV": 53.7,
+   "pred_mV": 46.8,
+   "between": true
+  },
+  {
+   "cell": "Jia 2024 C2",
+   "fit_mV": 58.5,
+   "pred_mV": 49.4,
+   "between": true
+  },
+  {
+   "cell": "Jia 2024 C2",
+   "fit_mV": 58.5,
+   "pred_mV": 49.2,
+   "between": true
+  },
+  {
+   "cell": "Jia 2024 C2",
+   "fit_mV": 58.5,
+   "pred_mV": 52.4,
+   "between": true
+  },
+  {
+   "cell": "Jin 2024 C1",
+   "fit_mV": 68.8,
+   "pred_mV": 86.4,
+   "between": true
+  },
+  {
+   "cell": "Qin 2024 C1",
+   "fit_mV": 11.2,
+   "pred_mV": 12.4,
+   "between": true
+  },
+  {
+   "cell": "Qin 2024 C1",
+   "fit_mV": 11.2,
+   "pred_mV": 15.3,
+   "between": true
+  },
+  {
+   "cell": "Qin 2024 C1",
+   "fit_mV": 11.2,
+   "pred_mV": 80.5,
+   "between": false
+  },
+  {
+   "cell": "Qin 2024 C2",
+   "fit_mV": 11.1,
+   "pred_mV": 24.3,
+   "between": true
+  },
+  {
+   "cell": "Qin 2024 C2",
+   "fit_mV": 11.1,
+   "pred_mV": 11.4,
+   "between": true
+  },
+  {
+   "cell": "Qin 2024 C2",
+   "fit_mV": 11.1,
+   "pred_mV": 24.5,
+   "between": false
+  },
+  {
+   "cell": "Qin 2024 C3",
+   "fit_mV": 12.8,
+   "pred_mV": 12.5,
+   "between": true
+  },
+  {
+   "cell": "Qin 2024 C3",
+   "fit_mV": 12.8,
+   "pred_mV": 12.5,
+   "between": true
+  },
+  {
+   "cell": "Qin 2024 C3",
+   "fit_mV": 12.8,
+   "pred_mV": 14.7,
+   "between": false
+  },
+  {
+   "cell": "Shi 2024 C1",
+   "fit_mV": 35.1,
+   "pred_mV": 70.1,
+   "between": true
+  },
+  {
+   "cell": "Shi 2024 C1",
+   "fit_mV": 35.1,
+   "pred_mV": 81.5,
+   "between": true
+  },
+  {
+   "cell": "Shi 2024 C2",
+   "fit_mV": 24.4,
+   "pred_mV": 102.1,
+   "between": false
+  },
+  {
+   "cell": "Shi 2024 C2",
+   "fit_mV": 24.4,
+   "pred_mV": 73.9,
+   "between": true
+  },
+  {
+   "cell": "Shi 2024 C2",
+   "fit_mV": 24.4,
+   "pred_mV": 41.8,
+   "between": true
+  },
+  {
+   "cell": "Simanjuntak 2024 C1",
+   "fit_mV": 22.0,
+   "pred_mV": 26.9,
+   "between": true
+  },
+  {
+   "cell": "Wang 2024 C1",
+   "fit_mV": 34.5,
+   "pred_mV": 39.8,
+   "between": true
+  },
+  {
+   "cell": "Wang 2024 C4",
+   "fit_mV": 8.4,
+   "pred_mV": 17.3,
+   "between": true
+  },
+  {
+   "cell": "Wang 2024 C4",
+   "fit_mV": 8.4,
+   "pred_mV": 18.0,
+   "between": false
+  },
+  {
+   "cell": "Wang 2024 C7",
+   "fit_mV": 18.3,
+   "pred_mV": 20.3,
+   "between": true
+  },
+  {
+   "cell": "Wang 2024 C7",
+   "fit_mV": 18.3,
+   "pred_mV": 26.3,
+   "between": false
+  },
+  {
+   "cell": "Wu 2024 C1",
+   "fit_mV": 10.8,
+   "pred_mV": 23.2,
+   "between": true
+  },
+  {
+   "cell": "Wu 2024 C2",
+   "fit_mV": 20.9,
+   "pred_mV": 51.7,
+   "between": true
+  },
+  {
+   "cell": "Wu 2024 C2",
+   "fit_mV": 20.9,
+   "pred_mV": 33.8,
+   "between": true
+  },
+  {
+   "cell": "Wu 2024 C3",
+   "fit_mV": 61.0,
+   "pred_mV": 128.2,
+   "between": true
+  },
+  {
+   "cell": "Wu 2024 C3",
+   "fit_mV": 61.0,
+   "pred_mV": 146.8,
+   "between": true
+  },
+  {
+   "cell": "You 2024 C1",
+   "fit_mV": 16.3,
+   "pred_mV": 18.0,
+   "between": true
+  },
+  {
+   "cell": "You 2024 C1",
+   "fit_mV": 16.3,
+   "pred_mV": 22.9,
+   "between": true
+  },
+  {
+   "cell": "You 2024 C1",
+   "fit_mV": 16.3,
+   "pred_mV": 24.8,
+   "between": true
+  },
+  {
+   "cell": "Zuo 2024 C4",
+   "fit_mV": 69.4,
+   "pred_mV": 90.4,
+   "between": true
+  },
+  {
+   "cell": "Zuo 2024 C4",
+   "fit_mV": 69.4,
+   "pred_mV": 45.3,
+   "between": true
+  },
+  {
+   "cell": "Zuo 2024 C5",
+   "fit_mV": 17.3,
+   "pred_mV": 19.3,
+   "between": true
+  },
+  {
+   "cell": "Zuo 2024 C5",
+   "fit_mV": 17.3,
+   "pred_mV": 19.3,
+   "between": true
+  },
+  {
+   "cell": "Zuo 2024 C6",
+   "fit_mV": 18.5,
+   "pred_mV": 17.7,
+   "between": true
+  },
+  {
+   "cell": "Zuo 2024 C6",
+   "fit_mV": 18.5,
+   "pred_mV": 20.6,
+   "between": true
+  },
+  {
+   "cell": "Ma 2026 C1",
+   "fit_mV": 53.2,
+   "pred_mV": 52.9,
+   "between": true
+  },
+  {
+   "cell": "Ma 2026 C1",
+   "fit_mV": 53.2,
+   "pred_mV": 49.7,
+   "between": true
+  },
+  {
+   "cell": "Ma 2026 C1",
+   "fit_mV": 53.2,
+   "pred_mV": 90.6,
+   "between": true
+  },
+  {
+   "cell": "Ma 2026 C2",
+   "fit_mV": 46.3,
+   "pred_mV": 100.4,
+   "between": true
+  },
+  {
+   "cell": "Ma 2026 C2",
+   "fit_mV": 46.3,
+   "pred_mV": 127.6,
+   "between": true
+  },
+  {
+   "cell": "Ma 2026 C2",
+   "fit_mV": 46.3,
+   "pred_mV": 138.4,
+   "between": true
+  }
+ ],
+ "params_good": {
+  "Wang 2013 C1": {
+   "w_S": 1.3689,
+   "dU0_2": 0.091,
+   "dU0_3rel2": -0.0646,
+   "b_12": 0.7772,
+   "b_3": 2.447,
+   "k0_1": 2.5283,
+   "d": 0.0259,
+   "Z_CC": 0.0048,
+   "rms_mV": 16.0,
+   "class": "carbonate"
+  },
+  "2014 20140515 C1": {
+   "w_S": 2.5113,
+   "dU0_2": -0.15,
+   "dU0_3rel2": -0.231,
+   "b_12": 0.9579,
+   "b_3": 0.4,
+   "k0_1": 1.7426,
+   "d": -0.1648,
+   "Z_CC": 0.0132,
+   "rms_mV": 10.5,
+   "class": "carbonate"
+  },
+  "2014 20140515 C2": {
+   "w_S": 2.8663,
+   "dU0_2": -0.15,
+   "dU0_3rel2": 0.1156,
+   "b_12": 1.0822,
+   "b_3": 3.5,
+   "k0_1": 2.5588,
+   "d": -0.1401,
+   "Z_CC": 0.0075,
+   "rms_mV": 9.6,
+   "class": "carbonate"
+  },
+  "An 2016 C1": {
+   "w_S": 1.3202,
+   "dU0_2": 0.1734,
+   "dU0_3rel2": -0.0388,
+   "b_12": 0.6664,
+   "b_3": 1.662,
+   "k0_1": 28.3845,
+   "d": -0.0154,
+   "Z_CC": 0.0,
+   "rms_mV": 23.9,
+   "class": "carbonate"
+  },
+  "Li 2017 C3": {
+   "w_S": 0.9911,
+   "dU0_2": 0.1121,
+   "dU0_3rel2": -0.094,
+   "b_12": 0.8026,
+   "b_3": 0.9643,
+   "k0_1": 1.3628,
+   "d": -0.2,
+   "Z_CC": 0.0009,
+   "rms_mV": 10.7,
+   "class": "carbonate"
+  },
+  "Li 2017 C4": {
+   "w_S": 0.8584,
+   "dU0_2": 0.161,
+   "dU0_3rel2": -0.0123,
+   "b_12": 0.7756,
+   "b_3": 0.7682,
+   "k0_1": 67.8881,
+   "d": -0.0256,
+   "Z_CC": 0.0153,
+   "rms_mV": 16.0,
+   "class": "carbonate"
+  },
+  "Kuo 2018 C1": {
+   "w_S": 1.5425,
+   "dU0_2": 0.0634,
+   "dU0_3rel2": -0.1612,
+   "b_12": 0.7986,
+   "b_3": 2.9871,
+   "k0_1": 10.5198,
+   "d": -0.0585,
+   "Z_CC": 0.01,
+   "rms_mV": 19.3,
+   "class": "carbonate"
+  },
+  "Li 2018 C1": {
+   "w_S": 1.2596,
+   "dU0_2": 0.1344,
+   "dU0_3rel2": -0.034,
+   "b_12": 0.686,
+   "b_3": 1.5355,
+   "k0_1": 2.3213,
+   "d": -0.0447,
+   "Z_CC": 0.0,
+   "rms_mV": 20.1,
+   "class": "carbonate"
+  },
+  "Li 2018b C1": {
+   "w_S": 1.0688,
+   "dU0_2": 0.093,
+   "dU0_3rel2": 0.0276,
+   "b_12": 0.9166,
+   "b_3": 1.2205,
+   "k0_1": 15.7109,
+   "d": -0.0075,
+   "Z_CC": 0.023,
+   "rms_mV": 16.4,
+   "class": "polymer / solid"
+  },
+  "2018 t1687pdf C1": {
+   "w_S": 0.7966,
+   "dU0_2": 0.28,
+   "dU0_3rel2": -0.0602,
+   "b_12": 0.9754,
+   "b_3": 0.4,
+   "k0_1": 6.1784,
+   "d": -0.0534,
+   "Z_CC": 0.007,
+   "rms_mV": 17.9,
+   "class": "carbonate"
+  },
+  "Wu 2018 C1": {
+   "w_S": 0.5914,
+   "dU0_2": 0.064,
+   "dU0_3rel2": -0.26,
+   "b_12": 1.2315,
+   "b_3": 2.2138,
+   "k0_1": 4.4347,
+   "d": 0.0524,
+   "Z_CC": 0.0,
+   "rms_mV": 21.2,
+   "class": "not reported"
+  },
+  "Yang 2018 C3": {
+   "w_S": 1.0944,
+   "dU0_2": 0.1851,
+   "dU0_3rel2": -0.0096,
+   "b_12": 0.6488,
+   "b_3": 1.0101,
+   "k0_1": 7.2127,
+   "d": -0.0275,
+   "Z_CC": 0.0023,
+   "rms_mV": 22.7,
+   "class": "carbonate"
+  },
+  "Chen 2019 C1": {
+   "w_S": 1.2349,
+   "dU0_2": 0.0422,
+   "dU0_3rel2": -0.1598,
+   "b_12": 0.9224,
+   "b_3": 2.346,
+   "k0_1": 1.8803,
+   "d": 0.0242,
+   "Z_CC": 0.0028,
+   "rms_mV": 13.3,
+   "class": "ether (dilute)"
+  },
+  "Chen 2019 C2": {
+   "w_S": 1.1333,
+   "dU0_2": 0.0803,
+   "dU0_3rel2": -0.1328,
+   "b_12": 0.8392,
+   "b_3": 1.8655,
+   "k0_1": 2.4068,
+   "d": -0.018,
+   "Z_CC": 0.0,
+   "rms_mV": 14.7,
+   "class": "carbonate"
+  },
+  "Li 2019 C1": {
+   "w_S": 1.4283,
+   "dU0_2": 0.0619,
+   "dU0_3rel2": -0.2184,
+   "b_12": 1.1339,
+   "b_3": 1.8925,
+   "k0_1": 4.748,
+   "d": 0.0341,
+   "Z_CC": 0.0,
+   "rms_mV": 16.0,
+   "class": "carbonate"
+  },
+  "Li 2019 C2": {
+   "w_S": 1.2083,
+   "dU0_2": 0.0983,
+   "dU0_3rel2": -0.1001,
+   "b_12": 0.8622,
+   "b_3": 1.2666,
+   "k0_1": 3.296,
+   "d": -0.0477,
+   "Z_CC": 0.0013,
+   "rms_mV": 12.8,
+   "class": "ether (dilute)"
+  },
+  "Wang 2019 C15": {
+   "w_S": 1.1835,
+   "dU0_2": 0.049,
+   "dU0_3rel2": -0.1448,
+   "b_12": 0.8935,
+   "b_3": 1.9554,
+   "k0_1": 39.4829,
+   "d": 0.0089,
+   "Z_CC": 0.018,
+   "rms_mV": 24.8,
+   "class": "ether (dilute)"
+  },
+  "Chen 2020 C1": {
+   "w_S": 0.7588,
+   "dU0_2": 0.1126,
+   "dU0_3rel2": -0.1024,
+   "b_12": 0.7198,
+   "b_3": 0.6793,
+   "k0_1": 100.0,
+   "d": 0.0069,
+   "Z_CC": 0.0309,
+   "rms_mV": 21.9,
+   "class": "ether (dilute)"
+  },
+  "Chen 2020 C2": {
+   "w_S": 1.1747,
+   "dU0_2": 0.0276,
+   "dU0_3rel2": -0.26,
+   "b_12": 0.9835,
+   "b_3": 2.9402,
+   "k0_1": 98.7621,
+   "d": 0.0363,
+   "Z_CC": 0.0402,
+   "rms_mV": 23.4,
+   "class": "ether (dilute)"
+  },
+  "Chen 2020 C3": {
+   "w_S": 1.0464,
+   "dU0_2": 0.1922,
+   "dU0_3rel2": 0.0572,
+   "b_12": 0.6478,
+   "b_3": 0.7723,
+   "k0_1": 21.3229,
+   "d": 0.0113,
+   "Z_CC": 0.019,
+   "rms_mV": 13.4,
+   "class": "carbonate"
+  },
+  "Chen 2020 C4": {
+   "w_S": 2.391,
+   "dU0_2": -0.1423,
+   "dU0_3rel2": 0.2,
+   "b_12": 1.2312,
+   "b_3": 0.4,
+   "k0_1": 100.0,
+   "d": -0.0774,
+   "Z_CC": 0.0175,
+   "rms_mV": 11.1,
+   "class": "carbonate"
+  },
+  "Jiang 2020 C6": {
+   "w_S": 0.9817,
+   "dU0_2": 0.1709,
+   "dU0_3rel2": 0.0932,
+   "b_12": 0.8311,
+   "b_3": 0.8854,
+   "k0_1": 16.0209,
+   "d": -0.1658,
+   "Z_CC": 0.0101,
+   "rms_mV": 14.3,
+   "class": "LHCE"
+  },
+  "Jingwei 2020 C1": {
+   "w_S": 1.0621,
+   "dU0_2": 0.1188,
+   "dU0_3rel2": -0.0144,
+   "b_12": 0.5808,
+   "b_3": 1.0038,
+   "k0_1": 0.9708,
+   "d": -0.126,
+   "Z_CC": 0.0,
+   "rms_mV": 10.8,
+   "class": "carbonate"
+  },
+  "Lu 2020 C1": {
+   "w_S": 1.3058,
+   "dU0_2": 0.0602,
+   "dU0_3rel2": -0.1985,
+   "b_12": 1.0212,
+   "b_3": 2.1044,
+   "k0_1": 5.2916,
+   "d": 0.0047,
+   "Z_CC": 0.0,
+   "rms_mV": 18.8,
+   "class": "carbonate"
+  },
+  "Lu 2020 C2": {
+   "w_S": 2.466,
+   "dU0_2": -0.15,
+   "dU0_3rel2": -0.26,
+   "b_12": 1.4473,
+   "b_3": 2.3875,
+   "k0_1": 62.7487,
+   "d": -0.0063,
+   "Z_CC": 0.009,
+   "rms_mV": 12.8,
+   "class": "carbonate"
+  },
+  "Zhang 2020b C1": {
+   "w_S": 1.4673,
+   "dU0_2": 0.0552,
+   "dU0_3rel2": -0.2138,
+   "b_12": 1.0687,
+   "b_3": 2.1592,
+   "k0_1": 6.4004,
+   "d": 0.0156,
+   "Z_CC": 0.0,
+   "rms_mV": 17.3,
+   "class": "carbonate"
+  },
+  "Zhang 2020c C2": {
+   "w_S": 0.809,
+   "dU0_2": 0.108,
+   "dU0_3rel2": -0.0405,
+   "b_12": 0.7043,
+   "b_3": 1.7446,
+   "k0_1": 1.7701,
+   "d": -0.0334,
+   "Z_CC": 0.0,
+   "rms_mV": 14.3,
+   "class": "carbonate"
+  },
+  "Zhang 2020c C6": {
+   "w_S": 0.8116,
+   "dU0_2": 0.0672,
+   "dU0_3rel2": -0.0421,
+   "b_12": 0.6698,
+   "b_3": 1.725,
+   "k0_1": 0.7528,
+   "d": 0.0797,
+   "Z_CC": 0.0018,
+   "rms_mV": 13.6,
+   "class": "ether (dilute)"
+  },
+  "Jerez 2021 C1": {
+   "w_S": 1.8588,
+   "dU0_2": 0.1171,
+   "dU0_3rel2": -0.0944,
+   "b_12": 0.765,
+   "b_3": 1.0533,
+   "k0_1": 58.1176,
+   "d": -0.0815,
+   "Z_CC": 0.0045,
+   "rms_mV": 14.0,
+   "class": "carbonate"
+  },
+  "Li 2021 C1": {
+   "w_S": 1.0369,
+   "dU0_2": -0.0265,
+   "dU0_3rel2": -0.1922,
+   "b_12": 1.1338,
+   "b_3": 0.7164,
+   "k0_1": 0.5033,
+   "d": 0.0371,
+   "Z_CC": 0.0077,
+   "rms_mV": 11.0,
+   "class": "ether (dilute)"
+  },
+  "Ma 2021 C1": {
+   "w_S": 1.5235,
+   "dU0_2": 0.0055,
+   "dU0_3rel2": -0.2274,
+   "b_12": 1.1745,
+   "b_3": 2.3676,
+   "k0_1": 2.7285,
+   "d": 0.0528,
+   "Z_CC": 0.0039,
+   "rms_mV": 13.9,
+   "class": "carbonate"
+  },
+  "Song 2021 C1": {
+   "w_S": 1.2153,
+   "dU0_2": 0.1053,
+   "dU0_3rel2": -0.0191,
+   "b_12": 0.7894,
+   "b_3": 0.4238,
+   "k0_1": 2.1016,
+   "d": -0.2,
+   "Z_CC": 0.0,
+   "rms_mV": 13.4,
+   "class": "carbonate"
+  },
+  "Song 2021 C2": {
+   "w_S": 0.7266,
+   "dU0_2": 0.0124,
+   "dU0_3rel2": 0.1713,
+   "b_12": 1.5106,
+   "b_3": 0.8131,
+   "k0_1": 100.0,
+   "d": -0.2,
+   "Z_CC": 0.0044,
+   "rms_mV": 22.9,
+   "class": "carbonate"
+  },
+  "Wang 2021 C1": {
+   "w_S": 0.8105,
+   "dU0_2": 0.1103,
+   "dU0_3rel2": -0.052,
+   "b_12": 0.861,
+   "b_3": 1.6853,
+   "k0_1": 30.1873,
+   "d": -0.0638,
+   "Z_CC": 0.0024,
+   "rms_mV": 22.5,
+   "class": "ether (dilute)"
+  },
+  "Wang 2021b C1": {
+   "w_S": 1.0075,
+   "dU0_2": 0.0204,
+   "dU0_3rel2": 0.0976,
+   "b_12": 1.2571,
+   "b_3": 1.6382,
+   "k0_1": 100.0,
+   "d": 0.0674,
+   "Z_CC": 0.0242,
+   "rms_mV": 14.1,
+   "class": "ether (dilute)"
+  },
+  "Wang 2021c C1": {
+   "w_S": 0.6222,
+   "dU0_2": 0.1087,
+   "dU0_3rel2": -0.1799,
+   "b_12": 0.8472,
+   "b_3": 1.5879,
+   "k0_1": 1.54,
+   "d": -0.11,
+   "Z_CC": 0.0,
+   "rms_mV": 21.5,
+   "class": "carbonate"
+  },
+  "Wang 2021c C2": {
+   "w_S": 0.5614,
+   "dU0_2": -0.0378,
+   "dU0_3rel2": -0.0806,
+   "b_12": 0.686,
+   "b_3": 1.5794,
+   "k0_1": 0.1,
+   "d": -0.0246,
+   "Z_CC": 0.0006,
+   "rms_mV": 15.9,
+   "class": "carbonate"
+  },
+  "Wei 2021 C1": {
+   "w_S": 1.2217,
+   "dU0_2": 0.0774,
+   "dU0_3rel2": -0.1348,
+   "b_12": 1.0111,
+   "b_3": 1.7492,
+   "k0_1": 3.4709,
+   "d": -0.0286,
+   "Z_CC": 0.0028,
+   "rms_mV": 14.0,
+   "class": "ether (dilute)"
+  },
+  "Wei 2021 C2": {
+   "w_S": 1.1965,
+   "dU0_2": 0.1094,
+   "dU0_3rel2": -0.1527,
+   "b_12": 1.0248,
+   "b_3": 1.5953,
+   "k0_1": 5.028,
+   "d": -0.0167,
+   "Z_CC": 0.0,
+   "rms_mV": 19.2,
+   "class": "ether (dilute)"
+  },
+  "He 2022 C1": {
+   "w_S": 0.4474,
+   "dU0_2": 0.1244,
+   "dU0_3rel2": -0.0947,
+   "b_12": 0.963,
+   "b_3": 1.2923,
+   "k0_1": 12.7784,
+   "d": -0.1412,
+   "Z_CC": 0.0125,
+   "rms_mV": 10.4,
+   "class": "LHCE"
+  },
+  "He 2022 C2": {
+   "w_S": 0.3136,
+   "dU0_2": 0.1993,
+   "dU0_3rel2": 0.0346,
+   "b_12": 0.9835,
+   "b_3": 0.4808,
+   "k0_1": 97.6933,
+   "d": -0.0981,
+   "Z_CC": 0.0145,
+   "rms_mV": 15.0,
+   "class": "LHCE"
+  },
+  "He 2022 C3": {
+   "w_S": 0.3451,
+   "dU0_2": 0.119,
+   "dU0_3rel2": -0.138,
+   "b_12": 1.1958,
+   "b_3": 0.5518,
+   "k0_1": 66.7851,
+   "d": -0.1782,
+   "Z_CC": 0.0158,
+   "rms_mV": 15.2,
+   "class": "carbonate"
+  },
+  "Kong 2022 C2": {
+   "w_S": 0.7036,
+   "dU0_2": 0.0283,
+   "dU0_3rel2": -0.1678,
+   "b_12": 0.9843,
+   "b_3": 2.6593,
+   "k0_1": 2.6587,
+   "d": 0.0116,
+   "Z_CC": 0.0135,
+   "rms_mV": 13.1,
+   "class": "other liquid"
+  },
+  "Kong 2022 C3": {
+   "w_S": 0.7033,
+   "dU0_2": 0.0201,
+   "dU0_3rel2": -0.1706,
+   "b_12": 0.9638,
+   "b_3": 2.6202,
+   "k0_1": 1.9539,
+   "d": 0.0278,
+   "Z_CC": 0.0263,
+   "rms_mV": 9.7,
+   "class": "other liquid"
+  },
+  "Kong 2022 C4": {
+   "w_S": 0.7136,
+   "dU0_2": 0.0095,
+   "dU0_3rel2": -0.197,
+   "b_12": 1.0119,
+   "b_3": 2.6722,
+   "k0_1": 0.6432,
+   "d": 0.0205,
+   "Z_CC": 0.0001,
+   "rms_mV": 13.6,
+   "class": "other liquid"
+  },
+  "Liu 2022 C1": {
+   "w_S": 0.6048,
+   "dU0_2": 0.0804,
+   "dU0_3rel2": -0.26,
+   "b_12": 1.1734,
+   "b_3": 3.5,
+   "k0_1": 99.9998,
+   "d": 0.0163,
+   "Z_CC": 0.0098,
+   "rms_mV": 13.5,
+   "class": "other liquid"
+  },
+  "Liu 2022 C2": {
+   "w_S": 0.6119,
+   "dU0_2": 0.0958,
+   "dU0_3rel2": -0.2463,
+   "b_12": 1.1581,
+   "b_3": 2.1345,
+   "k0_1": 13.1778,
+   "d": 0.0131,
+   "Z_CC": 0.0108,
+   "rms_mV": 13.8,
+   "class": "LHCE"
+  },
+  "Shi 2022 C1": {
+   "w_S": 0.5019,
+   "dU0_2": 0.0577,
+   "dU0_3rel2": -0.1765,
+   "b_12": 0.8491,
+   "b_3": 0.911,
+   "k0_1": 100.0,
+   "d": -0.0679,
+   "Z_CC": 0.0352,
+   "rms_mV": 10.6,
+   "class": "carbonate"
+  },
+  "Shi 2022 C2": {
+   "w_S": 0.2721,
+   "dU0_2": 0.1868,
+   "dU0_3rel2": 0.0058,
+   "b_12": 0.5963,
+   "b_3": 0.6524,
+   "k0_1": 9.2258,
+   "d": -0.0281,
+   "Z_CC": 0.0171,
+   "rms_mV": 24.0,
+   "class": "carbonate"
+  },
+  "Weret 2022 C1": {
+   "w_S": 0.9588,
+   "dU0_2": 0.0445,
+   "dU0_3rel2": -0.0487,
+   "b_12": 1.3281,
+   "b_3": 1.556,
+   "k0_1": 27.3522,
+   "d": 0.1012,
+   "Z_CC": 0.0132,
+   "rms_mV": 19.6,
+   "class": "carbonate"
+  },
+  "Hu 2023 C3": {
+   "w_S": 1.1426,
+   "dU0_2": -0.0255,
+   "dU0_3rel2": -0.2166,
+   "b_12": 1.6,
+   "b_3": 1.1333,
+   "k0_1": 8.4823,
+   "d": 0.1486,
+   "Z_CC": 0.0061,
+   "rms_mV": 23.7,
+   "class": "carbonate"
+  },
+  "Huang 2023 C1": {
+   "w_S": 1.5057,
+   "dU0_2": 0.0056,
+   "dU0_3rel2": -0.1572,
+   "b_12": 1.0831,
+   "b_3": 2.0189,
+   "k0_1": 1.9778,
+   "d": 0.04,
+   "Z_CC": 0.0146,
+   "rms_mV": 12.0,
+   "class": "polymer / solid"
+  },
+  "Li 2023 C1": {
+   "w_S": 0.4963,
+   "dU0_2": 0.1303,
+   "dU0_3rel2": -0.1242,
+   "b_12": 0.9323,
+   "b_3": 2.0789,
+   "k0_1": 3.3341,
+   "d": -0.0654,
+   "Z_CC": 0.0007,
+   "rms_mV": 16.0,
+   "class": "other liquid"
+  },
+  "Shi 2023a C2": {
+   "w_S": 0.988,
+   "dU0_2": 0.0882,
+   "dU0_3rel2": 0.0696,
+   "b_12": 0.8237,
+   "b_3": 0.4604,
+   "k0_1": 100.0,
+   "d": 0.0102,
+   "Z_CC": 0.037,
+   "rms_mV": 18.1,
+   "class": "polymer / solid"
+  },
+  "Shi 2023a C3": {
+   "w_S": 0.9553,
+   "dU0_2": -0.0327,
+   "dU0_3rel2": 0.061,
+   "b_12": 0.6691,
+   "b_3": 0.4,
+   "k0_1": 0.1734,
+   "d": 0.1331,
+   "Z_CC": 0.05,
+   "rms_mV": 24.5,
+   "class": "polymer / solid"
+  },
+  "Wu 2023b C1": {
+   "w_S": 1.6,
+   "dU0_2": 0.0087,
+   "dU0_3rel2": -0.26,
+   "b_12": 1.1418,
+   "b_3": 0.5478,
+   "k0_1": 99.9987,
+   "d": 0.0493,
+   "Z_CC": 0.0192,
+   "rms_mV": 10.0,
+   "class": "ether (dilute)"
+  },
+  "Wu 2023b C2": {
+   "w_S": 1.2847,
+   "dU0_2": 0.1874,
+   "dU0_3rel2": -0.069,
+   "b_12": 0.7623,
+   "b_3": 0.8069,
+   "k0_1": 86.4024,
+   "d": -0.0165,
+   "Z_CC": 0.0029,
+   "rms_mV": 10.1,
+   "class": "ether (dilute)"
+  },
+  "Wu 2023 C1": {
+   "w_S": 0.3567,
+   "dU0_2": 0.1549,
+   "dU0_3rel2": 0.0116,
+   "b_12": 0.7923,
+   "b_3": 1.4552,
+   "k0_1": 10.3039,
+   "d": -0.0769,
+   "Z_CC": 0.0061,
+   "rms_mV": 23.8,
+   "class": "carbonate"
+  },
+  "Wu 2023 C2": {
+   "w_S": 0.587,
+   "dU0_2": 0.0807,
+   "dU0_3rel2": 0.0474,
+   "b_12": 0.7509,
+   "b_3": 2.1307,
+   "k0_1": 1.605,
+   "d": -0.0389,
+   "Z_CC": 0.004,
+   "rms_mV": 18.0,
+   "class": "carbonate"
+  },
+  "Xu 2023 C3": {
+   "w_S": 1.3908,
+   "dU0_2": 0.1448,
+   "dU0_3rel2": -0.0696,
+   "b_12": 0.8024,
+   "b_3": 2.3085,
+   "k0_1": 100.0,
+   "d": -0.1214,
+   "Z_CC": 0.05,
+   "rms_mV": 20.4,
+   "class": "carbonate"
+  },
+  "Chen 2024 C1": {
+   "w_S": 0.515,
+   "dU0_2": 0.0364,
+   "dU0_3rel2": -0.2201,
+   "b_12": 1.2343,
+   "b_3": 2.0489,
+   "k0_1": 5.093,
+   "d": 0.0449,
+   "Z_CC": 0.0027,
+   "rms_mV": 12.3,
+   "class": "LHCE"
+  },
+  "Chen 2024 C2": {
+   "w_S": 0.4203,
+   "dU0_2": 0.0566,
+   "dU0_3rel2": -0.0792,
+   "b_12": 0.9014,
+   "b_3": 1.4919,
+   "k0_1": 2.0669,
+   "d": -0.0055,
+   "Z_CC": 0.0093,
+   "rms_mV": 12.5,
+   "class": "HCE"
+  },
+  "Chen 2024 C3": {
+   "w_S": 0.339,
+   "dU0_2": 0.0107,
+   "dU0_3rel2": -0.0962,
+   "b_12": 1.0061,
+   "b_3": 0.8547,
+   "k0_1": 0.4442,
+   "d": 0.2,
+   "Z_CC": 0.0488,
+   "rms_mV": 16.7,
+   "class": "HCE"
+  },
+  "Qin 2024 C1": {
+   "w_S": 0.6843,
+   "dU0_2": 0.034,
+   "dU0_3rel2": -0.1325,
+   "b_12": 0.9336,
+   "b_3": 2.3055,
+   "k0_1": 1.4501,
+   "d": -0.0067,
+   "Z_CC": 0.0039,
+   "rms_mV": 11.2,
+   "class": "ether (dilute)"
+  },
+  "Qin 2024 C2": {
+   "w_S": 0.6866,
+   "dU0_2": 0.0366,
+   "dU0_3rel2": -0.1327,
+   "b_12": 0.8511,
+   "b_3": 2.7079,
+   "k0_1": 1.1802,
+   "d": -0.0286,
+   "Z_CC": 0.0047,
+   "rms_mV": 11.1,
+   "class": "LHCE"
+  },
+  "Qin 2024 C3": {
+   "w_S": 0.705,
+   "dU0_2": 0.035,
+   "dU0_3rel2": -0.186,
+   "b_12": 1.0403,
+   "b_3": 2.3013,
+   "k0_1": 1.0549,
+   "d": -0.0049,
+   "Z_CC": 0.0009,
+   "rms_mV": 12.8,
+   "class": "LHCE"
+  },
+  "Shi 2024 C2": {
+   "w_S": 0.2578,
+   "dU0_2": 0.0315,
+   "dU0_3rel2": 0.2,
+   "b_12": 1.1376,
+   "b_3": 1.0659,
+   "k0_1": 100.0,
+   "d": 0.1242,
+   "Z_CC": 0.018,
+   "rms_mV": 24.4,
+   "class": "carbonate"
+  },
+  "Simanjuntak 2024 C1": {
+   "w_S": 1.2736,
+   "dU0_2": -0.0141,
+   "dU0_3rel2": -0.26,
+   "b_12": 1.3333,
+   "b_3": 1.1735,
+   "k0_1": 1.9719,
+   "d": 0.02,
+   "Z_CC": 0.0,
+   "rms_mV": 22.0,
+   "class": "carbonate"
+  },
+  "Wang 2024 C4": {
+   "w_S": 0.5353,
+   "dU0_2": 0.1966,
+   "dU0_3rel2": -0.26,
+   "b_12": 1.6,
+   "b_3": 2.1156,
+   "k0_1": 1.4738,
+   "d": 0.0417,
+   "Z_CC": 0.0,
+   "rms_mV": 8.4,
+   "class": "carbonate"
+  },
+  "Wang 2024 C7": {
+   "w_S": 0.5959,
+   "dU0_2": 0.0595,
+   "dU0_3rel2": -0.127,
+   "b_12": 0.7986,
+   "b_3": 2.1856,
+   "k0_1": 1.3415,
+   "d": -0.0294,
+   "Z_CC": 0.0,
+   "rms_mV": 18.3,
+   "class": "carbonate"
+  },
+  "Wu 2024 C1": {
+   "w_S": 1.2232,
+   "dU0_2": 0.0833,
+   "dU0_3rel2": -0.198,
+   "b_12": 1.0541,
+   "b_3": 1.9637,
+   "k0_1": 9.0227,
+   "d": -0.0211,
+   "Z_CC": 0.0125,
+   "rms_mV": 10.8,
+   "class": "LHCE"
+  },
+  "Wu 2024 C2": {
+   "w_S": 1.0426,
+   "dU0_2": 0.1017,
+   "dU0_3rel2": -0.0093,
+   "b_12": 0.8105,
+   "b_3": 1.0668,
+   "k0_1": 1.4487,
+   "d": -0.0439,
+   "Z_CC": 0.0093,
+   "rms_mV": 20.9,
+   "class": "LHCE"
+  },
+  "You 2024 C1": {
+   "w_S": 1.1879,
+   "dU0_2": 0.0628,
+   "dU0_3rel2": 0.0419,
+   "b_12": 0.9058,
+   "b_3": 1.6656,
+   "k0_1": 4.1347,
+   "d": 0.0167,
+   "Z_CC": 0.007,
+   "rms_mV": 16.3,
+   "class": "polymer / solid"
+  },
+  "Zuo 2024 C5": {
+   "w_S": 0.4508,
+   "dU0_2": 0.1045,
+   "dU0_3rel2": 0.0528,
+   "b_12": 0.638,
+   "b_3": 0.4,
+   "k0_1": 50.6782,
+   "d": 0.017,
+   "Z_CC": 0.0464,
+   "rms_mV": 17.3,
+   "class": "fluorinated"
+  },
+  "Zuo 2024 C6": {
+   "w_S": 0.4756,
+   "dU0_2": 0.1132,
+   "dU0_3rel2": 0.0785,
+   "b_12": 0.5704,
+   "b_3": 0.4,
+   "k0_1": 39.5404,
+   "d": 0.0145,
+   "Z_CC": 0.0456,
+   "rms_mV": 18.5,
+   "class": "fluorinated"
+  }
+ }
+}

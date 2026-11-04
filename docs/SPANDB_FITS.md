@@ -58,9 +58,10 @@ Rules in the script header.  The ones that came from failures of the first run (
     (+- 6-7); w_S 0.68-0.71.
   - Chen 2019 (Se0.06SPAN): d = +8 +- 7 mV (ether) vs -31 +- 6 mV (carbonate), a shift of -39 +- 9 mV.
   - Wu 2024: DBE/TTE vs DME/TTE not interpreted (k0_1 of the DME/TTE cell at the box edge, wide sd).
-- w_S is an effective factor: with the network's fixed cell (100 um cathode, 618 um glass fibre) it also absorbs
-  transport differences, so w_S > 1 on an S basis (Hu 2023, Huang 2023, You 2024, Simanjuntak with its current
-  converted from the electrode basis: 1.25-1.49) does not mean more than the theoretical capacity.  Parameters are
+- w_S > 1 on an S basis (Hu 2023, Huang 2023, You 2024, Simanjuntak with its current converted from the electrode
+  basis: 1.25-1.49): up to w_S 1.34 (1675 mAh/g, the theoretical capacity of S) the cell simply delivers more than the
+  model's chain allows (1254 mAh/g S); values of 1.4-1.5 exceed S itself and point to a basis or conversion issue (see
+  "w_S and the sulfur content"; corrected 2026-11-03: not a geometry effect).  Parameters are
   effective; comparisons within a paper are more reliable than absolute values across papers.
 
 ## w_S and the sulfur content
@@ -71,8 +72,10 @@ sulfur.  Check on the described cells (misfit <= 25 mV):
   w_S / S fraction = 1.02-1.48 (median ~1.35);
 - capacity per g S (9 cells): w_S = 1.14-1.43 in eight, the same factor (Shi 2023a C3: 0.96, at the 25 mV limit with box-edge
   parameters).
-So real coin cells deliver ~1.2-1.4x the model cell's capacity at the same normalized rate: a geometry/transport factor
-(the network's cell has a 618 um glass-fibre separator), not chemistry.  w_S / S fraction is a relative utilization,
+So real coin cells deliver ~1.2-1.4x the model cell's capacity per g S.  First read as a geometry/transport factor;
+the geometry test (docs/GEOMETRY.md, 2026-11-03) rules that out: coin-cell geometries change the fitted w_S by < 1 %.
+The model's chain (PAN-S4-PAN, 6 e- per 4 S) caps the capacity at 1254 mAh/g S, while S itself allows 1675: w_S
+1.2-1.34 means the SPAN delivers 1.6-1.8 e- per S instead of the model's 1.5, a stoichiometry limit of the model.  w_S / S fraction is a relative utilization,
 meaningful within a paper (Qin 2024: 1.42/1.44/1.48; Chen 2024 LHCE 1.27 vs HCE 1.02); as an S-content estimator it
 would be good to ~+-15 % only.  The S content must come from elemental analysis; a blind test of w_S against it needs
 geometry inputs in the network.
@@ -132,13 +135,105 @@ What changes with v4:
    fits at 227 mV (both curves beyond the window).  The two curves are probably not one cell's rate test; to check in
    SPAN-DB.
 
+## All cells of the 2026-11-03 snapshot (95 papers), network v4
+
+SPAN-DB after the extraction of 95 papers (542 PDFs triaged: A 100, B 167, C 31, D 244; 1017 cells, 4078 curves, 965
+flagged).  Same rules plus the doped-SPAN basis below; 84 min on 2 workers.
+
+    python scripts/lispan_spandb_fit.py --spandb <span_db> --network results/lispan_chem_runs/chem_v4_warm_salt_s0/final.pt \
+        --out results/lispan/spandb_v4ws_1103 --workers 2 --fv-check
+    python report/spandb/make_spandb_figures.py --spandb <span_db> --results spandb_v4ws_1103 --tag v4_1103 --range "0.08-3 C"
+    #  -> report/spandb/figures/v4_1103/sdb_*.png, report/spandb/numbers_v4_1103.json
+
+**Described cell** (make_spandb_figures.described): fit misfit <= 25 mV, every scored in-between blind prediction
+<= 25 mV, network vs FV at the fitted parameters <= 5 mV, and w_S <= 1.6 (above it the capacity exceeds the model's
+theoretical capacity on any basis: a basis error is more likely than a real cell).
+
+| | cells |
+|---|---|
+| with discharge curves at >= 2 currents | 115 |
+| fitted | 100 (14 without two usable currents: cycle-1-only, areal or cell capacity; 1 outside 0.08-3 C) |
+| misfit <= 25 mV | 69 (median 15.2 mV) |
+| described | 41 |
+
+Network vs FV at the fitted parameters (misfit <= 25 mV): median 1.1 mV; above 5 mV only Chen 2020 C4 (13.6 mV, curves
+end at 41 % of the window, w_S 2.39) and Wu 2023b C2 (5.6 mV).
+
+By electrolyte family (fitted / misfit <= 25 mV / described): carbonate 37 / 31 / 16, dilute ether 23 / 14 / 9, LHCE
+10 / 9 / 7, HCE 3 / 2 / 1, fluorinated 4 / 2 / 2, other liquid 9 / 5 / 2, polymer or solid 13 / 5 / 4, not reported
+1 / 1 / 0.  With 23 dilute-ether cells, 9 are described: "dilute ethers fail" (2 of 6 in the 47-cell set) does not
+hold as a rule.  The 20 DOL/DME cells (with or without LiNO3/FEC) split: 8 described, 5 with misfit <= 25 mV but a
+missed check, 7 above 25 mV (Heo 2019, Huang 2019, Kong 2022, Wang 2023, Jia 2024 C1/C2, Shao 2024 = data issue); the
+two pure-DME cells fail (Jiang 2020 C4, Wu 2024 C3); DEE (Qin 2024) is described.  The electrolyte family alone does not
+decide whether the model applies.
+All five LGPS all-solid-state cells fail (96-156 mV).
+
+Blind predictions on the 69 cells with misfit <= 25 mV: 99 in-between currents, median 21.5 mV, 65 within 25 mV; 38
+extrapolated (up to 2.5x), median 35.7 mV, 11 within 25 mV.  Calibrate on the slowest and the fastest current of
+interest.
+
+Within-paper sets with >= 2 described cells (comparisons on one electrode): Chen 2019, Chen 2020 (C1-C3), Wei 2021,
+He 2022, Liu 2022, Shi 2023a, Chen 2024, Qin 2024, Wang 2024, Zuo 2024.  The four comparisons of the previous sections
+keep their values with this run.
+
+**Se/Te-doped SPAN** (new in lispan_spandb_fit.py): capacities per g (S + Se), per g (S + Te) or per g SeS2 are fitted on
+that basis ('chalcogen_basis'; a current basis entered as "S" or not reported is taken as the same basis, because
+these papers define 1 C on the S + Se/Te mass).  11 such cells fitted; 3 described (Li 2019 C1, Zhang 2020c C6,
+2018 t1687pdf C1); w_S is then per g of chalcogen and not comparable with S-basis cells.
+
+**Data issues to check in SPAN-DB** (read only here):
+- Shao 2024 C2: a "CIHP-SPAN" curve paired with a "2nd" cycle (227 mV): not one cell's rate test.
+- Warneke 2017 C1 (DME/DOL/DMTS, 1 + 4 C): w_S at its bound 3.0 and 317 mV: capacity or current basis.
+- w_S > 1.6 (capacity above theoretical): Chen 2020 C4 (2.39, basis "S implied"), Lu 2020 C2 (2.47, basis unknown),
+  Jerez 2021 C1 (1.86).
+- Song 2021 C1/C2 (carbonate, 1-3 V): fit at 13 / 23 mV only with d at the -200 mV bound: check the digitized
+  voltage axis.
+- Doped-SPAN tests store c_rate_basis "S" while their definition is per (S + Se) or (S + Te).
+
+## All cells of the 120-paper snapshot (2026-11-03), network v4 - the presentation set
+
+SPAN-DB with 120 papers extracted (542 triaged: A 97, B 169, C 32, D 244; 1185 cells, 4513 curves, 1066 flagged).
+Same rules as the 95-paper run.  The FV check now has a 180 s limit per solve (`two_curve.FV_TIMEOUT_S`): without it
+two cells (2013 Wang C1, 2016 An C1) held their workers for more than 15 min in a stiff solve.
+
+    python scripts/lispan_spandb_fit.py --spandb <span_db> --network results/lispan_chem_runs/chem_v4_warm_salt_s0/final.pt \
+        --out results/lispan/spandb_v4ws_120 --workers 2 --fv-check
+    python scripts/lispan_spandb_fit.py --spandb <span_db> --out results/lispan/spandb_v4ws_120 --summary-only
+    python report/spandb/make_spandb_figures.py --spandb <span_db> --results spandb_v4ws_120 --tag v4_120 --range "0.08-3 C"
+
+| | cells |
+|---|---|
+| with discharge curves at >= 2 currents | 131 (64 papers fitted) |
+| fitted | 113 (17 without two usable currents, 1 outside 0.08-3 C) |
+| misfit <= 25 mV | 75 (median 15.2 mV) |
+| described | 44 (30 papers) |
+
+- Network vs FV at the fitted parameters (misfit <= 25 mV): median 1.1 mV; above 5 mV only Chen 2020 C4 (13.6), Wu 2023b
+  C2 (5.6), 2014 20140515 C1 (5.0).
+- By family (fitted / <= 25 / described): carbonate 45 / 37 / 19, dilute ether 25 / 14 / 9, LHCE 10 / 9 / 7, HCE 3 / 2 / 1,
+  fluorinated 5 / 2 / 2, other liquid 9 / 5 / 2, polymer or solid 15 / 5 / 4, not reported 1 / 1 / 0.  Dilute ethers:
+  DOL/DME 22 cells (8 described, 5 misfit <= 25 but a check fails, 9 above 25 mV), DME 2 (both fail), DEE 1 (described).
+  All five LGPS all-solid-state cells fail (96-156 mV).
+- Blind predictions (cells with misfit <= 25 mV): 101 in-between, median 21.5 mV, 66 within 25 mV; 45 extrapolated,
+  median 36.8 mV, 12 within 25 mV.
+- The 25 papers added after the 95-paper run (mostly 2007-2017) contribute 13 fitted cells, 6 within 25 mV, 3 described:
+  older papers fit worse (lower-quality figures, older electrolytes).
+- Within-paper sets with >= 2 described cells: 11 papers (Li 2017, Chen 2019, Chen 2020, Wei 2021, He 2022, Liu 2022,
+  Shi 2023a, Chen 2024, Qin 2024, Wang 2024, Zuo 2024).  The Chen 2019, Chen 2024 and Qin 2024 comparisons are unchanged.
+- Real-cell resistance (two_curve.z_cell, docs/GEOMETRY.md) for 34 described cells with a reported loading:
+  numbers_v4_120.json, "z_cell_described".
+- New data issues: 2014 20140515 C1/C2 (w_S 2.5-2.9: basis), Li 2017 C3 (d at -200 mV with an 11 mV fit: voltage axis);
+  the issues of the 95-paper run remain.
+
 ## Files
 
 - `scripts/lispan_spandb_fit.py` - the fits (rules above), `--summary-only` rebuilds the summary.
 - `results/lispan/spandb/` - run 2 (this document): per-cell JSON, summary.csv/json, run.log.
 - `results/lispan/spandb_run1/` - run 1 (before the rules above), kept for reference.
 - `results/lispan/spandb_v3s1/` - network v3 (partial).
-- `results/lispan/spandb_v4ws/` - network v4 (chem_v4_warm_salt_s0); `report/spandb/compare_networks.py` -> 
+- `results/lispan/spandb_v4ws_120/` - network v4 on the 120-paper snapshot (the presentation set); figures `report/spandb/figures/v4_120/`.
+- `results/lispan/spandb_v4ws_1103/` - network v4 on the 95-paper snapshot; figures `report/spandb/figures/v4_1103/`.
+- `results/lispan/spandb_v4ws/` - network v4 (chem_v4_warm_salt_s0) on the 47-cell snapshot; `report/spandb/compare_networks.py` -> 
   `report/spandb/figures/sdb_v2_v4.png`, `report/spandb/compare_v2_v4.json`.
 - `report/spandb/make_spandb_figures.py` -> `report/spandb/figures/sdb_{funnel,misfit,examples,predictions,controlled}.png`,
   `report/spandb/numbers.json`.

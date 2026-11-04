@@ -3,6 +3,7 @@
     python report/seminar/make_seminar_figures.py
 
 net_accuracy.png   network vs FV solver on the evaluation discharges, by C-rate: v2 (0.1-1 C) and v3 (0.08-3 C)
+net_accuracy_v4.png  the same with v4 (chem_v4_warm_salt_s0, 0.08-3 C) in place of v3 (--v4)
 two_curve_b.png    crop of report/phase3/figures/p3b_two_curve.png, panel b (network fit vs FV optimum)
 two_curve_c.png    crop of the same figure, panel c (Hao 0.2 + 1 C, prediction of 0.5 C)
 """
@@ -29,9 +30,10 @@ plt.rcParams.update({
 SELECT = {"p0", "p1", "p2", "p3", "p4"}          # chemistries used to pick the checkpoint; the rest are test cases
 
 
-def net_accuracy():
+def net_accuracy(v4=False):
+    wide = ("chem_v4_warm_salt_s0", "network v4 (trained 0.08-3 C)") if v4 else ("chem_v3_s1", "network v3 (trained 0.08-3 C)")
     runs = [("chem_v2_norar_s0", "network v2 (trained 0.1-1 C)", BLUE, ["0.1C", "0.3C", "1C"]),
-            ("chem_v3_s1", "network v3 (trained 0.08-3 C)", ORANGE, ["0.1C", "0.3C", "1C", "3C"])]
+            (wide[0], wide[1], ORANGE, ["0.1C", "0.3C", "1C", "3C"])]
     rates = ["0.1C", "0.3C", "1C", "3C"]
     fig, ax = plt.subplots(figsize=(12, 5.4))
     rng = np.random.default_rng(1)
@@ -59,7 +61,7 @@ def net_accuracy():
     ax.set_ylabel("rms error vs FV solver [mV]")
     ax.grid(axis="x", visible=False)
     ax.legend(loc="upper left", fontsize=13, ncol=2)
-    fig.savefig(OUT / "net_accuracy.png")
+    fig.savefig(OUT / ("net_accuracy_v4.png" if v4 else "net_accuracy.png"))
     plt.close(fig)
 
 
@@ -70,5 +72,9 @@ def crops():
 
 
 if __name__ == "__main__":
-    net_accuracy()
-    crops()
+    import sys
+    if "--v4" in sys.argv:
+        net_accuracy(v4=True)
+    else:
+        net_accuracy()
+        crops()

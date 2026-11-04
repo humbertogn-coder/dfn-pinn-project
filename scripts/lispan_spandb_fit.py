@@ -17,7 +17,9 @@ Curve choice per cell:
   - current and capacity on the same mass basis: if the current basis (tests.c_rate_basis) differs from the capacity
     basis (curves.x_basis) it is converted with the S content of the SPAN and the active fraction of the electrode;
     an unreported basis is taken equal to the other one ('basis_assumed' / 'capacity_basis_assumed'), both unreported
-    is one unknown basis ('basis_unknown': w_S absorbs it and is not comparable with the S content).
+    is one unknown basis ('basis_unknown': w_S absorbs it and is not comparable with the S content).  Se- or Te-doped
+    SPAN reported per g (S + Se/Te) is fitted on that basis, the current taken on the same basis
+    ('chalcogen_basis').
 Calibration pair: w_S is estimated from the slowest curve (end capacity / 1200 mAh/g); the slowest and fastest currents
 whose estimated model rates sit 1.25x inside the network's range; fallback: the pair whose feasible w_S range is closest
 to (or contains) the estimate, widest first.  Predictions are scored inside the network window (T <= 1).
@@ -72,6 +74,11 @@ def basis_key(b):
         return "NR"
     if b.startswith("span"):
         return "SPAN"
+    if b.startswith("ses2"):
+        return "S+Se"
+    parts = sorted(x.strip() for x in b.replace(" ", "").split("+"))
+    if len(parts) == 2 and "s" in parts and parts[0 if parts[1] == "s" else 1] in ("se", "te"):
+        return "S+" + ("Se" if "se" in parts else "Te")    # chalcogen-doped SPAN: capacity per g (S + Se/Te)
     if b == "s" or b.startswith("s ") or b.startswith("s("):
         return "S"
     if b.startswith("electrode"):
@@ -88,7 +95,8 @@ def cell_curves(db, cell_id):
     s_frac = s_frac / 100.0 if s_frac and s_frac > 1.0 else s_frac
     act = num(el.get("active_wt"))
     act = act / 100.0 if act and act > 1.0 else act
-    per_span = {"SPAN": 1.0, "S": s_frac, "electrode": (1.0 / act) if act else None, "unknown": None}   # mass of the basis per g SPAN
+    per_span = {"SPAN": 1.0, "S": s_frac, "electrode": (1.0 / act) if act else None, "unknown": None,
+                "S+Se": None, "S+Te": None}   # mass of the basis per g SPAN (S+Se / S+Te: used only on their own basis)
     rows = []
     for k in db["curves"]:
         t = db["tests"].get(k["test_id"])
@@ -102,6 +110,11 @@ def cell_curves(db, cell_id):
         if i is None or i <= 0 or xb is None or cb is None:
             continue
         notes = []
+        if xb.startswith("S+") and cb in ("S", "NR"):
+            # doped SPAN: papers that report capacity per g (S + Se/Te) state the current on the same basis (often
+            # entered as "S" with the (S + Se) definition in the text)
+            cb = xb
+            notes.append("chalcogen_current_basis_assumed")
         if xb == "NR" and cb == "NR":
             xb = cb = "unknown"                          # same (unreported) basis assumed: w_S absorbs it, not comparable
             notes.append("basis_unknown")
@@ -111,6 +124,8 @@ def cell_curves(db, cell_id):
         elif cb == "NR":
             cb = xb
             notes.append("basis_assumed")
+        if xb.startswith("S+"):
+            notes.append("chalcogen_basis")          # w_S is per g (S + Se/Te), not comparable with the S content
         if cb != xb:
             fa, fb = per_span.get(cb), per_span.get(xb)
             if not fa or not fb:

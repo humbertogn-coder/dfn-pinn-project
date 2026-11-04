@@ -21,6 +21,8 @@ def test_basis_key():
     assert F.basis_key("SPAN composite") == "SPAN" and F.basis_key("S") == "S"
     assert F.basis_key("electrode") == "electrode" and F.basis_key("electrode (tap)") is None
     assert F.basis_key("cell") is None
+    assert F.basis_key("S+Se") == "S+Se" and F.basis_key("Se+S") == "S+Se" and F.basis_key("S + Te") == "S+Te"
+    assert F.basis_key("S+C") is None and F.basis_key("SeS2 (active-material mass)") == "S+Se"
 
 
 def test_rate_order_drops_an_activation_like_slow_curve():

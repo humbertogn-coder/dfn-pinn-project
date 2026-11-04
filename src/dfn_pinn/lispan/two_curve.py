@@ -91,6 +91,17 @@ def m_S_g(params) -> float:
     return params.m_S_model * 1e3
 
 
+def z_cell(Z_fit, w_S, loading_mg_cm2, params) -> float:
+    """Series resistance of the REAL cell [Ohm m2] from the fitted Z_CC [Ohm m2].
+
+    The network's Z multiplies the network's current density, i_sp m_S_model / w_S; the real cell carries
+    i_sp x (areal loading in the data basis).  Same voltage drop -> Z_cell = Z_fit m_S_model / (w_S loading).
+    loading_mg_cm2: areal mass of the data's capacity basis (mg S/cm2 for capacities per g S, mg SPAN/cm2 per g SPAN).
+    With this scaling the geometry test (docs/GEOMETRY.md) recovers the true Z of coin-cell geometries to -3..-10
+    Ohm cm2; without it the fitted Z is off by the loading ratio."""
+    return Z_fit * m_S_g(params) / (w_S * loading_mg_cm2 * 10.0)
+
+
 def model_rate(params, i_sp, w_S):
     """Model C-rate of a specific current i_sp [A/g] at the active-sulfur factor w_S."""
     return i_sp * m_S_g(params) / (w_S * ONE_C)
@@ -424,6 +435,35 @@ def fv_params(net_params, spec, x):
     return replace(p, U0=tuple(u + float(x[1 + k]) for u in p.U0))
 
 
+FV_TIMEOUT_S = 180       # a stiff FV solve at an extreme parameter set can run for tens of minutes: give up instead
+
+
+class _time_limit:
+    """SIGALRM time limit (main thread only; elsewhere, e.g. in a thread pool, no limit is applied)."""
+
+    def __init__(self, seconds):
+        self.s = int(seconds)
+
+    def _raise(self, *_):
+        raise TimeoutError(f"FV solve longer than {self.s} s")
+
+    def __enter__(self):
+        import signal
+        import threading
+        self.on = threading.current_thread() is threading.main_thread() and hasattr(signal, "SIGALRM")
+        if self.on:
+            self.old = signal.signal(signal.SIGALRM, self._raise)
+            signal.alarm(self.s)
+        return self
+
+    def __exit__(self, *exc):
+        if self.on:
+            import signal
+            signal.alarm(0)
+            signal.signal(signal.SIGALRM, self.old)
+        return False
+
+
 def fv_curve(net_params, spec, x, i_sp, q, N=(20, 10), rtol=1e-6, ramp_s=30.0):
     """FV voltage at the capacities q [mAh/g, data basis] for specific current i_sp [A/g]; points beyond the FV cut-off
     are NaN.  Returns (V, Q_end in the data basis) or (None, None) on solver failure."""
@@ -434,8 +474,9 @@ def fv_curve(net_params, spec, x, i_sp, q, N=(20, 10), rtol=1e-6, ramp_s=30.0):
     prot = LiSPANProtocol(current=i_sp * m_S_g(p) / w, ramp_s=ramp_s)
     for tol in (rtol, 10 * rtol):
         try:
-            _, res = solve(p, prot, N_c=N[0], N_s=N[1], n_out=1200, rtol=tol)
-        except (RuntimeError, ValueError, FloatingPointError, np.linalg.LinAlgError):
+            with _time_limit(FV_TIMEOUT_S):
+                _, res = solve(p, prot, N_c=N[0], N_s=N[1], n_out=1200, rtol=tol)
+        except (RuntimeError, ValueError, FloatingPointError, np.linalg.LinAlgError, TimeoutError):
             continue
         Q, V = np.asarray(res["Q_mAh_gS"]) * w, np.asarray(res["V"])
         q = np.asarray(q, float)

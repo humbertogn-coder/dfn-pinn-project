@@ -31,7 +31,7 @@ plt.rcParams.update({
     "axes.axisbelow": True, "figure.facecolor": BG, "axes.facecolor": BG, "savefig.facecolor": BG, "text.color": INK})
 
 GOOD_MV = 25.0          # misfit up to which the continuum model is taken to describe a cell (Phase 2: 11-17 mV typical)
-CLASSES = ["carbonate", "ether (dilute)", "LHCE", "HCE", "fluorinated", "other liquid", "polymer / solid"]
+CLASSES = ["carbonate", "ether (dilute)", "LHCE", "HCE", "fluorinated", "other liquid", "polymer / solid", "not reported"]
 SHORT = {"2019_Chen_088186": "Chen 2019", "2023_Hu_3c00450": "Hu 2023", "2023_Huang_202306484": "Huang 2023",
          "2023_Li_d3ta01803b": "Li 2023", "2023_Shi_202301656": "Shi 2023a", "2023_Shi_3c00380": "Shi 2023b",
          "2023_Wang_144142": "Wang 2023", "2023_Wu_cnl261": "Wu 2023", "2024_Chen_202422791": "Chen 2024",
@@ -42,12 +42,32 @@ SHORT = {"2019_Chen_088186": "Chen 2019", "2023_Hu_3c00450": "Hu 2023", "2023_Hu
          "2023_Wu_3c00815": "Wu 2023b", "2024_Shao_nano14131155": "Shao 2024", "2024_Kakiage_003211": "Kakiage 2024"}
 
 
+_AUTO = {}
+
+
+def paper_name(p):
+    """'Author Year' for a paper id 'YYYY_Author_xxx'; SHORT keeps the names used in the docs, other papers get
+    a/b/... when author and year repeat."""
+    if p in SHORT:
+        return SHORT[p]
+    if p not in _AUTO:
+        parts = p.split("_")
+        base = f"{parts[1]} {parts[0]}" if len(parts) > 2 and parts[0].isdigit() else p
+        if len(parts) > 2 and parts[1].upper() == "NR":
+            base = f"{parts[0]} {parts[2][:8]}"             # first author not reported: year + DOI fragment
+        taken = [v for v in list(SHORT.values()) + list(_AUTO.values()) if v.rstrip("abcdefgh") == base]
+        _AUTO[p] = base if not taken else f"{base}{'abcdefgh'[len(taken)]}"
+    return _AUTO[p]
+
+
 def short(cell):
     p, c = cell.rsplit("_C", 1)
-    return f"{SHORT.get(p, p)} C{c}"
+    return f"{paper_name(p)} C{c}"
 
 
 def el_class(r):
+    if (r.get("electrolyte_family") or "").strip().upper() in ("", "NR", "NA"):
+        return "not reported"
     fam, txt = (r.get("electrolyte_family") or "").lower(), (r.get("electrolyte") or "").lower() + " " + (r.get("electrolyte_family") or "").lower()
     if any(k in txt for k in ("solid", "llzo", "gel", "polymer", "polymeriz", "hydride", "pise")):
         return "polymer / solid"
@@ -62,7 +82,7 @@ def el_class(r):
 
 
 def load(folder):
-    folder = ROOT / "results" / "lispan" / folder
+    folder = Path(folder) if Path(folder).is_absolute() else ROOT / "results" / "lispan" / folder
     if not folder.exists():
         return []
     return [json.loads(f.read_text()) for f in sorted(folder.glob("*.json")) if not f.name.startswith("summary")]
@@ -70,7 +90,63 @@ def load(folder):
 
 def fv_err(r):
     fv = (r.get("fv_check") or {}).get("curves") or []
-    return max(c["rms_net_vs_fv_mV"] for c in fv) if fv else np.nan
+    v = [c["rms_net_vs_fv_mV"] for c in fv if "rms_net_vs_fv_mV" in c]
+    return max(v) if v else np.nan
+
+
+W_MAX = 1.6            # w_S above this: capacity well above the model's theoretical one on any basis -> check the basis
+FV_MAX_MV = 5.0        # network vs FV solver at the fitted parameters above this: the network is not trusted there
+
+
+def described(r):
+    """Misfit <= GOOD_MV, every scored in-between prediction <= GOOD_MV, network vs FV <= FV_MAX_MV at the fitted
+    parameters and w_S <= W_MAX (docs/SPANDB_FITS.md, "Network v4")."""
+    if r["fit"]["rms_mV"] > GOOD_MV or r["fit"]["params"]["w_S"] > W_MAX:
+        return False
+    if not np.isnan(fv_err(r)) and fv_err(r) > FV_MAX_MV:
+        return False
+    return all(p["rms_mV"] <= GOOD_MV for p in r["predictions"] if "rms_mV" in p and p.get("between"))
+
+
+def _first_number(txt):
+    """Loading field -> number (a range 'a-b' gives the mean); None when not reported or the basis is unclear."""
+    import re
+    t = (txt or "").strip()
+    if not t or t.upper().startswith(("NR", "NA")) or "unclear" in t.lower() or "not s" in t.lower():
+        return None
+    m = re.match(r"~?\s*([0-9.]+)\s*(?:[-\u2013]\s*([0-9.]+))?", t)
+    if not m:
+        return None
+    a = float(m.group(1))
+    return 0.5 * (a + float(m.group(2))) if m.group(2) else a
+
+
+def z_cell_table(spandb, fits):
+    """Fitted Z converted to the real cell's area (two_curve.z_cell) for cells on an S or SPAN basis with a loading."""
+    import sys
+    sys.path.insert(0, str(ROOT / "src"))
+    from dfn_pinn.lispan.params import LiSPANParams
+    from dfn_pinn.lispan.two_curve import z_cell
+    root = Path(spandb) / "db"
+    rd = lambda f, k: {r[k]: r for r in csv.DictReader(open(root / f, encoding="utf-8"))}   # noqa: E731
+    cells, els = rd("cells.csv", "cell_id"), rd("electrodes.csv", "electrode_id")
+    p = LiSPANParams()
+    out = {}
+    for r in fits:
+        e = els.get(cells.get(r["cell"], {}).get("electrode_id", ""), {})
+        ls, lp, sf = _first_number(e.get("loading_s_mg_cm2")), _first_number(e.get("loading_span_mg_cm2")), r.get("s_frac")
+        basis = r["x_bases"][0] if r["x_bases"] else None
+        load = None
+        if basis == "S":
+            load = ls if ls else (lp * sf if lp and sf else None)
+        elif basis == "SPAN":
+            load = lp if lp else (ls / sf if ls and sf else None)
+        if not load:
+            continue
+        f = r["fit"]["params"]
+        out[r["cell"]] = {"basis": basis, "loading_mg_cm2": load, "Z_fit_ohm_cm2": 1e4 * f["Z_CC"],
+                          "Z_cell_ohm_cm2": 1e4 * z_cell(f["Z_CC"], f["w_S"], load, p)}
+    return out
 
 
 def db_counts(spandb):
@@ -87,7 +163,7 @@ def db_counts(spandb):
 def fig_misfit(fit):
     fig, ax = plt.subplots(figsize=(13, 5.6))
     ax.axhspan(0, GOOD_MV, color="#EAF2FB", zorder=0)
-    ax.text(-0.45, 0.55, f"shaded: model describes the cell (\u2264 {GOOD_MV:.0f} mV)", ha="left", va="bottom",
+    ax.text(-0.45, 0.55, f"shaded: fit misfit \u2264 {GOOD_MV:.0f} mV", ha="left", va="bottom",
             fontsize=13, color=BLUE)
     rng = np.random.default_rng(3)
     for k, cl in enumerate(CLASSES):
@@ -97,9 +173,13 @@ def fig_misfit(fit):
             m, e = r["fit"]["rms_mV"], fv_err(r)
             col = BLUE if m <= GOOD_MV else ORANGE
             ax.plot([x, x], [e, m], color=LIGHT, lw=1.2, zorder=1)
-            ax.plot(x, m, "o", ms=11, color=col, mec="white", mew=1.2, zorder=3)
+            if m <= GOOD_MV and not described(r):
+                ax.plot(x, m, "o", ms=11, color=BLUE, mfc="white", mew=2.0, zorder=3)
+            else:
+                ax.plot(x, m, "o", ms=11, color=col, mec="white", mew=1.2, zorder=3)
             ax.plot(x, e, "_", ms=12, mew=2.2, color=GREY, zorder=2)
-    ax.plot([], [], "o", ms=11, color=BLUE, label="fit misfit (data vs network)")
+    ax.plot([], [], "o", ms=11, color=BLUE, label="described: misfit and blind predictions ≤ 25 mV")
+    ax.plot([], [], "o", ms=11, color=BLUE, mfc="white", mew=2.0, label="misfit ≤ 25 mV, not described (a blind prediction or a check fails)")
     ax.plot([], [], "o", ms=11, color=ORANGE, label="fit misfit above 25 mV")
     ax.plot([], [], "_", ms=12, mew=2.2, color=GREY, label="network vs FV solver at the fitted parameters")
     ax.set_xticks(range(len(CLASSES)), [f"{c}\n(n = {sum(el_class(r) == c for r in fit)})" for c in CLASSES], fontsize=13)
@@ -108,7 +188,7 @@ def fig_misfit(fit):
     ax.set_yticks([0.5, 1, 2, 5, 10, 20, 50, 100], ["0.5", "1", "2", "5", "10", "20", "50", "100"])
     ax.set_ylabel("rms voltage error [mV]")
     ax.grid(axis="x", visible=False)
-    ax.legend(loc="lower center", bbox_to_anchor=(0.5, 1.0), fontsize=12.5, ncol=3, handletextpad=0.3, columnspacing=1.5)
+    ax.legend(loc="lower center", bbox_to_anchor=(0.5, 1.0), fontsize=12, ncol=2, handletextpad=0.3, columnspacing=1.5)
     fig.savefig(OUT / "sdb_misfit.png")
     plt.close(fig)
 
@@ -139,7 +219,8 @@ def fig_examples(byc):
             ("2023_Shi_3c00380_C4", "Shi 2023b: LLZO solid electrolyte", False)]
     fig, axs = plt.subplots(2, 2, figsize=(14, 9.6))
     for ax, (c, t, pr) in zip(axs.flat, pick):
-        _panel(ax, byc[c], t, pr)
+        if c in byc and byc[c]["status"] == "fitted":
+            _panel(ax, byc[c], t, pr)
     fig.tight_layout(h_pad=2.0, w_pad=2.5)
     fig.savefig(OUT / "sdb_examples.png")
     plt.close(fig)
@@ -151,9 +232,10 @@ def fig_funnel(num):
             ("relevance A: profiles at \u2265 2 rates", d["relevance"].get("A", 0), GREY),
             ("articles extracted so far", d["papers_extracted"], BLUE),
             ("cells with \u2265 2 discharge currents", num["cells_two_or_more_currents"], BLUE),
-            ("fitted (pair inside 0.1-1 C)", num["fitted"], BLUE),
-            ("model describes the cell (\u2264 25 mV)", num["good"], AQUA)]
-    fig, ax = plt.subplots(figsize=(12, 4.6))
+            (f"fitted (pair inside {num['range']})", num["fitted"], BLUE),
+            ("misfit \u2264 25 mV", num["good"], AQUA),
+            ("described: also blind predictions \u2264 25 mV", num["described"], AQUA)]
+    fig, ax = plt.subplots(figsize=(12, 5.2))
     for k, (lab, v, col) in enumerate(rows):
         ax.barh(k, v, color=col, height=0.66)
         ax.text(v + 6, k, f"{v}", va="center", fontsize=15, fontweight="bold", color=INK)
@@ -188,6 +270,8 @@ def fig_controlled(byc):
     for ax, (p, sc, lab) in zip(axs, pars):
         for gi, (paper, cells) in enumerate(CONTROLLED):
             xs = [pos[c][0] for c, _ in cells]
+            if not all(c in byc and byc[c]["status"] == "fitted" for c, _ in cells):
+                continue
             ys = [byc[c]["fit"]["params"][p] * sc for c, _ in cells]
             es = [byc[c]["fit"]["sd_total"].get(p, 0.0) for c, _ in cells]
             edge = [any(f["flag"] == "box_edge" and p in f["msg"] for f in byc[c]["fit"]["flags"]) for c, _ in cells]
@@ -235,8 +319,17 @@ def fig_predictions(fit):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--spandb", required=True)
+    ap.add_argument("--results", default="spandb", help="folder under results/lispan (or absolute) with the per-cell JSONs")
+    ap.add_argument("--tag", default="", help="write figures to figures/<tag>/ and numbers_<tag>.json")
+    ap.add_argument("--range", default="0.1-1 C", help="network rate range, for the funnel label")
     a = ap.parse_args()
-    res = load("spandb")
+    global OUT
+    if a.tag:
+        OUT = HERE / "figures" / a.tag
+        OUT.mkdir(parents=True, exist_ok=True)
+    res = load(a.results)
+    for pid in sorted({r["cell"].rsplit("_C", 1)[0] for r in res}):
+        paper_name(pid)                                     # a/b suffixes in paper-id order, not in plotting order
     fit = [r for r in res if r["status"] == "fitted"]
     byc = {r["cell"]: r for r in res}
     fig_misfit(fit)
@@ -244,7 +337,14 @@ def main():
     fig_controlled(byc)
     pts = fig_predictions(fit)
     good = [r for r in fit if r["fit"]["rms_mV"] <= GOOD_MV]
-    num = {"db": db_counts(a.spandb), "cells_two_or_more_currents": len(res), "fitted": len(fit),
+    desc = [r for r in fit if described(r)]
+    num = {"results": a.results, "range": a.range, "described": len(desc),
+           "described_cells": {short(r["cell"]): round(r["fit"]["rms_mV"], 1) for r in desc},
+           "good_not_described": {short(r["cell"]): [round(p["rms_mV"], 1) for p in r["predictions"]
+                                                    if "rms_mV" in p and p.get("between")]
+                                  for r in good if not described(r)},
+           "z_cell_described": {short(c): v for c, v in z_cell_table(a.spandb, desc).items()},
+           "db": db_counts(a.spandb), "cells_two_or_more_currents": len(res), "fitted": len(fit),
            "skipped": dict(Counter(r["reason"] for r in res if r["status"] != "fitted")),
            "good": len(good), "misfit_median_good_mV": float(np.median([r["fit"]["rms_mV"] for r in good])),
            "misfit_all_mV": sorted(round(r["fit"]["rms_mV"], 1) for r in fit),
@@ -252,12 +352,13 @@ def main():
            "net_vs_fv_good_median_mV": float(np.median([fv_err(r) for r in good])),
            "by_class": {c: {"n": sum(el_class(r) == c for r in fit),
                             "good": sum(el_class(r) == c and r["fit"]["rms_mV"] <= GOOD_MV for r in fit),
+                            "described": sum(el_class(r) == c and described(r) for r in fit),
                             "cells": {short(r["cell"]): round(r["fit"]["rms_mV"], 1) for r in fit if el_class(r) == c}}
                         for c in CLASSES},
            "predictions": [{"cell": short(c), "fit_mV": round(m, 1), "pred_mV": round(e, 1), "between": b} for m, e, b, c in pts],
            "params_good": {short(r["cell"]): {k: round(v, 4) for k, v in r["fit"]["params"].items()} | {"rms_mV": round(r["fit"]["rms_mV"], 1),
                            "class": el_class(r)} for r in good}}
-    v3 = load("spandb_v3s1")
+    v3 = load("spandb_v3s1") if not a.tag else []
     if v3:
         f3 = [r for r in v3 if r["status"] == "fitted"]
         num["v3s1"] = {"fitted": len(f3), "good": sum(r["fit"]["rms_mV"] <= GOOD_MV for r in f3),
@@ -265,7 +366,7 @@ def main():
                                         "pred_mV": round(p["rms_mV"], 1), "between": p["between"]}
                                        for r in f3 for p in r["predictions"] if "rms_mV" in p]}
     fig_funnel(num)
-    (HERE / "numbers.json").write_text(json.dumps(num, indent=1, ensure_ascii=False))
+    (HERE / (f"numbers_{a.tag}.json" if a.tag else "numbers.json")).write_text(json.dumps(num, indent=1, ensure_ascii=False))
     print(json.dumps({k: v for k, v in num.items() if k not in ("params_good", "predictions", "misfit_all_mV")}, indent=1, ensure_ascii=False))
 
 

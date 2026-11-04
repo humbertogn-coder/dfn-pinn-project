@@ -1,16 +1,18 @@
-<!-- Markdown export of the Claude Doc "PINN for Li-SPAN: Technical Report from DFN to SPAN-DB" (https://claude.ai/artifact/79SsxzrqLAYC3e1RVSuppn), exported 2026-10-30. The Claude Doc is the editable original; figures are linked to their files in this repository. -->
+<!-- Version 2 (2026-11-03). Version 1 (2026-10-30) was exported from the Claude Doc "PINN for Li-SPAN: Technical Report from DFN to SPAN-DB" (https://claude.ai/artifact/79SsxzrqLAYC3e1RVSuppn); this Markdown file is now the up-to-date version (v4 network, 120-paper SPAN-DB results, geometry test). Figures are linked to their files in this repository. -->
 
 # PINN for Li-SPAN: Technical Report from DFN to SPAN-DB
 
-Oct 30, 2026 · @Carlos
+Version 2, Nov 3, 2026 (version 1: Oct 30) · Carlos Guerrero
 
 ## 0. Reading guide and executive summary
 
-In eight weeks (September 11 to October 30, 2026) the project went from a physics-informed neural network (PINN) that could not reproduce a lithium-ion model (23 mV error) to a trained network that fits published lithium–SPAN discharge curves in about one minute. That network was applied to 35 literature cells extracted by AI agents into a database (SPAN-DB); the continuum model describes 22 of them within 25 mV.
+In eight weeks (September 11 to November 3, 2026) the project went from a physics-informed neural network (PINN) that could not reproduce a lithium-ion model (23 mV error) to a trained network that solves the Li-SPAN continuum model for any rate between 0.08 and 3 C and any chemistry in a box, within 0.55 mV of the solver up to 1 C, and fits published discharge curves in one to two minutes. Applied to the 131 cells with curves at two or more currents in a database of 120 papers extracted by AI agents (SPAN-DB), it fits 113; 75 are within 25 mV and 44 are described including blind predictions of currents not used in the fit. A known-truth test shows that the network’s fixed cell geometry biases the fitted potentials by 10–15 mV without raising the misfit, which defines the next step: geometry as network inputs.
+
+**What changed since version 1 (October 30).** The v4 network (exact charge balance, 0.08–3 C) replaced v2 and v3 (Part IX.3); its error floor is measured (Part X.3); the tool converts the fitted resistance to the real cell (Part X.7); SPAN-DB grew from 38 to 120 papers and all its cells were refitted, with a stricter definition of a described cell (Part XII); the cell-geometry test is new (Part XIII); the interpretation of w\_S above 1 was corrected (Parts XII.7 and XIII.2).
 
 ### How to read this report
 
-- **Order.** Parts I–III give the chemistry and the mathematics. Parts IV–X follow the work in time: the DFN model of a lithium-ion cell, the Li-SPAN model, the parametric network and the fitting tool. Parts XI–XII describe SPAN-DB and its first results. Parts XIII–XV cover applications, limitations and the plan to finish the project. The appendices hold a glossary, the symbols, a table of key numbers and a file map.
+- **Order.** Parts I–III give the chemistry and the mathematics. Parts IV–X follow the work in time: the DFN model of a lithium-ion cell, the Li-SPAN model, the parametric network and the fitting tool. Parts XI–XII describe SPAN-DB and the fits of its cells. Part XIII measures how much the network’s fixed cell geometry matters. Parts XIV–XVI cover applications, limitations and the plan to finish the project. The appendices hold a glossary, the symbols, a table of key numbers and a file map.
 - **Every section opens with its result.** Background and reasoning follow.
 - **Status words** are used consistently: DONE (finished and checked), RUNNING (in progress on a computer), PROPOSED (planned, not started), OPEN (a question without an answer yet).
 - **Units.** Voltage errors are root-mean-square (rms) differences in millivolts (mV) between two curves, unless “max” is written. Capacities are in mAh per gram of the stated mass basis: sulfur (S), SPAN composite, or electrode. A C-rate is the current that would discharge the nominal capacity in one hour (1 C); “0.1 C” is ten times slower.
@@ -36,16 +38,18 @@ In eight weeks (September 11 to October 30, 2026) the project went from a physic
 | 3 | Li-SPAN finite-volume solver (rebuild of Simanjuntak et al. 2024) | Reproduces the paper’s curves and capacities within a few percent | DONE |
 | 4 | Li-SPAN PINN, one rate | 0.16 mV (0.1 C) and 0.23 mV (1 C) from the solver | DONE |
 | 5 | Identifiability | Kinetic constant and potential of steps 2–3 are inseparable; two currents (slowest and fastest) are needed | DONE |
-| 6 | Parametric network v2 (any rate 0.1–1 C, any chemistry in a box) | 1.4 mV median from the solver, below 5 mV measurement noise | DONE |
-| 7 | Two-curve fitting tool | 8 parameters in 35–70 s; agrees with the solver’s optimum (45 of 47 parameters within 1 sd) | DONE |
-| 8 | SPAN-DB built by AI agents | 542 papers triaged, 38 extracted: 415 cells, 1670 curves with provenance | RUNNING (73 + 156 papers left) |
-| 9 | Fits of literature cells | 35 cells fitted; 22 described within 25 mV; LHCE 5 of 5, dilute ethers 2 of 6 | DONE (first pass) |
-| 10 | Networks for higher rates (to 3 C) | v3: 4.8 mV median; v4 with an exact charge balance training on Grace | RUNNING |
+| 6 | Parametric network (any rate, any chemistry in a box) | v2 (0.1–1 C): 1.4 mV median; v4 (0.08–3 C, exact charge balance): 0.55 mV median up to 1 C, 5 mV at 3 C | DONE |
+| 7 | Two-curve fitting tool | 8 parameters in 1–2 min; agrees with the solver’s optimum (45 of 47 parameters within 1 sd); error floor of v4 close to v2’s | DONE |
+| 8 | SPAN-DB built by AI agents | 542 papers triaged, 120 extracted: 1185 cells, 4513 curves with provenance | RUNNING (about 145 A and B papers left) |
+| 9 | Fits of literature cells (v4) | 113 cells fitted; 75 within 25 mV; 44 described including blind predictions; LHCE 7 of 10, carbonate 19 of 45, dilute ether 9 of 25 | DONE (120-paper snapshot) |
+| 10 | Cell geometry | Fixed geometry shifts potentials 8–15 mV and k0\_1 17–29 % for coin cells without raising the misfit; w\_S unaffected; Z corrected with the loading | Step 0 DONE; geometry network PROPOSED |
 
 ### Project timeline (past events, newest first)
 
 | Dates (2026) | Event |
 | --- | --- |
+| Nov 3 | 120-paper SPAN-DB snapshot fitted with v4; geometry test (step 0); real-cell resistance; report version 2 |
+| Nov 2 | v4 trained and analysed (exact charge balance, 0.08–3 C); error floor; 47-cell refit and 95-paper run |
 | Oct 30 | SPAN-DB cells fitted; group-seminar deck; v4 network submitted to Grace |
 | Oct 27–29 | Two-curve tool built and validated; v3 network (0.08–3 C) trained and analysed |
 | Oct 24–28 | SPAN-DB pilot and batches 1–10 (separate conversation in this project) |
@@ -401,7 +405,7 @@ The electrolyte species follow Nernst–Planck mass balances in the cathode and 
 
 ### VI.6 What the model is and is not
 
-The model describes a solid–solid conversion with a fixed geometry and a carbonate electrolyte. It contains no polysulfide shuttle, no first-cycle activation, no transport inside SPAN particles and no dependence of the step potentials on the electrolyte other than through the fitted parameters. Every later finding must be read with these limits in mind (Part XIV).
+The model describes a solid–solid conversion with a fixed geometry and a carbonate electrolyte. It contains no polysulfide shuttle, no first-cycle activation, no transport inside SPAN particles and no dependence of the step potentials on the electrolyte other than through the fitted parameters. Every later finding must be read with these limits in mind (Part XV).
 
 ## Part VII. The single-rate Li-SPAN PINN (DONE)
 
@@ -516,7 +520,7 @@ Two more observations became rules later:
 
 ## Part IX. The parametric PINN: one network for every rate and chemistry
 
-The network used by the fitting tool (chem\_v2\_norar\_s0) takes the C-rate (0.1–1 C) and five chemistry parameters as inputs and stays within 1.4 mV median of the FV solver on 39 evaluation discharges (1.0–1.2 mV away from the steep “voltage cliffs”). Getting there took four training waves for the rate alone and four versions for the chemistry, mostly to tame training instabilities; a version reaching 3 C is training now.
+The network used by the fitting tool since November 2 (chem\_v4\_warm\_salt\_s0, “v4”) takes the C-rate (0.08–3 C) and five chemistry parameters as inputs and stays within 0.55 mV median of the FV solver at 0.1–1 C and about 5 mV at 3 C (52 evaluation discharges). The earlier v2 network (0.1–1 C, 1.4 mV median) remains valid inside its range. Getting there took four training waves for the rate alone and four versions for the chemistry: the first ones to tame training instabilities, the last one to make the charge balance exact.
 
 ### IX.1 Making the rate an input (Phase 3a, DONE)
 
@@ -564,11 +568,11 @@ By the Tafel degeneracy (Part VIII.1), dU0\_2 and dU0\_3rel2 also stand for the 
 | v1 | 0.1–1 C, small box (4 inputs) | 0.8–0.9 mV away from cliffs; spikes of 60–100 mV at voltage cliffs | Only 3 of 22 literature fits fell inside its box |
 | v2 (in use) | 0.1–1 C, wide box (5 inputs) | 1.02 / 1.15 mV select/test away from cliffs; worst test case 2.41 mV; cliffs placed within 0.32 % of capacity; 1.4 mV median overall | Residual-based sampling at the cliffs gave no benefit; 3 of 5 runs passed |
 | v3 | 0.08–3 C | 4.8 mV median; 7.9 mV at 3 C | The charge inventory drifts late in discharge (1–25 mol/m³ vs 0.5–2 for v2) |
-| v4 | 0.08–3 C, exact charge inventory | Probes: 0.95 / 0.44 / 0.51 / 6.9 mV at 0.1 / 0.3 / 1 / 3 C | RUNNING on Grace (5 variants, 120 h limit) |
+| v4 (in use since Nov 2) | 0.08–3 C, exact charge inventory | Outside cliffs, mean over 13 chemistries: 0.83 / 0.42 / 0.44 / 5.1 mV at 0.1 / 0.3 / 1 / 3 C (chem\_v4\_warm\_salt\_s0); all 5 runs pass the gate at 0.1–1 C; cliffs within 0.23 % | The exact inventory removed the v3 drift; 3 C is the remaining limit (a smooth late offset at the box corner p6) |
 
-![Network error against the FV solver for 13 chemistries at each C-rate: v2 (blue) mostly 0.4–2.5 mV at 0.1–1 C; v3 (orange) 0.5–24 mV, largest at 3 C. Hollow points are the chemistries used to pick the checkpoint.](../report/seminar/figures/net_accuracy.png)
+![Network error against the FV solver for 13 chemistries at each C-rate: v2 (blue) medians 1.2–1.5 mV at 0.1–1 C; v4 (orange) medians 0.5–0.6 mV at 0.1–1 C and 5.0 mV at 3 C. Hollow points are the chemistries used to pick the checkpoint.](../report/seminar/figures/net_accuracy_v4.png)
 
-Each point is one evaluation discharge; the black bar is the median. 0.3 C was never a training rate. Source: final\_metrics.json of chem\_v2\_norar\_s0 and chem\_v3\_s1 (report/seminar/make\_seminar\_figures.py).
+Each point is one evaluation discharge (all points, cliffs included); the black bar is the median. 0.3 C was never a training rate. Source: final\_metrics.json of chem\_v2\_norar\_s0 and chem\_v4\_warm\_salt\_s0 (report/seminar/make\_seminar\_figures.py --v4).
 
 **Voltage cliffs.** When the steps are well separated and the slopes small, the FV voltage falls by 0.15–0.3 V within about 1 % of the capacity at the end of a step. A network that places that drop 0.3 % of capacity too early produces a large but very local error. Errors are therefore also reported “outside the cliffs”, plus the cliff timing.
 
@@ -578,7 +582,23 @@ Each point is one evaluation discharge; the black bar is the median. 0.3 C was n
 c_{S4,0}\int_0^{1}\big(\xi_1+\xi_2+\xi_3\big)\,dY = \frac{Q(t)}{2F\,L_{\mathrm{cat}}}
 ```
 
-holds exactly on the 12-node quadrature. λ is found by bisection in ln λ, then two Newton steps that carry gradients, so first and mixed second derivatives are exact (tested to 10⁻¹⁰). Each training step costs about twice as much (1.1–1.2 s on the sandbox). In probes from the v3 weights the late-discharge drift disappeared and 0.1–1 C became better than v2; 3 C stays at about 7 mV because the network’s salt polarization at 3 C is about 10 % too shallow.
+holds exactly on the 12-node quadrature. λ is found by bisection in ln λ, then two Newton steps that carry gradients, so first and mixed second derivatives are exact (tested to 10⁻¹⁰). Each training step costs about twice as much (1.1–1.2 s on the sandbox).
+
+**v4 results (Grace array 20342362, finished November 2; docs/PHASE3B\_CHEM\_PINN.md “v4 results”).** Five runs: two from scratch (250 000 steps, 80–85 h), one with a minimum salt weight, and two warm starts from v3 (150 000 steps, 50 h). No rollbacks, 11–30 skipped batches. Outside-cliff error, mean over the 13 chemistries, per rate:
+
+| Run | 0.1 C | 0.3 C | 1 C | 3 C | test 0.1–1 C (worst) | test 3 C (worst) |
+| --- | --- | --- | --- | --- | --- | --- |
+| chem\_v4\_s0 | 0.69 | 0.35 | 0.93 | 6.70 | 0.68 (3.3) | 6.86 (11.3) |
+| chem\_v4\_s1 | 0.74 | 0.39 | 1.36 | 4.22 | 0.87 (3.5) | 4.37 (8.5) |
+| chem\_v4\_salt\_s0 | 0.75 | 0.43 | 0.50 | 6.79 | 0.60 (3.4) | 6.96 (10.7) |
+| chem\_v4\_warm\_s0 | 0.78 | 0.38 | 0.35 | 5.56 | 0.55 (4.2) | 5.70 (8.9) |
+| **chem\_v4\_warm\_salt\_s0 (chosen)** | 0.83 | 0.42 | 0.44 | 5.08 | 0.63 (4.3) | 5.20 (8.3) |
+| v3\_s1 (reference) | 5.6 | 3.6 | 1.9 | 7.9 | – | – |
+| v2 (reference, 0.1–1 C) | 1.1 | 0.9 | 1.3 | – | – | – |
+
+- **The exact inventory removed the drift.** At 0.1–1 C every v4 run is better than v2 (7–10 times better than v3 at 0.1–0.3 C) and the cliffs sit within 0.23 % of the FV position (v3: 1.2–2.2 %). All five runs pass the revised gate restricted to 0.1–1 C.
+- **3 C is the remaining limit** (test mean 4.4–7.0 mV). The worst case of every run is the box corner p6 (step 2 +0.26 V, b\_3 ×0.45, k0\_1 ×0.39): a smooth positive offset that grows late in the discharge (+24 mV at the cut-off), consistent with a salt polarization about 10 % too shallow. A minimum salt weight did not change it.
+- **Choice:** chem\_v4\_warm\_salt\_s0 is the tool network for 0.08–3 C (best balance); chem\_v4\_s1 (best at 3 C) is the cross-check for fits that use 3 C data. The scratch runs were still improving at 250 000 steps, so a continuation could lower the 3 C error.
 
 ### IX.4 Cost
 
@@ -587,13 +607,13 @@ holds exactly on the 12-node quadrature. λ is found by bisection in ln λ, then
 | Rate network (3a) | 17–19 h | \~75 SU per wave of 4–5 runs |
 | Chemistry v2 | 35–38 h | \~181 SU for 5 runs |
 | Chemistry v3 | 38–47 h | \~150–175 SU for 5 runs |
-| Chemistry v4 | \~85–95 h expected | \~350–400 SU for 5 runs |
+| Chemistry v4 | 50 h (warm starts, 150k steps), 80–85 h (from scratch, 250k steps) | \~350–400 SU for 5 runs |
 
 The group’s default Grace account had about 91 900 SU for fiscal year 2027, so compute is not the bottleneck.
 
 ## Part X. The two-curve tool (DONE)
 
-Given discharge curves of one cell at two or more currents, the tool returns eight effective parameters with uncertainties and validity flags in 35–70 s on one CPU core. On six published data sets it reaches the same optimum as a full FV fit (45 of 47 parameters within one standard deviation), and on synthetic data with a known answer it recovers the parameters to 0.1–2 % (docs/TWO\_CURVE\_TOOL.md; code src/dfn\_pinn/lispan/two\_curve.py; command scripts/lispan\_two\_curve\_fit.py).
+Given discharge curves of one cell at two or more currents, the tool returns eight effective parameters with uncertainties and validity flags in about 1–2 minutes on one CPU core (35–70 s with v2, 70–100 s with v4). On six published data sets it reaches the same optimum as a full FV fit (45 of 47 parameters within one standard deviation), and on synthetic data with a known answer it recovers the parameters to 0.1–2 % (docs/TWO\_CURVE\_TOOL.md; code src/dfn\_pinn/lispan/two\_curve.py; command scripts/lispan\_two\_curve\_fit.py).
 
 ### X.1 From a measured curve to the network’s inputs
 
@@ -626,13 +646,21 @@ The statistical covariance comes from the linearized problem, with the noise lev
 \mathrm{Cov}(\hat\theta) \approx s^2\,(J^\top W J)^{-1},\qquad s^2 = \frac{\sum_i w_i\, r_i^2}{N - p}
 ```
 
-To it the tool adds the network’s own error floor in quadrature, measured on the known-truth test (for v2: w\_S 0.14 %, dU0\_2 0.64 mV, dU0\_3rel2 2.1 mV, b\_12 0.22 %, b\_3 0.71 %, k0\_1 11.6 %, d 0.56 mV, Z 1.25 Ω cm²; for v3 two to eight times larger):
+To it the tool adds the network’s own error floor in quadrature, measured on the known-truth test (rms of the noise-free errors over the unflagged chemistries; `NETWORK_SD` in two\_curve.py):
+
+| Network (test pair) | w\_S | dU0\_2 | dU0\_3rel2 | b\_12 | b\_3 | k0\_1 | d | Z |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| v2 (0.2 + 0.6 C) | 0.14 % | 0.64 mV | 2.1 mV | 0.22 % | 0.71 % | 11.6 % | 0.56 mV | 1.25 Ω cm² |
+| v3\_s1 (0.2 + 2 C) | 0.34 % | 5.4 mV | 5.1 mV | 2.4 % | 2.9 % | 24 % | 4.5 mV | 2.9 Ω cm² |
+| **v4 warm\_salt\_s0 (0.2 + 2 C)** | 0.18 % | 1.1 mV | 3.3 mV | 0.42 % | 1.0 % | 3.5 % | 0.95 mV | 0.40 Ω cm² |
+
+The v4 floor is close to v2’s over a current ratio of 10 instead of 3. In the v4 test the box corner p6 is flagged (box edge, poorly identified) and its noise-free fit is wrong (w\_S +40 %): the flags catch it.
 
 ```latex
 \mathrm{sd}_{\mathrm{total}} = \sqrt{\mathrm{sd}_{\mathrm{stat}}^2 + \mathrm{sd}_{\mathrm{network}}^2}
 ```
 
-With the floor, 92–100 % of the errors on the synthetic test fall within 2 sd for every parameter (95 % expected).
+With the floor, 92–100 % (v2) and 85–100 % (v4) of the errors on the synthetic test with 5 mV noise fall within 2 sd (95 % expected).
 
 ### X.4 Validity flags
 
@@ -670,11 +698,21 @@ With the floor, 92–100 % of the errors on the synthetic test fall within 2 sd 
 
 ### X.6 Cost
 
-Network fit with 8 starts: 35–70 s on one core. FV check at the solution: 25–35 s. FV fit of the same points from the network’s solution: 12–50 min, i.e. 12–60 times longer, before counting multiple starts.
+Network fit with 8 starts: 35–70 s (v2) or 70–100 s (v4) on one core. FV check at the solution: 25–35 s. FV fit of the same points from the network’s solution: 12–50 min, i.e. 12–60 times longer, before counting multiple starts.
+
+### X.7 Series resistance of the real cell (added November 3)
+
+The fitted Z multiplies the network’s current density, i·m\_S,model/w\_S, not the real cell’s, i × loading. Equal voltage drops give the resistance of the real cell (two\_curve.z\_cell):
+
+```latex
+Z_{\mathrm{cell}} = \frac{Z_{\mathrm{fit}}\; m_{S,\mathrm{model}}}{w_S\; m_{\mathrm{basis}}},\qquad m_{S,\mathrm{model}} = 0.767\ \mathrm{mg\,S\,cm^{-2}}
+```
+
+with m\_basis the areal loading in the mass basis of the data’s capacity (mg S/cm² for capacities per g S, mg SPAN/cm² per g SPAN). Without this conversion the fitted Z of a cell with three times the model’s loading is three times too large, and high-loading cells reach the Z box edge (500 Ω cm²) for that reason alone. The geometry test (Part XIII) recovers the true Z of coin-cell geometries to −3 to −10 Ω cm² with the conversion. Comparisons within one paper (same loading) are unchanged.
 
 ## Part XI. SPAN-DB: structure and the agents that build it (RUNNING)
 
-SPAN-DB is a relational database of published Li‖SPAN cells built from the group’s folder of 542 SPAN papers. AI agents read each paper and write a structured brief with a page and quote for every value; deterministic scripts digitize the curves; a coordinating agent checks every result against the original figure. After ten batches it holds 38 extracted papers, 415 cells and 1670 curves (snapshot used for the fits: batch 10, October 28, 2026). The rules live in the project document INSTRUCCIONES\_SPAN\_DB.md; the data in Li-SPAN-Papers/span\_db/.
+SPAN-DB is a relational database of published Li‖SPAN cells built from the group’s folder of 542 SPAN papers. AI agents read each paper and write a structured brief with a page and quote for every value; deterministic scripts digitize the curves; a coordinating agent checks every result against the original figure. On November 3, 2026 (batch 35) it holds 120 extracted papers, 1185 cells and 4513 curves (3447 passing quality control, 1066 flagged); that snapshot is the one fitted in Part XII. The rules live in the project document INSTRUCCIONES\_SPAN\_DB.md; the data in Li-SPAN-Papers/span\_db/.
 
 ### XI.1 Rules that are never broken
 
@@ -719,12 +757,12 @@ The information level says what the fitting tool can obtain from a cell. Losses 
 | 3 | Level 2 + thickness and porosity | Transport with the real geometry (needs geometry inputs in the network) |
 | 4 | Level 3 + independent information (third rate, EIS, GITT or pulses) | Separation of resistance and kinetics, extrapolation, independent checks |
 
-Cells with curves after batch 10: 94 at level 1, 45 at level 2, 2 at level 3, 1 at level 4 (the paper’s own Simanjuntak cell). Geometry is the rarest information in the literature.
+Cells with an assigned level in the 120-paper snapshot: 219 at level 1, 152 at level 2, 2 at level 3, 1 at level 4 (the paper’s own Simanjuntak cell). Geometry is the rarest information in the literature: loading is reported for about 60 % of the electrodes, thickness for 15 %, porosity for 4 %; the separator type for about 69 % of the cells.
 
 ### XI.4 The pipeline: what scripts do and what agents do
 
 1. **Stage 0, inventory (script).** 876 files (762 PDF, 98 docx, others; 3.7 GB) became 542 articles; 329 of 334 supplementary files were paired with their article (by publisher identifier, title or DOI). Text is extracted and cached. Bibliographic data come from the PDFs because Crossref is not reachable from the sandbox.
-2. **Stage 1, triage (script plus model reading).** A script collects figure captions and sentences that mention rates; a model reads them in batches and assigns relevance: A = voltage curves at two or more rates on one electrode, B = one rate, C = only single values, D = review or out of scope. Current counts: A 107, B 160, C 31, D 244.
+2. **Stage 1, triage (script plus model reading).** A script collects figure captions and sentences that mention rates; a model reads them in batches and assigns relevance: A = voltage curves at two or more rates on one electrode, B = one rate, C = only single values, D = review or out of scope. Current counts (November 3): A 97, B 169, C 32, D 244.
 3. **Stage 2, metadata (one agent per paper).** A Claude agent (Opus 5.5, high effort) reads the full paper and supplement and fills a JSON brief with materials, electrodes, cells, tests and the list of panels with curves, every value with page and quote, under the rule “never assume”. The JSON is loaded into the tables by code.
 4. **Stages 3–4, digitization (agent plus scripts).** The agent writes a specification per figure panel: which series, which colours or line styles, which legend label, the axis tick values. Deterministic scripts do the extraction. Vector figures are read from the PDF’s drawing commands, with axes calibrated on the tick marks (calibrating on label centres left a +8 mV, −0.5 % bias). Raster figures are taken as the embedded image at native resolution and traced by colour (hue masks for pastel palettes), with discharges forced to be non-increasing in voltage and hidden segments left out and flagged. Figures inside Word supplements are read from their EMF vector records or TIFF images.
 5. **Stage 5, quality control (coordinator agent).** Overlay images of every extracted curve on the original panel; end capacities compared with the values printed in the text (±5 %); rate-order and window checks; flags. The coordinator reviews every specification and removes, with explicit ranges, points that jumped to a neighbouring line at crossings.
@@ -751,13 +789,13 @@ The blind re-extraction found three values the first run had wrong. The most con
 
 These are flagged, never corrected, and the fitting rules (Part XII.1) work around them.
 
-## Part XII. Results on the SPAN-DB cells (DONE, first pass)
+## Part XII. Results on the SPAN-DB cells (DONE for the 120-paper snapshot)
 
-Of the 47 SPAN-DB cells with discharge curves at two or more currents, 35 could be fitted with the v2 network and 22 are described by the continuum model within 25 mV (median 13.9 mV), the same level as the model achieves on its own paper’s cell. All five LHCE cells are described; dilute solvating ethers and inorganic solid electrolytes mostly are not. Where the model fits, a third current between the two calibration currents is predicted within 10–25 mV, and same-electrode comparisons give measurable differences such as +95 ± 5 Ω cm² of series resistance for an HCE against an LHCE (docs/SPANDB\_FITS.md; results in results/lispan/spandb/).
+With 120 papers extracted (1185 cells), 131 cells have discharge curves at two or more currents. The v4 network fits 113 of them; 75 are within 25 mV (median 15 mV), the level the model reaches on its own paper’s cell, and **44 are “described”**: they also predict the currents not used in the fit within 25 mV, with the network within 5 mV of the solver and a plausible sulfur utilization. Inside single papers, the fits give measurable differences between electrolytes, such as an HCE needing about three times the series resistance of its LHCE. The cells the model does not describe (solid inorganic electrolytes, some ether cells) are themselves informative (docs/SPANDB\_FITS.md; results/lispan/spandb\_v4ws\_120/; figures report/spandb/figures/v4\_120/).
 
-### XII.1 Curve-selection rules (learned from a first run)
+### XII.1 Curve-selection rules
 
-A first run with simple rules produced fits of 83–157 mV for some cells. Every one of them traced back to the data chosen, not to the model, and six rules were added (the first run is kept in results/lispan/spandb\_run1/):
+A first run with simple rules (October 30, v2 network) produced fits of 83–157 mV for some cells; every one traced back to the data chosen, not to the model. The rules added then are applied unchanged since:
 
 | Rule | Case that motivated it |
 | --- | --- |
@@ -765,90 +803,174 @@ A first run with simple rules produced fits of 83–157 mV for some cells. Every
 | Rate order: over the common capacity window, mean voltage must fall with current (25 mV tolerance); the worst violator, or the slowest on a tie, is dropped | The slowest step of a rate test often contains the activation; Li 2023: 157 mV with it, 10.6 mV without |
 | Partial curves (points start after 15 % of the end capacity) are dropped when two complete curves remain | A 0.05 A/g curve digitized only in its tail (Qin 2024) |
 | An unreported capacity basis is taken equal to the current basis; both unreported = one unknown basis (w\_S then not comparable with the S content) | 7 cells had been skipped |
-| Calibration pair: slowest and fastest currents whose estimated model rates lie 1.25× inside the network’s range; fallback: the pair whose allowed w\_S range is closest to the estimate | The widest pair pinned w\_S far from the estimate (Wang 2024 C1: 72 → 36 mV) |
+| Se- or Te-doped SPAN with capacity per g (S + Se/Te) or per g SeS₂ is fitted on that basis, the current taken on the same basis (added November 2) | 12 doped-SPAN cells had been skipped |
+| Calibration pair: slowest and fastest currents whose estimated model rates lie 1.25× inside the network’s range (0.08–3 C with v4); fallback: the pair whose allowed w\_S range is closest to the estimate | The widest pair pinned w\_S far from the estimate (Wang 2024 C1: 72 → 36 mV) |
 | Predictions are scored only where the network is inside its time window | Beyond it the network extrapolates and produces spurious dips |
+| Each FV solve of the self-check is limited to 180 s (added November 3) | Two stiff solves held their workers for more than 15 minutes |
 
-These rules were written after seeing the 47 cells. To be an honest test they must now be frozen and applied unchanged to the next SPAN-DB batches.
+The first rules were written after seeing the first 47 cells. The 84 cells added since (95-paper and 120-paper snapshots) were fitted with the same rules, so they are a first out-of-sample test: the fraction of fitted cells within 25 mV did not drop (63 % with v2 on the first 35 cells, 68 % with v4 on the same cells, 69 % at 95 papers, 66 % at 120).
 
 ### XII.2 From the folder to the fits
 
-![Funnel: 542 PDF articles, 107 with profiles at two or more rates, 38 extracted (415 cells, 1670 curves), 47 cells with two or more discharge currents, 35 fitted, 22 described within 25 mV](../report/spandb/figures/sdb_funnel.png)
+![Funnel: 542 PDF articles, 97 with profiles at two or more rates, 120 extracted (1185 cells, 4513 curves), 131 cells with two or more discharge currents, 113 fitted, 75 within 25 mV, 44 described](../report/spandb/figures/v4_120/sdb_funnel.png)
 
-The 12 cells not fitted: 8 without two usable currents (capacity per area or per cell, or only a first cycle plus one other) and 4 whose currents lie outside 0.1–1 C at any utilization (Wu 2023b at 2–3 C, Shao 2024 at 0.05 and 1 C, Chen 2024 C4 at 0.01–0.05 C). The v3 network covers part of them.
+Of the 18 cells not fitted, 17 have no two usable currents (capacity per area or per cell, or only first cycles plus one other) and one has its currents below 0.08 C. With the v2 network (0.1–1 C) four cells with only fast currents had been out of reach; with v4 they are fitted (for example Wu 2023b at 2–3 C, 10 mV).
+
+**What counts as described.** The rule used from November 2 on (report/spandb/make\_spandb\_figures.py, described()):
+
+1. misfit of the two calibration curves ≤ 25 mV;
+2. every blind prediction of a current between them ≤ 25 mV (when the cell has one);
+3. network versus FV at the fitted parameters ≤ 5 mV;
+4. w\_S ≤ 1.6 (above it the capacity exceeds even the theoretical capacity of sulfur: a basis error is more likely than a real cell).
+
+Rule 2 matters: of the 75 cells within 25 mV, several fit easily because one curve is short, and then miss the middle current by 40–100 mV (Chen 2024 C3: 17 mV fit, 99 mV prediction).
 
 ### XII.3 Fit quality by electrolyte family
 
-![Misfit of the 35 fitted cells by electrolyte family on a log scale; grey ticks show the network-versus-solver error at each fit](../report/spandb/figures/sdb_misfit.png)
+![Misfit of the 113 fitted cells by electrolyte family on a log scale; filled points are described cells, hollow points fit within 25 mV but fail a check; grey ticks show the network-versus-solver error at each fit](../report/spandb/figures/v4_120/sdb_misfit.png)
 
-Each dot is a cell (rms misfit of its two calibration curves); the grey tick below it is the FV solver run at the fitted parameters and compared with the network. For the 22 described cells that network-versus-solver difference has a median of 1.9 mV and a maximum of 4.9 mV, so the misfit above it belongs to the model, not to the network.
+The grey tick under each dot is the FV solver run at the fitted parameters and compared with the network: median 1.1 mV for the cells within 25 mV, so the misfit belongs to the model, not to the network.
 
-| Family | Fitted | Within 25 mV | Not described (misfit) |
-| --- | --- | --- | --- |
-| Carbonate | 12 | 7 | Shi 2024 C1/C2 (34, 39 mV), Wang 2024 C1 (36), Ma 2026 C1/C2 (26, 47) |
-| Dilute ether | 6 | 2 (Chen 2019 DOL/DME 15 mV; Qin 2024 DEE 11 mV) | Wang 2023 DOL/DME + LiNO₃ (82), Jia 2024 DOL/DME (48, 38), Wu 2024 DME (52) |
-| LHCE | 5 | 5 (11–21 mV) | — |
-| HCE | 2 | 1 (Chen 2024, 2,5-dimethyl-THF, 10 mV) | Chen 2024 THF (60) |
-| Fluorinated (commercial) | 3 | 2 | Zuo 2024 C4 (64) |
-| Other liquid | 1 | 1 (Li 2023, silane solvent, 11 mV) | — |
-| Polymer or solid | 6 | 4 (gel, two in-situ poly-DOL, polymer-in-salt) | Shi 2023b garnet LLZO (72), Jin 2024 hydride (57) |
+| Family | Fitted | Within 25 mV | Described | Notes |
+| --- | --- | --- | --- | --- |
+| Carbonate | 45 | 37 | 19 | The largest group; failures include Ma 2026, Shi 2024 C1 |
+| Dilute ether | 25 | 14 | 9 | DOL/DME 22 cells: 8 described, 9 above 25 mV; pure DME 2 (both fail); DEE 1 (described) |
+| LHCE | 10 | 9 | 7 | The best-described family |
+| HCE | 3 | 2 | 1 | Chen 2024 THF HCE fits only with a short fast curve and misses its prediction |
+| Fluorinated (commercial) | 5 | 2 | 2 | |
+| Other liquid | 9 | 5 | 2 | |
+| Polymer or solid | 15 | 5 | 4 | All five LGPS all-solid-state cells fail (96–156 mV) |
+| Not reported | 1 | 1 | 0 | |
 
-**Interpretation (hypothesis):** solvating ethers can dissolve sulfur species from SPAN, a shuttle-like loss the model does not contain, while weakly solvating ethers (DEE) and LHCEs suppress dissolution and behave like the solid–solid model. Inorganic solid electrolytes impose polarizations far above the model’s resistance range. The sample per family is small (2–12 cells), so these are hypotheses for the full database, not conclusions.
+**Interpretation.** The October hypothesis, that solvating dilute ethers fail because sulfur species dissolve (a loss the model does not contain), does not hold as a rule: with 25 ether cells, the same DOL/DME electrolyte is described in some papers and not in others. What decides is a combination of electrode, cell and electrolyte, not the electrolyte family alone. Inorganic solid electrolytes impose polarizations far above anything the liquid-electrolyte model can produce, and fail consistently.
 
 ### XII.4 What a described and an undescribed cell look like
 
-![Four fits: Qin 2024 DEE (11 mV, with a predicted 0.2 A/g curve), Chen 2024 HCE (10 mV), Wu 2024 DME (52 mV), Shi 2023b LLZO (72 mV)](../report/spandb/figures/sdb_examples.png)
+![Four fits: Qin 2024 DEE (11 mV, predicted 0.2 A/g curve 12 mV), Chen 2024 HCE (12 mV, predicted 1.0 C curve 14 mV), Wu 2024 DME (61 mV), Shi 2023b LLZO (45 mV)](../report/spandb/figures/v4_120/sdb_examples.png)
 
-Dots are digitized data, lines the network fit, dashed green a current not used in the fit. The bottom cells have curve shapes the model cannot produce; their parameters sit at the edges of the box, and the tool flags them so they are not interpreted.
+Dots are digitized data, lines the network fit, dashed green a current not used in the fit. The bottom cells have curve shapes the model cannot produce (a high-voltage shoulder and a different fast-curve shape for DME; a 400 mV lower start of the fast curve for the garnet solid electrolyte); their parameters sit at box edges and the tool flags them.
 
-### XII.5 Blind prediction of a third current
+### XII.5 Blind prediction of the currents not used in the fit
 
-![Prediction error of a third current against the calibration misfit, log axes; filled points are interpolations, hollow points extrapolations; blue cells are described by the model](../report/spandb/figures/sdb_predictions.png)
+![Prediction error of the currents not used in the fit against the calibration misfit, log axes; filled points are interpolations, hollow points extrapolations; blue cells fit within 25 mV](../report/spandb/figures/v4_120/sdb_predictions.png)
 
-For the 22 described cells: eight currents between the two calibration currents are predicted within 10–25 mV (0.8–2.2 times the fit’s own misfit); seven currents outside them within 16–55 mV (1.3–4.5 times). Undescribed cells predict badly in both cases, as expected.
+For the 75 cells within 25 mV: 101 currents between the two calibration currents are predicted with a median error of 22 mV (66 within 25 mV); 45 currents outside them with a median of 37 mV (12 within 25 mV). Cells that do not fit predict badly in both cases. The practical rule for experiments follows: calibrate on the slowest and the fastest current of interest and interpolate.
 
 ### XII.6 Same electrode, different electrolyte
 
-![Fitted series resistance, common potential shift and step-2 potential, with one-sd error bars, for same-electrode cells in Qin 2024, Chen 2024, Wu 2024 and Chen 2019](../report/spandb/figures/sdb_controlled.png)
+![Fitted series resistance, common potential shift and step-2 potential, with one-sd error bars, for same-electrode cells in Qin 2024, Chen 2024, Wu 2024 and Chen 2019](../report/spandb/figures/v4_120/sdb_controlled.png)
 
-Within one paper the electrode, loading and cell format are the same, so differences in fitted parameters reflect the electrolyte. Error bars are one standard deviation including the network floor; hollow symbols are parameters at a box edge.
+Within one paper the electrode, loading and cell format are the same, so differences in fitted parameters reflect the electrolyte, and the geometry bias of Part XIII is nearly common to both cells. Error bars are one standard deviation including the network floor.
 
-- **Chen 2024:** the HCE (3 m LiFSI in 2,5-dimethyltetrahydrofuran) needs Z = 95 ± 5 Ω cm², the LHCE (same salt and solvent plus a fluorinated diluent) 0 ± 7. Consistent with the higher viscosity and lower conductivity of an HCE.
-- **Qin 2024:** DEE, DEE/ETFE (LHCE) and the LHCE with 10 % ionic liquid give the same step-2 potential (35–36 ± 6 mV) and the same utilization (w\_S 0.68–0.71); they differ only in resistance (17, 38, 7 Ω cm², ± 6–7).
-- **Chen 2019 (Se-doped SPAN):** carbonate shifts all potentials by −39 ± 9 mV relative to the ether electrolyte (d = −31 ± 6 vs +8 ± 7 mV).
-- **Wu 2024:** shown but not interpreted (the DME/TTE cell’s step-1 rate constant is at the box edge and its error bars are wide).
+- **Chen 2024:** the HCE (3 m LiFSI in 2,5-dimethyltetrahydrofuran) needs Z = 93 ± 3 Ω cm² in network units, the LHCE (same salt and solvent plus a fluorinated diluent) 27 ± 2; converted to the real cells (0.7 mg SPAN/cm², Part X.7) 243 and 58 Ω cm². Consistent with the higher viscosity and lower conductivity of an HCE.
+- **Qin 2024:** DEE, DEE/ETFE (LHCE) and the LHCE with 10 % ionic liquid give the same step-2 potential (34–37 ± 6 mV) and utilization (w\_S 0.68–0.71); they differ only in resistance (real cells 22, 27 and 5 Ω cm²).
+- **Chen 2019 (Se-doped SPAN):** carbonate shifts all potentials by −42 ± 9 mV relative to the ether electrolyte (d = −18 ± 7 vs +24 ± 7 mV).
+- **Wu 2024:** shown but not interpreted (the DME/TTE cell misses its blind prediction).
+
+These differences were the same with the v2 network (0.1–1 C calibration) and with v4 (calibration up to 2–2.5 C), except the LHCE resistance of Chen 2024 (0 → 27 Ω cm² in network units) that changes with the faster curve. With 120 papers, eleven papers have two or more described cells on one electrode, the material for a systematic electrolyte comparison.
 
 ### XII.7 Sulfur utilization and the sulfur content
 
 The tool does not measure the sulfur content; w\_S is the scale between the data’s capacity and the model’s sulfur.
 
-- For the 8 described cells with capacity per gram of SPAN and a reported S content (37.8–47.6 wt%), w\_S follows the S content (correlation 0.89) with w\_S / S fraction = 1.02–1.48 (median about 1.35).
-- For the 9 described cells with capacity per gram of S, w\_S = 1.14–1.43 in eight of them: the same factor (the ninth, Shi 2023a C3 at 0.96, sits at the 25 mV limit with parameters at the box edge).
+- For described cells with capacity per gram of SPAN and a reported S content, w\_S follows the S content (correlation 0.89 in the 35-cell set) with w\_S / S fraction = 1.0–1.5.
+- For described cells with capacity per gram of S, w\_S is mostly 1.14–1.43.
 
-Real coin cells therefore deliver 1.2–1.4 times the model cell’s capacity at the same normalized rate. This is a geometry and transport factor (the model cell has a 618 µm glass-fibre separator), not chemistry. The ratio w\_S / S fraction is a useful relative utilization inside one paper (Qin 2024: 1.42 / 1.44 / 1.48; Chen 2024: LHCE 1.27 vs HCE 1.02), but as an estimator of the S content it would be good only to about ±15 %, against ±1–2 % for elemental analysis.
+**Corrected interpretation (November 3).** This had been read as a geometry or transport factor. The geometry test (Part XIII) rules that out: coin-cell geometries change w\_S by less than 1 %. The reason is the model’s stoichiometry: its PAN-S4-PAN chain gives 6 electrons per 4 S atoms, 1254 mAh/g S, while sulfur itself allows 1675 mAh/g (w\_S = 1.34). w\_S of 1.2–1.34 on an S basis therefore means that the SPAN delivers 1.6–1.8 electrons per S, more than the model’s chain; values above 1.34 exceed sulfur itself and point to a basis or conversion problem in the data. The ratio w\_S / S fraction is a useful relative utilization inside one paper; as an estimator of the S content it is good only to about ±15 %.
 
-### XII.8 With the v3 network (0.08–3 C), preliminary
+### XII.8 Data problems found by the fits
 
-The same fits with the wider-range v3 network (larger error floor) are running (results/lispan/spandb\_v3s1/). Of the first 11 cells: Chen 2019 ether and carbonate fit at 13.1 and 14.4 mV and now predict their faster currents (23–25 mV for ether; 18 and 69 mV for carbonate); Wu 2023b, unreachable with v2, fits at 9.8 mV; Wang 2023 (DOL/DME + LiNO₃) stays undescribed at 76 mV. The full comparison will be added when the run completes.
+The fits work as a quality check of SPAN-DB. Flagged for checking in the database (read-only from this side):
 
-## Part XIII. Practical applications
+- Shao 2024 C2: a curve labelled “CIHP-SPAN” paired with a “2nd” cycle (227 mV): not one cell’s rate test.
+- Capacity or current basis: w\_S above 1.6 in 2014 20140515 C1/C2 (2.5–2.9), Warneke 2017 C1 (3.0, 317 mV), Chen 2020 C4 (2.39), Lu 2020 C2 (2.47), Jerez 2021 C1 (1.86).
+- Voltage axis: Song 2021 C1/C2 and Li 2017 C3 fit only with the common shift at its −200 mV bound.
+- Doped-SPAN tests store the current basis as “S” while their definition is per (S + Se) or (S + Te).
+
+### XII.9 History of the runs
+
+| Date | Snapshot | Network | Cells with ≥ 2 currents | Fitted | ≤ 25 mV | Described |
+| --- | --- | --- | --- | --- | --- | --- |
+| Oct 30 | 38 papers | v2 (0.1–1 C) | 47 | 35 | 22 | (rule not yet defined) |
+| Nov 2 | 38 papers | v4 (0.08–3 C) | 47 | 38 | 26 | 20 |
+| Nov 3 | 95 papers | v4 | 115 | 100 | 69 | 41 |
+| Nov 3 | **120 papers** | v4 | **131** | **113** | **75** | **44** |
+
+## Part XIII. Cell geometry: how much the fixed geometry matters (step 0 DONE; geometry network PROPOSED)
+
+The network knows one cell: the Simanjuntak test cell, with a 100 µm cathode of low SPAN fraction (porosity 0.87, 0.77 mg S/cm² in the model) and a 618 µm glass-fibre separator. A known-truth test with other geometries shows that this mismatch is **invisible in the fit** (misfit 3–7 mV for coin-cell-like cells) but shifts the step potentials by 10–15 mV and the step-1 rate constant by 20–30 %. The sulfur utilization w\_S is **not** affected (< 1 %), and the series resistance is recovered to within 3–10 Ω cm² once it is converted to the real cell’s area (Part X.7). Within one geometry the shifts are nearly the same for every chemistry, which is why comparisons inside a paper hold (docs/GEOMETRY.md; scripts/lispan\_geometry\_bias.py; results/lispan/geometry/).
+
+### XIII.1 The test
+
+FV discharges are generated for a cell with another geometry and a known chemistry, converted to specific capacity and specific current exactly like literature data, and fitted with the v4 network as SPAN-DB cells are. The fitted parameters minus the truth are the bias that the geometry alone causes.
+
+- **Geometry transform.** Cathode thickness L\_cat; SPAN volume fraction ε\_SPAN = f × 0.0945, with the carbon fraction, the chain concentrations (initial and reference) and the specific surface a\_SPAN scaled by the same f, so the chemistry per chain is unchanged; separator thickness, porosity and Bruggeman exponent (effective transport = porosity^β).
+- **Same specific current = same C-rate** in every cell (1 C = 1.30 A per g of S).
+- **Truth:** w\_S = 1, four chemistries (the nominal one and those fitted to Hao 2025, Chen 2019 and SPAN300), d = 0, Z = 20 Ω cm² (and 50 in a check). Calibration 0.2 + 2 C; blind predictions at 0.5 and 1 C.
+
+| Geometry | Cathode | Separator | Loading (mg S/cm²) | Cathode porosity |
+| --- | --- | --- | --- | --- |
+| ref | 100 µm, f = 1 | 618 µm glass fibre | 0.77 | 0.87 |
+| celgard | 100 µm, f = 1 | 25 µm, porosity 0.41, β = 2.33 (MacMullin number about 8, assumed) | 0.77 | 0.87 |
+| thick2x | 200 µm, f = 1 | glass fibre | 1.53 | 0.87 |
+| dense3 | 67 µm, f = 3 | glass fibre | 1.54 | 0.62 |
+| dense4 | 75 µm, f = 4 | glass fibre | 2.30 | 0.49 |
+| coin\_mid | 67 µm, f = 3 | Celgard-type | 1.54 | 0.62 |
+| coin\_high | 75 µm, f = 4 | Celgard-type | 2.30 | 0.49 |
+
+### XIII.2 Results
+
+![Bias of the fitted parameters when coin-cell-like data are fitted with the network trained for the reference test cell: step-2 potential, step-1 rate constant and real-cell resistance, for each geometry and chemistry. The misfit stays at 3–4 mV, so the bias is invisible in the fit quality.](../report/geometry/figures/geo_bias.png)
+
+Mean bias over the four chemistries (spread between chemistries in brackets); Z converted to the real cell.
+
+| Geometry | Misfit (mV) | w\_S (%) | dU0\_2 (mV) | dU0\_3rel2 (mV) | b\_12 (%) | k0\_1 (%) | d (mV) | Z real cell (Ω cm²) | Blind prediction (mV) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| ref | 0.9 | 0.0 (0.0) | +0.8 (1.1) | −1.0 (2.7) | 0.0 (0.2) | +3 (3) | −0.4 (0.9) | +0.4 | 0.6 |
+| celgard | 3.0 | +0.1 (0.3) | −1.3 (1.7) | +0.8 (8.0) | −2.8 (0.4) | −3 (5) | −2.5 (0.7) | −20 | 2.1 |
+| thick2x | 6.0 | −0.5 (0.7) | +15.5 (3.6) | +2.0 (10) | +4.1 (2.5) | +83 (40) | −6.8 (6.6) | +35 | 7.1 |
+| dense3 | 4.0 | −0.3 (0.2) | −6.1 (7.3) | −7.4 (5.6) | +5.7 (0.5) | −16 (21) | +14.7 (5.1) | +16 | 4.0 |
+| dense4 | 16.7 | −16 (11) | +76 (50) | +106 (108) | +8 (10) | +373 (71) | +18 (14) | +37 | 37 |
+| coin\_mid | 3.3 | +0.1 (0.3) | −8.4 (3.0) | −2.9 (6.4) | −1.9 (0.5) | −17 (8) | +1.5 (2.1) | −10 | 2.7 |
+| coin\_high | 3.6 | +0.1 (0.4) | −15.0 (4.0) | −7.0 (8.7) | −0.6 (1.1) | −29 (7) | +6.1 (4.3) | −3 | 3.2 |
+
+1. **The bias is invisible in the fit.** Except for the extreme dense4 cell (dense cathode behind a thick glass-fibre separator), misfits stay at 3–7 mV and blind predictions at 2–7 mV. A good fit does not prove that geometry is harmless.
+2. **w\_S is not a geometry effect** (below 1 % for every coin-like geometry). The w\_S of 1.2–1.4 found for literature cells on a sulfur basis therefore means that those cells deliver more than the model’s chain allows: the model’s PAN-S4-PAN chain holds 6 electrons per 4 S atoms, 1254 mAh/g S, while sulfur itself allows 1675 mAh/g (w\_S = 1.34). The earlier reading of w\_S as a geometry or transport factor (October report) was wrong and has been corrected.
+3. **Z carries the loading.** The fitted Z multiplies the network’s current density; converted with Part X.7 the remaining error is −3 to −10 Ω cm² for coin cells (+16 to +37 for glass-fibre cells with thick or dense cathodes), the same for a true Z of 20 or 50 Ω cm².
+4. **Potentials and kinetics move:** dU0\_2 −8 to −15 mV, k0\_1 −17 to −29 %, d +2 to +6 mV for coin-like cells; a thick cathode behind glass fibre moves k0\_1 by +80 %.
+5. **Within one geometry the bias is nearly common to all chemistries** (spread: dU0\_2 3–4 mV, d 2–4 mV, k0\_1 7–8 %, b\_12 ≤ 1 %, Z about 1 Ω cm² for coin cells). Comparisons inside one paper are therefore robust; across papers, differences of about 10–20 mV in the potentials or a factor of about 1.3 in k0\_1 can be geometry.
+
+### XIII.3 Geometry as network inputs (network v5, IMPLEMENTED, not trained)
+
+**Physical reduction.** At fixed composition, transport in the cathode (salt diffusion, migration and solid conduction alike) depends on the C-rate times the thickness squared, while the reaction kinetics depend on the C-rate alone; the separator enters through its effective length L\_sep/porosity^β. Two or three inputs are therefore enough:
+
+| Input | Source in SPAN-DB | Coverage |
+| --- | --- | --- |
+| Cathode thickness, from the loading at a reference density | loading (mg S or SPAN per cm²) | about 60 % of electrodes |
+| SPAN fraction or porosity of the cathode | thickness and porosity, rarely reported | 15 % and 4 %; typical value with a wide prior otherwise |
+| Separator effective length | separator type → catalogue thickness and porosity (derived value with its formula) | about 69 % of cells |
+
+**Step 1 (November 3, docs/GEOMETRY.md).** An FV-only emulation of a network that knows part of the geometry (Gauss-Newton fits with FV curves of the reduced cell; it reproduces the real v4 bias to within 1 mV and 1 %) shows that the cathode density is the dominant variable (at porosity 0.37 the v4 cell biases dU0\_2 by −20 to −30 mV and k0\_1 by −40 to −47 %; knowing only the loading still leaves −10 to −15 mV), that thickness at fixed density acts mostly as a resistance, and that 20–25 µm polyolefin separators are interchangeable (≤ 0.6 mV, 2 %) while glass fibre is not (1 SPAN-DB cell). **Network v5** therefore takes ln L\_cat (20–200 µm) and the SPAN scale factor f (1–5, porosity 0.87–0.37) as inputs, with a fixed 25 µm polyolefin separator and a transport domain I·L/porosity^1.5 ≤ 0.03 A/m, loading ≤ 6 mg S/cm². The model, residuals, sampler, FV design (6569 discharges), window correction, 96 evaluation references, training script, configs and Slurm arrays are written and tested (5 unit tests, 40-step smoke run); the design and the training (about 450–500 SU) run on Grace.
+
+## Part XIV. Practical applications
 
 The tool turns two discharge curves of a SPAN cell into a diagnosis: whether the voltage and capacity lost at high current come from resistance, from slow reactions or from sulfur that does not take part, with error bars and a warning when the model does not apply. That diagnosis takes about a minute and needs no simulation expertise. This part lists what it is good for, what an experimentalist has to provide, and what it cannot do.
 
-### XIII.1 What the tool returns, in experimental language
+### XIV.1 What the tool returns, in experimental language
 
 | Output | Chemical meaning | What typically changes it | Typical use |
 | --- | --- | --- | --- |
 | Step potentials (d, dU0\_2, dU0\_3rel2) | Thermodynamics of reducing the bound sulfur: how easily each S–S environment is reduced (for steps 2–3 including their kinetics, Part VIII.1) | Chain length and synthesis temperature, dopants (Se), electrolyte solvation | Compare materials and electrolytes; compare with DFT reduction potentials |
 | OCV slopes (b\_12, b\_3) | Spread of sulfur environments: a steeper slope means more heterogeneous sites | Synthesis, dopants, polymer structure | Track structural changes between syntheses |
 | Step-1 rate constant (k0\_1) | Speed of the first reduction, i.e. a kinetic loss | Catalysts, dopants, SPAN conductivity | Judge whether a catalyst acts on the first step |
-| Series resistance Z (Ω cm²) | All ohmic-like losses the model does not resolve: contacts, electrolyte conductivity, interphases | Electrode processing, electrolyte, aging | Compare with EIS; separate ohmic from kinetic losses |
-| Utilization w\_S | Capacity scale relative to the model’s sulfur; divided by the S fraction, a relative utilization | Inaccessible sulfur, first-cycle loss, synthesis; also cell geometry today | Track lost active sulfur over cycles or across a series |
+| Series resistance Z (Ω cm²) | All ohmic-like losses the model does not resolve: contacts, electrolyte conductivity, interphases | Electrode processing, electrolyte, aging | Compare with EIS (after conversion to the real cell’s area, Part X.7); separate ohmic from kinetic losses |
+| Utilization w\_S | Capacity scale relative to the model’s sulfur (1254 mAh/g S); divided by the S fraction, a relative utilization | Inaccessible sulfur, first-cycle loss, synthesis, electrons delivered per S; not cell geometry (Part XIII) | Track lost active sulfur over cycles or across a series |
 | Misfit and flags | Whether the continuum model applies | Shuttle (dilute ethers), solid electrolytes, activation, digitization problems | Decide whether to trust the parameters; spot missing physics |
 | Predicted curves | Voltage and capacity at currents not measured | — | Plan tests; fill gaps in a rate study (interpolation only) |
 
 The key separation is of the loss with current into three causes that look alike by eye: resistance (grows linearly with current), kinetics (grows with the logarithm of current) and missing sulfur (a capacity scale).
 
-### XIII.2 Applications for an experimentalist
+### XIV.2 Applications for an experimentalist
 
 1. **Diagnose a new material.** A cell that loses capacity at 1 C can do so because of contact (high Z), slow reactions (low k₀ or low effective potentials) or inaccessible sulfur (low w\_S). Each points to a different fix: electrode processing or electrolyte; a catalyst or dopant; the synthesis.
 2. **Compare electrolytes or materials quantitatively.** Say “electrolyte B adds 95 ± 5 Ω cm²” instead of “B shows more polarization”. Most reliable inside one paper or one cell format.
@@ -858,27 +980,27 @@ The key separation is of the loss with current into three causes that look alike
 6. **Check data quality.** The selection rules and flags catch activation curves, inverted rate order, partial curves and inconsistent mass bases before they mislead.
 7. **Place a cell against the literature.** Once SPAN-DB is complete, a new cell’s parameters can be compared with the distribution of published cells of the same electrolyte family.
 
-### XIII.3 Applications for the group
+### XIV.3 Applications for the group
 
 - **Bridge to DFT.** The group’s DFT work can compute reduction potentials of PAN-bound sulfur chains (the existing SPAN320 models of the Nat. Mater. 2026 paper are a starting point). The tool supplies per-step effective potentials from real curves; differences between materials or chain lengths are the robust quantities to compare on both sides.
 - **Internal SPAN curve reader.** The owner decided (October 13) that the reader is an internal repository tool, not a public web application, because Battery500 data are confidential. The trained network itself may be made public (advisor’s approval).
-- **Literature meta-analysis.** Turning SPAN-DB into a comparison of electrolytes and syntheses with uncertainties (Part XV).
+- **Literature meta-analysis.** Turning SPAN-DB into a comparison of electrolytes and syntheses with uncertainties (Part XVI).
 - **Model development.** Cells the model cannot describe are a map of missing physics (shuttle, solid-electrolyte transport, in-particle transport), which tells where the next model extension pays.
 - **Teaching.** The DFN and Li-SPAN work is a complete worked example of forward and inverse modeling, identifiability and PINN pitfalls, documented with negative results.
 
-### XIII.4 What an experimentalist must provide
+### XIV.4 What an experimentalist must provide
 
 | Item | Why | Without it |
 | --- | --- | --- |
 | Discharge curves at two or more currents, same electrode, after conditioning | Losses need two currents | Only step potentials (level 1) |
 | Specific current and capacity on a stated mass basis (S, SPAN or electrode), and the definition of 1 C | The model rate depends on it | w\_S not comparable; the basis is assumed |
 | S content and how it was measured | To turn w\_S into a utilization | No utilization |
-| Loading (mg/cm²) | Resistance per area | Z only relative |
+| Loading (mg/cm²) | Converts Z to the real cell (Part X.7); future geometry input | Z only relative |
 | Electrode thickness and porosity; separator | Geometry inputs (future network) | Geometry absorbed into w\_S and Z |
 | EIS before and after the rate test | Independent check of Z | Z unchecked |
 | Electrolyte composition, E/S ratio, temperature | Interpretation | Weaker comparisons |
 
-### XIII.5 A worked example of use
+### XIV.5 A worked example of use
 
 A student makes SPAN at two synthesis temperatures and tests both in the same carbonate electrolyte at 0.1, 0.5 and 1 C after three formation cycles.
 
@@ -888,20 +1010,20 @@ A student makes SPAN at two synthesis temperatures and tests both in the same ca
 4. If both fits are clean, compare: a lower w\_S/S at equal Z means sulfur lost; a higher Z at equal w\_S means contact or processing; lower effective potentials of steps 2–3 mean harder reduction (chain length or kinetics, inseparable).
 5. Check the 0.5 C prediction against the measured 0.5 C curve. Agreement within about the fit misfit supports the calibration.
 
-### XIII.6 What the tool cannot do (today)
+### XIV.6 What the tool cannot do (today)
 
 - Separate the rate constants of steps 2–3 from their potentials (no data can).
 - Return electrolyte transport properties (not visible in discharge voltage).
-- Give geometry-independent absolute values: thickness, porosity and separator are absorbed into w\_S and Z until the network takes them as inputs.
+- Give geometry-independent absolute potentials and rate constants: thickness, porosity and separator shift them by about 10–15 mV and 20–30 % (Part XIII) until the network takes geometry as inputs. Z can already be converted to the real cell if the loading is known; w\_S is not affected.
 - Describe the first cycle, a shuttle, or inorganic solid electrolytes.
-- Extrapolate safely beyond the fastest calibration current, or beyond 1 C with v2.
+- Extrapolate safely beyond the fastest calibration current, or beyond 3 C (v4) or 1 C (v2).
 - Replace elemental analysis for the S content (w\_S is good to about ±15 % as an S estimator).
 
-## Part XIV. Limitations
+## Part XV. Limitations
 
-The largest limitation is that every fitted parameter is “effective”: the network knows one cell geometry, one electrolyte transport and a solid–solid mechanism, so differences in thickness, porosity, separator or dissolution chemistry are absorbed into the fitted values. Comparisons within one paper are therefore more reliable than absolute values across papers. The full list, by origin, follows.
+The largest limitation is that every fitted parameter is “effective”: the network knows one cell geometry, one electrolyte transport and a solid–solid mechanism, so differences in thickness, porosity, separator or dissolution chemistry are absorbed into the fitted values (for geometry the size of the effect is now measured, Part XIII). Comparisons within one paper are therefore more reliable than absolute values across papers. The full list, by origin, follows.
 
-### XIV.1 The continuum model
+### XV.1 The continuum model
 
 | Limitation | Consequence | Possible remedy |
 | --- | --- | --- |
@@ -913,51 +1035,51 @@ The largest limitation is that every fitted parameter is “effective”: the ne
 | Carbonate electrolyte transport fixed | Electrolyte differences appear only through Z and the potentials | Electrolyte transport as network inputs |
 | One temperature (298 K assumed) | Temperature studies not covered | Temperature as an input |
 
-### XIV.2 The networks
+### XV.2 The networks
 
-- **Rate range.** v2 covers 0.1–1 C; many papers report 2–5 C. v3 reaches 3 C with 2–8 times larger errors; v4 is training.
-- **Fixed geometry.** 100 µm cathode, SPAN volume fraction 0.0945, 618 µm glass-fibre separator. Real coin cells use about 25 µm polymer separators and other loadings and porosities; today w\_S (factor 1.2–1.4 observed) and Z absorb the difference.
+- **Rate range.** v4 covers 0.08–3 C with an error below 1 mV up to 1 C but about 5 mV at 3 C (up to 8 mV at extreme chemistries); papers that report 4–10 A/g remain outside.
+- **Fixed geometry.** 100 µm cathode, SPAN volume fraction 0.0945, 618 µm glass-fibre separator. For coin cells this shifts the fitted potentials by 10–15 mV and k0\_1 by 20–30 % without raising the misfit; Z needs the loading conversion; w\_S is unaffected (Part XIII).
 - **Trained box.** Fits at a box edge (k0\_1 at ×0.1 or ×100, b\_3 at ×3.5, Z at 500 Ω cm², d at ±0.2 V) are flagged and must not be interpreted.
 - **Voltage cliffs.** Errors are largest where the voltage falls steeply at the end of a step (tens of mV over about 1 % of capacity).
 - **Time window.** The network stops at 95 % of the predicted cut-off; the last 10 % of a measured curve is not used.
 - **Training reliability.** About half of the runs fail somewhere; multi-start and selection on FV evaluation are part of the method, and the selection cases must stay separate from the test cases.
 
-### XIV.3 The data
+### XV.3 The data
 
 - **Digitization error:** 0.4 mV (vector figures) to 2–5 mV median (images), up to 8–15 mV on hard panels; below the model misfit but not negligible for the weakest parameters.
 - **Missing metadata:** most cells are information level 1–2; thickness and porosity are rarely reported (2 cells at level 3).
-- **Mass basis and 1 C definition** often unclear or inconsistent; seven fitted cells needed an assumed basis.
+- **Mass basis and 1 C definition** often unclear or inconsistent; several fitted cells need an assumed basis (flagged in their notes, for example chalcogen\_current\_basis\_assumed), and six cells have w\_S above 1.6, which points to a basis or mass problem in the source (Part XII.8).
 - **Selection bias:** published curves are the best cells of each paper; failed cells are not in the literature.
-- **Rules written after seeing the data:** the curve-selection rules were developed on these 47 cells; they must be frozen and tested on new batches.
+- **Rules written after seeing the data:** the curve-selection rules were developed on the first 47 cells; the 84 cells added since are a first out-of-sample test and the fraction within 25 mV did not drop (Part XII). The rules must stay frozen for the remaining papers.
 
-### XIV.4 The statistics
+### XV.4 The statistics
 
-- **Small samples per family** (2–12 cells): differences between electrolyte families are hypotheses.
-- **Cells within a paper are not independent** (same group, same equipment, same digitization); a cross-paper analysis needs a paper-level random effect (Part XV).
+- **Small samples per family** (1–45 fitted cells; HCE 3, fluorinated 5): differences between electrolyte families are hypotheses, except where a within-paper contrast exists.
+- **Cells within a paper are not independent** (same group, same equipment, same digitization); a cross-paper analysis needs a paper-level random effect (Part XVI).
 - **Uncertainties are linearized** plus a network floor checked on synthetic data; they do not include model-form error, which is the largest error for undescribed cells.
 - **No independent validation of the chemical conclusions yet:** the series resistance has been compared with EIS for one data set only (Hao 2025), and w\_S has not been blind-tested against measured S contents.
 
-### XIV.5 What is solid despite these limits
+### XV.5 What is solid despite these limits
 
-- The network reproduces the solver within about 1–2 mV over its box (v2), measured on unseen chemistries.
+- The network reproduces the solver within about 0.5 mV (v4, 0.1–1 C) and 5 mV (3 C) over its box, measured on unseen chemistries.
 - The tool reaches the solver’s optimum and recovers known parameters.
 - The identifiability results (two currents needed; steps 2–3 degenerate) are properties of the model and the data, independent of the network.
 - Within-paper comparisons cancel most geometry and digitization effects.
 
-## Part XV. Roadmap to a complete project (PROPOSED)
+## Part XVI. Roadmap to a complete project (PROPOSED)
 
 A complete project has two products: a methods paper that can be written now (about 4–6 weeks), and a literature-trend analysis that needs a finished SPAN-DB, a network that reaches 2–3 C, and geometry as a network input (about 4–6 months). The two tracks share work and should run in parallel. Dates below are a proposal to discuss with the advisor, not commitments.
 
-### XV.1 Track A: higher rates (2 C, 3 C and beyond)
+### XVI.1 Track A: higher rates (2 C, 3 C and beyond)
 
 **Why it matters.** Many SPAN papers report 2–10 A/g or 2–5 C. With v2 only pairs within a factor of 10 inside 0.1–1 C (model rates) can be used; four cells were unreachable and most fast currents could not be predicted.
 
-**Step A1, evaluate v4 (RUNNING, results expected early November).**
+**Step A1, evaluate v4 (DONE, November 2–3).**
 
-1. Summary and gate with scripts/lispan\_chem\_summary.py: outside-cliff test error below 2 mV at 0.1–1 C; at 3 C a target of about 3–5 mV (v3 reached 7.9).
-2. Known-truth test at 0.2 + 2 C (scripts/lispan\_two\_curve\_synthetic.py --network …) to measure v4’s error floor (NETWORK\_SD) for the tool.
-3. FV validation on wide literature pairs: Hao 0.1 + 2 C, Chen 2019 0.4 + 2 and 0.4 + 4 A/g, Ma 0.2 + 1 C, Simanjuntak 0.1 + 1 C with w\_S free.
-4. Rerun the SPAN-DB fits with v4 and compare with v2 on the cells both can fit (same rules, frozen).
+1. Gate: all five runs pass at 0.1–1 C (outside-cliff test 0.55–0.87 mV); 3 C at 4.4–7.0 mV (target 3–5 mV met only by the s1 run). chem\_v4\_warm\_salt\_s0 chosen, chem\_v4\_s1 as 3 C cross-check (Part IX.3).
+2. Known-truth test at 0.2 + 2 C: v4 floor close to v2’s (Part X.3).
+3. SPAN-DB refit with v4: more cells fitted, network-versus-FV error at the fits 0.7–1.1 mV median (Part XII). The FV fits of the wide literature pairs were replaced by the FV check of every SPAN-DB fit.
+4. Still open: an FV check of chem\_v4\_s1 (its error floor) and a continuation of the scratch runs, which were still improving at 250 000 steps.
 
 **Step A2, if 3 C stays near 7 mV.** The probes showed the network’s salt polarization at 3 C about 10 % too shallow. Options, cheapest first:
 
@@ -971,22 +1093,22 @@ A complete project has two products: a methods paper that can be written now (ab
 
 **Step A4, a transport input (optional).** Cells that lose capacity with rate faster than the model (Ma, Hao) suggest a slower transport time scale. A multiplier on electrolyte (or in-particle) diffusivity as a network input could describe them; its identifiability from the end-of-discharge capacity must be checked first with the Fisher analysis of Part VIII.
 
-### XV.2 Track B: geometry as network inputs (network v5)
+### XVI.2 Track B: geometry as network inputs (network v5)
 
-**Why.** Today w\_S and Z absorb cell geometry (Part XII.7), which blocks absolute comparisons across papers.
+**Why.** The fixed geometry shifts the fitted potentials and k0\_1 without a visible misfit (Part XIII), which blocks absolute comparisons across papers. Step 0, the size of the effect, is DONE; Z is already converted with the loading.
 
-1. **Choose inputs and ranges:** cathode thickness (about 20–150 µm), cathode porosity (about 0.3–0.9), SPAN volume fraction or loading, separator thickness (about 20–650 µm) and porosity. Check with FV sensitivities which ones change the voltage enough to matter.
+1. **Choose inputs and ranges** (Part XIII.3 gives the physical reduction to 2–3 inputs): cathode thickness (about 20–150 µm), cathode porosity (about 0.3–0.9), SPAN volume fraction or loading, separator thickness (about 20–650 µm) and porosity. Check with FV sensitivities which ones change the voltage enough to matter.
 2. **New FV design:** factorial plus Latin-hypercube chemistries × geometries × rates (several thousand discharges; the v3 design had 2821), with a time-window fit that includes geometry.
 3. **Train with the v4 recipe** (exact charge inventory), multi-start, select on FV evaluation; validate with the known-truth test.
 4. **Data side:** SPAN-DB must supply the geometry. Separator thickness can be derived from the product name (for example Celgard 2325 or 2500, about 25 µm; glass fibre, hundreds of µm) as a “derived” value with its formula; cathode thickness and porosity are reported by few papers (2 cells at level 3 so far). For the rest, a prior over typical values, with the uncertainty carried into the fit, is the honest option.
 
 Expected cost: 1–2 weeks of design work plus about one week of Grace time; a few hundred service units.
 
-### XV.3 Track C: the literature-trend analysis
+### XVI.3 Track C: the literature-trend analysis
 
 **Goal:** quantify how electrolyte, synthesis and electrode design change SPAN’s effective thermodynamics, kinetics, resistance and utilization, with uncertainties, from the published record.
 
-**C1, finish SPAN-DB.** 73 A-papers remain (about 25 batches of three; at about 0.4 million agent tokens per paper, roughly 30 million tokens), then the 156 B-papers. B-papers have one rate per cell; they can give step potentials only if the losses are fixed or taken from a similar cell, so they are secondary.
+**C1, finish SPAN-DB.** 120 papers are processed; about 145 of the A- and B-papers of the triage (A 97, B 169) remain (at about 0.4 million agent tokens per paper, roughly 60 million tokens). A-papers first, then B-papers. B-papers have one rate per cell; they can give step potentials only if the losses are fixed or taken from a similar cell, so they are secondary.
 
 **C2, freeze the fitting rules** (tag a version of scripts/lispan\_spandb\_fit.py) and run every new batch through them unchanged. The new batches are the honest test: the fraction of described cells and the prediction errors should stay similar to Part XII.
 
@@ -1016,22 +1138,22 @@ with cell i in paper j, covariates x (electrolyte family, S content, synthesis t
 
 **C8, data policy.** Fitted parameters, code and the trained network can be released (advisor approved a public network). Whether digitized curves from papers can be redistributed depends on journal and publisher terms and must be decided with the advisor before submission.
 
-### XV.4 Publications
+### XVI.4 Publications
 
 | Paper | Content | Needs | Estimate |
 | --- | --- | --- | --- |
-| 1. Methods (J. Electrochem. Soc. proposed) | Identifiability (two currents, Tafel degeneracy); parametric PINN; tool validation; SPAN-DB demonstration on 35 cells; measurement protocol | v4 decision, frozen-rule test on 2–3 new batches, EIS check, rewrite of paper/manuscript, references from the owner | 4–6 weeks |
+| 1. Methods (J. Electrochem. Soc. proposed) | Identifiability (two currents, Tafel degeneracy); parametric PINN; tool validation; SPAN-DB demonstration on 113 fitted cells from 64 papers (44 described); measurement protocol | EIS check, geometry caveat or geometry inputs (Track B), rewrite of paper/manuscript, references from the owner | 4–6 weeks |
 | 2. Literature trends | Track C results with uncertainties; electrolyte and synthesis effects; map of missing physics | Complete SPAN-DB, v4 or v5 network, geometry inputs | 4–6 months |
 | Optional data or software note | The network, the tool and the database schema | Release decisions | with paper 2 |
 
-### XV.5 Gates that decide the path
+### XVI.5 Gates that decide the path
 
-- **G1 (early November): v4 passes at 3 C?** Yes: use v4 for wide pairs. No: try A2 (salt features or two networks) before Track B.
-- **G2 (mid-November): frozen rules hold on new batches?** Yes: proceed to the full SPAN-DB run. No: revise rules, then test again on another held-out batch.
+- **G1 (early November): v4 passes at 3 C?** Resolved November 2: v4 is used for wide pairs; 3 C stays at about 5 mV, so A2 remains an option, after Track B.
+- **G2 (mid-November): frozen rules hold on new batches?** First answer, November 3: the 84 cells added after the rules were written give 66–69 % within 25 mV, as before (Part XII), so the rules are kept for the remaining papers. If a later batch drops clearly, revise and test again on another held-out batch.
 - **G3 (November): Z agrees with EIS where both exist?** Yes: Z can be interpreted physically. No: report Z as a lumped fitting parameter only.
 - **G4 (December–January): geometry network within about 2 mV?** Yes: rerun all fits with geometry. No: keep within-paper analysis as the main result.
 
-### XV.6 Proposed sequence
+### XVI.6 Proposed sequence
 
 Roadmap (drawn in the Claude Doc; text version):
 
@@ -1114,17 +1236,20 @@ The methods paper depends only on the first two phases; the trend analysis waits
 | Rate network (Phase 3a) best | 0.15 mV mean over 7 rates | docs/PHASE3\_PARAMETRIC\_PINN.md |
 | Chemistry network v2 | 1.4 mV median, 1.02 / 1.15 mV outside cliffs (select / test) | docs/PHASE3B\_CHEM\_PINN.md |
 | Chemistry network v3 | 4.8 mV median; 7.9 mV at 3 C | same |
-| v4 probes | 0.95 / 0.44 / 0.51 / 6.9 mV at 0.1 / 0.3 / 1 / 3 C | same |
+| Chemistry network v4 (chem\_v4\_warm\_salt\_s0) | median 0.55 mV (0.1–1 C), 5.0 mV (3 C); outside cliffs 0.83 / 0.42 / 0.44 / 5.1 mV at 0.1 / 0.3 / 1 / 3 C | same |
+| v4 error floor (0.2 + 2 C) | w\_S 0.18 %, dU0\_2 1.1 mV, dU0\_3rel2 3.3 mV, k0\_1 3.5 %, d 0.95 mV, Z 0.40 Ω cm² | docs/TWO\_CURVE\_TOOL.md |
 | Tool vs FV optimum | 45 of 47 parameters within 1 sd; misfits within 0.6 mV | docs/TWO\_CURVE\_TOOL.md |
 | Tool known-truth test (median) | w\_S 0.12 %, potentials 0.4–1.5 mV, Z 1.3 Ω cm² | same |
 | Tool cost | 35–70 s per fit vs 12–50 min FV | same |
-| SPAN-DB | 542 papers triaged; 38 extracted; 415 cells; 1670 curves (1252 ok) | span\_db/logs |
+| SPAN-DB (Nov 3) | 542 papers triaged; 120 extracted; 1185 cells; 4513 curves (3447 ok) | span\_db |
 | Agent checks | triage 90 %; metadata 88 % equal or equivalent; digitization 0.4 mV (vector), 2–5 mV (image) | span\_db/logs |
-| SPAN-DB fits (v2) | 47 cells → 35 fitted → 22 within 25 mV (median 13.9 mV) | docs/SPANDB\_FITS.md |
-| Network vs FV at real fits | median 1.9 mV, max 4.9 mV (22 described cells) | same |
-| Third-current predictions | 10–25 mV inside, 16–55 mV outside the calibration pair | same |
-| HCE vs LHCE (Chen 2024) | Z = 95 ± 5 vs 0 ± 7 Ω cm² | same |
-| w\_S vs S content (SPAN basis) | r = 0.89; w\_S/S = 1.02–1.48 | same |
+| SPAN-DB fits (v4, 120 papers) | 131 cells → 113 fitted → 75 within 25 mV (median 15.2 mV) → 44 described | docs/SPANDB\_FITS.md |
+| Network vs FV at real fits | median 1.1 mV (cells within 25 mV) | same |
+| Blind predictions | in-between: median 22 mV (66 of 101 within 25 mV); extrapolated: median 37 mV (12 of 45) | same |
+| HCE vs LHCE (Chen 2024) | Z = 93 ± 3 vs 27 ± 2 Ω cm² (network units); 243 vs 58 Ω cm² real cells | same |
+| Ether vs carbonate (Chen 2019) | all potentials −42 ± 9 mV in carbonate | same |
+| w\_S vs S content (SPAN basis) | r = 0.89; w\_S/S = 1.02–1.48 (35-cell set) | same |
+| Geometry bias, coin cells | dU0\_2 −8 to −15 mV, k0\_1 −17 to −29 %, w\_S < 1 %, Z −3 to −10 Ω cm² (after conversion); misfit 3–4 mV | docs/GEOMETRY.md |
 
 ### Appendix D. File map (repository DFN\_PINN\_Project)
 
@@ -1138,9 +1263,12 @@ The methods paper depends only on the first two phases; the trend analysis waits
 | src/dfn\_pinn/lispan/two\_curve.py | The two-curve tool (fit, uncertainty, flags, FV check) |
 | scripts/lispan\_two\_curve\_fit.py | Command-line tool for curves in CSV files or known data sets |
 | scripts/lispan\_spandb\_fit.py | Fits of every SPAN-DB cell (selection rules, predictions, summary) |
+| scripts/lispan\_geometry\_bias.py | Geometry known-truth test (Part XIII) |
+| report/spandb/make\_spandb\_figures.py, compare\_networks.py | SPAN-DB figures, numbers, described rule, real-cell Z; v2 vs v4 comparison |
+| report/geometry/make\_geometry\_figure.py | Geometry figure |
 | scripts/lispan\_chem\_design.py, lispan\_chem\_train.py, lispan\_chem\_summary.py | FV design and time window; training; gate |
 | configs/, slurm/ | Training configurations and Grace job scripts |
-| docs/ | V2\_RESULTS, LI\_SPAN\_MODEL\_FORMULATION, PAPER\_ASSUMPTIONS, PHASE1\_IDENTIFIABILITY, PHASE2\_LITERATURE\_DATA, PHASE3\_PARAMETRIC\_PINN, PHASE3B\_CHEM\_PINN, TWO\_CURVE\_TOOL, SPANDB\_FITS |
+| docs/ | V2\_RESULTS, LI\_SPAN\_MODEL\_FORMULATION, PAPER\_ASSUMPTIONS, PHASE1\_IDENTIFIABILITY, PHASE2\_LITERATURE\_DATA, PHASE3\_PARAMETRIC\_PINN, PHASE3B\_CHEM\_PINN, TWO\_CURVE\_TOOL, SPANDB\_FITS, GEOMETRY |
 | report/ | Figure scripts (phase1–3, spandb, seminar), student guide, advisor summary |
 | results/ (git-ignored) | Runs, networks (results/lispan\_chem\_runs/), fits (results/lispan/) |
 | Li-SPAN-Papers/span\_db/ (owner folder, outside the repository) | SPAN-DB tables, curves, overlays, scripts, logs |
@@ -1153,4 +1281,4 @@ The methods paper depends only on the first two phases; the trend analysis waits
 | Cloud sandbox (2 CPU cores, about 4–7 GB) | Development, FV designs, fits, analysis; jobs run only while a session is active |
 | Owner’s PC (Anaconda, environment dfn-pinn) | Repository, git, local checks |
 | TAMU HPRC Grace | Training: single-core job arrays (2 GB memory per job is enough), module GCC/12.3.0 OpenMPI/4.1.5 PyTorch/2.1.2-CUDA-12.1.1; GPU tested (RTX 6000: 10–25× faster than one core, but more service units per run) |
-| Service units used for training so far | About 75 per rate wave, 130–180 per chemistry version; v4 about 350–400 expected |
+| Service units used for training so far | About 75 per rate wave, 130–180 per chemistry version (v1–v3), about 350–400 for v4 |
